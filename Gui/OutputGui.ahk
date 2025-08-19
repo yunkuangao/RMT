@@ -4,12 +4,14 @@ class OutputGui {
     __new() {
         this.Gui := ""
         this.SureBtnAction := ""
+        this.VariableObjArr := []
         this.RemarkCon := ""
-        this.MacroEditGui := ""
         this.OutputTypeCon := ""
+        this.ContentTypeCon := ""
+        this.TextTipCon := ""
         this.TextCon := ""
-        this.IsCoverCon := ""
-        this.NameCon := ""
+        this.VariTipCon := ""
+        this.VariCon := ""
         this.Data := ""
     }
 
@@ -22,79 +24,86 @@ class OutputGui {
         }
 
         this.Init(cmd)
+        this.OnChangeType()
         this.ToggleFunc(true)
     }
 
     AddGui() {
         MyGui := Gui(, "输出指令编辑")
         this.Gui := MyGui
-        MyGui.SetFont(, "Arial")
-        MyGui.SetFont("S10 W550 Q2", "Consolas")
+        MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
         PosX := 10
         PosY := 10
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 80, 20), "快捷方式:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 80), "快捷方式:")
         PosX += 80
-        con := MyGui.Add("Hotkey", Format("x{} y{} w{} h{} Center", PosX, PosY - 3, 70, 20), "!l")
+        con := MyGui.Add("Hotkey", Format("x{} y{} w{}", PosX, PosY - 3, 70), "!l")
         con.Enabled := false
 
         PosX += 90
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 10, 80, 30), "执行指令")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 80), "执行指令")
         btnCon.OnEvent("Click", (*) => this.TriggerMacro())
 
         PosX += 90
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 50, 30), "备注:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), "备注:")
         PosX += 50
         this.RemarkCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 5, 150), "")
 
         PosX := 10
-        PosY += 25
-        MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "选择/输入为空时输出文本，否则输出选择/输入的变量值")
-
-        PosX := 10
         PosY += 40
         MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 80, 20), "输出方式:")
-
         PosX += 80
-        this.OutputTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 100), ["SendText",
-            "Send粘贴", "Win粘贴"])
+        this.OutputTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), ["发送内容",
+            "Send粘贴", "Win粘贴", "临时提示", "复制到剪切板", "软件弹窗", "系统语音"])
         this.OutputTypeCon.Value := 1
+        this.OutputTypeCon.OnEvent("Change", this.OnChangeType.Bind(this))
 
-        PosX += 140
-        this.IsCoverCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY, 200), "输出内容复制到剪切板")
+        PosX += 160
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 80, 20), "输出内容:")
+        PosX += 80
+        this.ContentTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), ["文本",
+            "变量", "文本+变量"])
+        this.ContentTypeCon.Value := 1
+        this.ContentTypeCon.OnEvent("Change", this.OnChangeType.Bind(this))
 
         PosX := 10
         PosY += 30
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "文本                              选择/输入")
+        this.TextTipCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "文本")
+        PosX += 240
+        this.VariTipCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "变量")
 
+        PosX := 10
         PosY += 20
         this.TextCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX, PosY, 200, 50))
 
         PosX += 240
-        this.NameCon := MyGui.Add("ComboBox", Format("x{} y{} w{}", PosX, PosY, 100), [])
+        this.VariCon := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX, PosY, 130), [])
+    
+        PosX := 10
+        PosY += 60
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "提示：文本中{变量名}表示变量值、例如：变量1 = {变量1}")
 
-        PosY += 80
+        PosY += 30
         PosX := 200
         btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY, 100, 40), "确定")
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
         MyGui.OnEvent("Close", (*) => this.ToggleFunc(false))
-        MyGui.Show(Format("w{} h{}", 500, 270))
+        MyGui.Show(Format("w{} h{}", 500, 240))
     }
 
     Init(cmd) {
         cmdArr := cmd != "" ? StrSplit(cmd, "_") : []
-        this.SerialStr := cmdArr.Length >= 2 ? cmdArr[2] : this.GetSerialStr()
+        this.SerialStr := cmdArr.Length >= 2 ? cmdArr[2] : GetSerialStr("Output")
         this.RemarkCon.Value := cmdArr.Length >= 3 ? cmdArr[3] : ""
         this.Data := this.GetOutputData(this.SerialStr)
-        macro := this.MacroEditGui.GetFinallyMacroStr()
-        VariableArr := GetSelectVariableObjArr(macro)
+
         this.TextCon.Value := this.Data.Text
         this.OutputTypeCon.Value := this.Data.OutputType
-        this.IsCoverCon.Value := this.Data.IsCover
-        this.NameCon.Delete()
-        this.NameCon.Add(VariableArr)
-        this.NameCon.Text := this.Data.Name
+        this.ContentTypeCon.Value := this.Data.ContentType
+        this.VariCon.Delete()
+        this.VariCon.Add(this.VariableObjArr)
+        this.VariCon.Text := this.Data.VariName
     }
 
     ToggleFunc(state) {
@@ -105,6 +114,15 @@ class OutputGui {
         else {
             Hotkey("!l", MacroAction, "Off")
         }
+    }
+
+    OnChangeType(*) {
+        showText := this.ContentTypeCon.Value == 1 || this.ContentTypeCon.Value == 3
+        showVari := this.ContentTypeCon.Value == 2 || this.ContentTypeCon.Value == 3
+        this.TextTipCon.Enabled := showText
+        this.TextCon.Enabled := showText
+        this.VariTipCon.Enabled := showVari
+        this.VariCon.Enabled := showVari
     }
 
     OnClickSureBtn() {
@@ -129,9 +147,10 @@ class OutputGui {
         tableItem := MySoftData.SpecialTableItem
         tableItem.CmdActionArr[1] := []
         tableItem.KilledArr[1] := false
+        tableItem.PauseArr[1] := 0
         tableItem.ActionCount[1] := 0
-        tableItem.SuccessClearActionArr[1] := Map()
         tableItem.VariableMapArr[1] := Map()
+        tableItem.index := 1
 
         OnOutput(tableItem, CommandStr, 1)
     }
@@ -143,11 +162,6 @@ class OutputGui {
             CommandStr .= "_" this.RemarkCon.Value
         }
         return CommandStr
-    }
-
-    GetSerialStr() {
-        CurrentDateTime := FormatTime(, "HHmmss")
-        return "Output" CurrentDateTime
     }
 
     GetOutputData(SerialStr) {
@@ -165,10 +179,13 @@ class OutputGui {
     SaveOutputData() {
         this.Data.Text := this.TextCon.Value
         this.Data.OutputType := this.OutputTypeCon.Value
-        this.Data.IsCover := this.IsCoverCon.value
-        this.Data.Name := this.NameCon.Text
+        this.Data.ContentType := this.ContentTypeCon.Value
+        this.Data.VariName := this.VariCon.Text
 
         saveStr := JSON.stringify(this.Data, 0)
         IniWrite(saveStr, OutputFile, IniSection, this.Data.SerialStr)
+        if (MySoftData.DataCacheMap.Has(this.Data.SerialStr)) {
+            MySoftData.DataCacheMap.Delete(this.Data.SerialStr)
+        }
     }
 }

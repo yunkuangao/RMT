@@ -4,7 +4,8 @@ class IntervalGui {
     __new() {
         this.Gui := ""
         this.SureBtnAction := ""
-        this.TimeTextCon := ""
+        this.VariableObjArr := []
+        this.TimeVarCon := ""
     }
 
     ShowGui(cmd) {
@@ -14,29 +15,40 @@ class IntervalGui {
         else {
             this.AddGui()
         }
+        this.Init(cmd)
+    }
 
-        this.TimeTextCon.Value := ""
-        if (cmd != "") {
-            cmdArr := StrSplit(cmd, "_")
-            this.TimeTextCon.Value := cmdArr[2]
+    Init(cmd) {
+        cmdArr := cmd != "" ? StrSplit(cmd, "_") : []
+        this.TimeVarCon.Delete()
+        this.TimeVarCon.Add(this.VariableObjArr)
+        this.TimeVarCon.Text := "空"
+        if (cmdArr.Length == 2) {
+            this.TimeVarCon.Text := cmdArr[2]
+        }
+        else if (cmdArr.Length == 3) {
+            this.TimeVarCon.Text := cmdArr[3]
+        }
+        else {
+            this.TimeVarCon.Text := "500"
         }
     }
 
     AddGui() {
         MyGui := Gui(, "指令间隔编辑")
         this.Gui := MyGui
-        MyGui.SetFont(, "Arial")
-        MyGui.SetFont("S10 W550 Q2", "Consolas")
+        MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
-        PosX := 10
-        PosY := 10
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 300, 20), "指令间隔时间(毫秒)")
 
-        PosY += 20
-        this.TimeTextCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY, 300))
+        PosX := 40
+        PosY := 20
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 90, 20), "时间(毫秒)：")
+
+        PosX += 90
+        this.TimeVarCon := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 130), [])
 
         PosY += 40
-        PosX += 100
+        PosX := 110
         btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY, 100, 40), "确定")
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
@@ -47,14 +59,24 @@ class IntervalGui {
         if (this.SureBtnAction == "")
             return
 
-        timeText := this.TimeTextCon.Value
-        if (!IsInteger(timeText) || Integer(timeText) < 0) {
-            MsgBox("请输入大于等于0的整数")
-            return
+        timeText := this.TimeVarCon.Text
+        if (IsNumber(timeText)) {
+            if (IsFloat(timeText) || timeText < 0) {
+                MsgBox("请输入大于0的整数")
+                return
+            }
         }
 
         action := this.SureBtnAction
-        action("间隔_" timeText)
+        action(this.GetCmdStr())
         this.Gui.Hide()
+    }
+
+    GetCmdStr() {
+        if (IsNumber(this.TimeVarCon.Text)) {
+            return "间隔_" this.TimeVarCon.Text
+        }
+
+        return "间隔_变量_" this.TimeVarCon.Text
     }
 }

@@ -9,34 +9,34 @@ class TableItem {
         this.LoopCountArr := []
         this.RemarkArr := []
         this.TriggerTypeArr := []
-        this.MacroTypeArr := []
         this.TKConArr := []
         this.InfoConArr := []
         this.KeyBtnConArr := []
         this.MacroBtnConArr := []
         this.DeleteBtnConArr := []
-        this.HoldTimeConArr := []
         this.ModeConArr := []
         this.ForbidConArr := []
         this.ProcessNameConArr := []
         this.LoopCountConArr := []
-        this.RemarkTextConArr := []
+        this.RemarkTipConArr := []
         this.RemarkConArr := []
+        this.ColorConArr := []
+        this.ColorStateArr := []
         this.IndexConArr := []
         this.TriggerTypeConArr := []
-        this.MacroTypeConArr := []
+        this.TimingSerialArr := []
 
         this.SerialArr := []
         this.CmdActionArr := []
-        this.SuccessClearActionArr := []        ;成功后清除后续操作
         this.HoldKeyArr := []
         this.KilledArr := []
+        this.PauseArr := []         ;暂停
         this.ActionCount := []      ; 记录执行次数，用于循环次数判断
         this.ToggleStateArr := []   ; 触发键开关状态
         this.ToggleActionArr := []   ; 触发键开关Action
         this.VariableMapArr := []    ;  每条宏对应的变量映射
         this.UnderPosY := 0
-        this.Index := 0
+        this.Index := 0             ;tableIndex
         this.IsWorkArr := []        ;work正在执行中
     }
 }
@@ -80,7 +80,11 @@ class ToolCheck {
         this.ToolTextCtrl := ""
         this.ToolRecordMacroHotKeyCtrl := ""
         this.ToolCheckRecordMacroCtrl := ""
+        this.ScreenShotHotKeyCtrl := ""
+        this.FreePasteHotKeyCtrl := ""
 
+        this.ScreenShotHotKey := ""
+        this.FreePasteHotKey := ""
         this.ToolRecordMacroHotKey := ""
         this.IsToolRecord := false
         this.ToolTextFilterHotKey := ""
@@ -97,43 +101,48 @@ class ToolCheck {
         this.MouseInfoTimer := ""
 
         this.MacroGui := ""
-        this.RecordNodeArr := []
-        this.RecordKeyboardArr := []
+
+        this.RecordLastMousePos := []
+        this.RecordLastTime := ""
+        this.RecordMacroStr := ""
         this.RecordHoldKeyMap := Map()
         this.RecordSpecialKeyMap := Map(33, 0, 34, 0, 35, 0, 36, 0, 37, 0, 38, 0, 39, 0, 40, 0, 45, 0, 46, 0)
-        this.RecordLastMousePos := []
-        this.RecordKeyboardCtrl := ""
-        this.RecordKeyboardValue := ""
-        this.RecordMouseCtrl := ""
-        this.RecordMouseValue := ""
-        this.RecordMouseRelativeCtrl := ""
-        this.RecordMouseRelativeValue := ""
+        this.RecordHoldMuti := ""
+        this.RecordAutoLoosen := ""
+        this.RecordKeyboard := ""
+        this.RecordMouse := ""
+        this.RecordMouseRelative := ""
+        this.RecordMouseTrail := ""
+        this.RecordMouseTrailLen := ""
+        this.RecordMouseTrailSpeed := ""
+        this.RecordMouseTrailInterval := ""
+        this.RecordJoy := ""
+        this.RecordJoyInterval := ""
         this.OCRTypeCtrl := ""
         this.OCRTypeValue := 1
-    }
-
-    RecordMacroSwitch() {
-        if (this.IsToolRecord) {
-            this.RecordMacroTimer := Timer(() => {}, 100)
-            this.RecordMacroTimer.On()
-        }
-        else
-            this.RecordMacroTimer := ""
     }
 }
 
 class SoftData {
     __New() {
         this.isWork := false
+        this.ToolTipText := ""
+        this.ToolTipEndTime := ""
         this.AgreeAgreement := false
         this.IsExecuteShow := true
         this.ShowWinCtrl := ""
         this.IsBootStart := false
         this.BootStartCtrl := ""
-        this.MutiThread := false
-        this.MutiThreadCtrl := ""
+        this.NoVariableTip := false
+        this.NoVariableTipCtrl := ""
+        this.ScreenShotType := 1
+        this.ScreenShotTypeCtrl := ""
         this.MutiThreadNum := 3
         this.MutiThreadNumCtrl := ""
+        this.IsSuspend := false
+        this.SuspendToggleCtrl := ""
+        this.SuspendHotkey := ""
+        this.SuspendHotkeyCtrl := ""
         this.IsPause := false
         this.PauseToggleCtrl := ""
         this.PauseHotkey := ""
@@ -151,16 +160,16 @@ class SoftData {
         this.CoordXFloat := 0
         this.CoordYFloat := 0
         this.IsLastSaved := false
-        this.WinPosX := 0
-        this.WinPosY := 0
-        this.IsSavedWinPos := false
         this.TableIndex := 1
         this.HasSaved := false
         this.MacroEditGui := ""
-        this.MacroEditCon := ""
         this.RecordToggleCon := ""
+        this.FontType := "微软雅黑"
+        this.FontList := []
 
         this.MyGui := {}
+        this.CurSettingName := ""
+        this.SettingArrStr := ""
         this.TabPosX := 0
         this.TabPosY := 0
         this.BtnAdd := ""
@@ -169,8 +178,8 @@ class SoftData {
         this.EditHotKeyCtrl := ""
         this.EditHotStrCtrl := ""
 
-        this.TabNameArr := ["按键宏", "字串宏", "宏", "按键替换", "工具", "设置", "帮助", "打赏作者"]
-        this.TabSymbolArr := ["Normal", "String", "SubMacro", "Replace", "Tool", "Setting", "Help", "Reward"]
+        this.TabNameArr := ["按键宏", "字串宏", "定时宏", "宏", "按键替换", "工具", "设置", "帮助", "打赏作者"]
+        this.TabSymbolArr := ["Normal", "String", "Timing", "SubMacro", "Replace", "Tool", "Setting", "Help", "Reward"]
         this.TabCtrl := {}
         this.TableInfo := []
 
@@ -188,10 +197,27 @@ class SoftData {
         this.SpecialNumKeyMap := Map("WheelDown", 0, "WheelUp", 0)
         this.ContinueSecondIntervale := 200
         this.ContinueIntervale := 50
+        this.DataCacheMap := Map()
+        this.TestCount := 0
 
         this.GroupFixedCons := []
         this.FixedCons := []
         this.SB := ""
+        this.GlobalVariMap := Map() ;UI下拉显示变量
+        this.VariableMap := Map()
+
+        ;显示指令提示配置
+        this.CMDTip := false
+        this.CMDTipCtrl := ""
+        this.CMDPosX := A_ScreenWidth - 225
+        this.CMDPosY := 0
+        this.CMDWidth := 225
+        this.CMDHeight := 120
+        this.CMDLineNum := 5
+        this.CMDBGColor := "FFFFFF"
+        this.CMDTransparency := 50
+        this.CMDFontSize := "12"
+        this.CMDFontColor := "000000"
     }
 }
 
@@ -233,22 +259,23 @@ class SearchData {
     __New() {
         this.SerialStr := ""
         this.SearchType := 1       ;1 图片  2 颜色  3 文本
-        this.SearchColor := ""
-        this.SearchText := ""
+        this.SearchColor := "FFFFFF"
+        this.SearchText := "检索文本"
         this.SearchImagePath := ""
         this.Similar := 90 ; 图片搜索模糊匹配度100  - 50
-        this.OCRType := 1
+        this.OCRType := 1   ;1中文  2英文
+        this.SearchImageType := 1 ; 1 opencv 2 rmt
         this.StartPosX := 0
         this.StartPosY := 0
         this.EndPosX := A_ScreenWidth
         this.EndPosY := A_ScreenHeight
         this.SearchCount := 1
         this.SearchInterval := 1000
-        this.AutoType := 1
+        this.MouseActionType := 1   ;   1无动作 2移动到目标 3移动到目标点击
         this.ClickCount := 1
         this.Speed := 90
-        this.TrueCommandStr := ""
-        this.FalseCommandStr := ""
+        this.TrueMacro := ""
+        this.FalseMacro := ""
         this.ResultToggle := 0
         this.ResultSaveName := "搜索结果"
         this.TrueValue := 1
@@ -262,11 +289,12 @@ class SearchData {
 
 class CompareData {
     __New() {
+        this.IsGlobal := 0
+        this.IsIgnoreExist := 0
         this.ToggleArr := [1, 0, 0, 0]
-        this.NameArr := ["空", "空", "空", "空"]
-        this.CompareTypeArr := [1, 1, 1, 1]  ;1大于 2大于等于 3等于 4小于等 5小于
-        this.ValueArr := [0, 0, 0, 0]
-        this.VariableArr := ["空", "空", "空", "空"]
+        this.NameArr := ["Num1", "Num2", "Num3", "Num4"]
+        this.CompareTypeArr := [1, 1, 1, 1]  ;1大于 2大于等于 3等于 4小于等 5小于 6字符包含 7存在变量
+        this.VariableArr := ["Num1", "Num2", "Num3", "Num4"]
         this.TrueMacro := ""
         this.FalseMacro := ""
         this.SaveToggle := 0
@@ -277,13 +305,11 @@ class CompareData {
     }
 }
 
-class CoordData {
+class MMProData {
     __New() {
         this.SerialStr := ""
-        this.PosX := 100
-        this.PosY := 100
-        this.NameX := "空"
-        this.NameY := "空"
+        this.PosVarX := 100
+        this.PosVarY := 100
         this.IsRelative := 0         ;相对位移
         this.IsGameView := 0        ;游戏视角
         this.Speed := 90           ;移动速度
@@ -295,34 +321,25 @@ class CoordData {
 class FileData {
     __New() {
         this.SerialStr := ""
-        this.FilePath := ""
-        this.ProcessName := ""
-        this.BackPlay := 0
+        this.RunPath := ""
+        this.BackPlay := false
     }
 }
 
 class OutputData {
     __New() {
         this.SerialStr := ""
-        this.Text := ""
-        this.IsCover := 1
-        this.OutputType := 1
-        this.Name := "空"
-    }
-}
-
-class StopData {
-    __New() {
-        this.SerialStr := ""
-        this.StopType := 1
-        this.StopIndex := 1
+        this.Text := "将要输出的文本"
+        this.OutputType := 1    ;sendtest  粘贴   粘贴
+        this.ContentType := 1   ;文本   变量    文本+变量
+        this.VariName := "空"
     }
 }
 
 class SubMacroData {
     __New() {
         this.SerialStr := ""
-        this.Type := 1
+        this.MacroType := 1
         this.CallType := 1
         this.Index := 1
         this.MacroSerial := "009973"
@@ -332,12 +349,25 @@ class SubMacroData {
 class VariableData {
     __New() {
         this.SerialStr := ""
-        this.CreateType := 1
+        this.IsGlobal := 0
+        this.IsIgnoreExist := 0
         this.ToggleArr := [1, 0, 0, 0]
-        this.NameArr := ["Num1", "Num2", "Num3", "Num4"]
-        this.ValueArr := [0, 0, 0, 0]
-        this.SelectCopyNameArr := ["NameA", "NameB", "NameC", "NameD"]
-        this.ExtractStr := ""
+        this.OperaTypeArr := [1, 1, 1, 1]   ;1赋值 2随机 3字符 4删除
+        this.VariableArr := ["Num1", "Num2", "Num3", "Num4"]
+        this.CopyVariableArr := ["1", "0", "0", "0"]
+        this.MinVariableArr := ["0", "0", "0", "0"]
+        this.MaxVariableArr := ["10", "10", "10", "10"]
+    }
+}
+
+class ExVariableData {
+    __New() {
+        this.SerialStr := ""
+        this.IsGlobal := 0
+        this.IsIgnoreExist := 0
+        this.ToggleArr := [1, 0, 0, 0]
+        this.VariableArr := ["Num1", "Num2", "Num3", "Num4"]
+        this.ExtractStr := "HP:&x"
         this.ExtractType := 1
         this.OCRType := 1
         this.StartPosX := 0
@@ -352,11 +382,12 @@ class VariableData {
 class OperationData {
     __New() {
         this.SerialStr := ""
+        this.IsGlobal := 0
+        this.IsIgnoreExist := 0
         this.ToggleArr := [1, 0, 0, 0]
-        this.NameArr := ["空", "空", "空", "空"]
+        this.NameArr := ["Num1", "Num2", "Num3", "Num4"]
         this.OperationArr := ["", "", "", ""]
-        this.UpdateTypeArr := [1, 1, 1, 1]
-        this.UpdateNameArr := ["空", "空", "空", "空"]
+        this.UpdateNameArr := ["Num1", "Num2", "Num3", "Num4"]
         this.SymbolGroups := [[], [], [], []]  ;操作符号
         this.ValueGroups := [[], [], [], []]     ;运算对象
     }
@@ -368,12 +399,28 @@ class BGMouseData {
         this.TargetTitle := ""
         this.OperateType := 1 ;点击 双击 按下 松开
         this.MouseType := 1 ;左键 中键 右键
-        this.PosX := 100
-        this.PosY := 100
-        this.PosXName := "空"
-        this.PosYName := "空"
+        this.PosVarX := 100
+        this.PosVarY := 100
         this.ScrollV := 1 ;水平滚动
         this.ScrollH := 0 ; 垂直滚动
         this.ClickTime := 50 ;点击时间跨度
+    }
+}
+
+class TimingData {
+    __New() {
+        this.SerialStr := ""
+        this.StartTime := A_Now
+        this.EndTime := ""
+        this.Type := 1  ;1单次 2每小时 3每天 4每周 5每月 6自定义
+        this.CustomInterval := "10"
+        this.NextTriggerTime := ""
+    }
+}
+
+class RMTCMDData {
+    __New() {
+        this.SerialStr := ""
+        this.OperateType := 1 ; 1截图 2截图中提取文本 3自由贴 4开启指令显示 5关闭指令显示 6启用键鼠 7禁用键鼠 8休眠 9终止所有宏 10重载
     }
 }

@@ -24,7 +24,7 @@ class CommandIntervalGui{
     AddGui() {
         MyGui := Gui(, "指令间隔编辑")
         this.Gui := MyGui
-        MyGui.SetFont(, "Consolas")
+        MyGui.SetFont(, MySoftData.FontType)
 
         PosX := 10
         PosY := 10

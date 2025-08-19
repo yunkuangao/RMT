@@ -4,42 +4,46 @@
 #Include MouseMoveGui.ahk
 #Include SearchGui.ahk
 #Include SearchProGui.ahk
-#Include FileGui.ahk
+#Include RunGui.ahk
 #Include CompareGui.ahk
-#Include CoordGui.ahk
+#Include MMProGui.ahk
 #Include OutputGui.ahk
-#Include StopGui.ahk
 #Include VariableGui.ahk
 #Include SubMacroGui.ahk
 #Include OperationGui.ahk
 #Include BGMouseGui.ahk
+#Include ExVariableGui.ahk
+#Include RMTCMDGui.ahk
 
 class MacroEditGui {
     __new() {
         this.Gui := ""
         this.ShowSaveBtn := false
         this.SureFocusCon := ""
-        this.checkAction := () => this.CheckIfChangeLineNum()
+        this.VariableObjArr := []
         this.isContextEdit := false
         this.RecordToggleCon := ""
 
         this.SureBtnAction := ""
         this.SaveBtnAction := ""
         this.SaveBtnCtrl := {}
-        this.MacroEditStrCon := {}
         this.CmdBtnConMap := map()
         this.SubGuiMap := map()
         this.NeedCommandInterval := false
-        this.EditModeType := 1
-        this.EditModeCon := ""
+        this.MacroTreeViewCon := ""
+        this.EditModeType := 1  ;1添加指令 2修改当前指令 3向上插入指令 4 向下插入指令
+        this.CurItemID := ""  ;当前操作itemID
+        this.LastItemID := "" ;最后的itemID
+        this.TreeBranchMap := Map()
+        this.ContextMenu := ""
+        this.BranchContextMenu := ""
         this.RecordMacroCon := ""
         this.DefaultFocusCon := ""
-        this.CurEditLineNum := 0
-        this.EditLineNum := 0
         this.SubMacroLastIndex := 0
 
-        this.RecordKeyboardArr := []
-        this.RecordNodeArr := []
+        this.CMDStrArr := ["间隔", "按键", "搜索", "搜索Pro", "移动", "移动Pro", "输出", "运行", "变量", "变量提取", "运算", "如果", "宏操作",
+            "RMT指令",
+            "后台鼠标"]
 
         this.InitSubGui()
     }
@@ -58,64 +62,52 @@ class MacroEditGui {
         this.SubGuiMap.Set("移动", this.MoveMoveGui)
 
         this.SearchGui := SearchGui()
-        this.SearchGui.MacroEditGui := this
         this.SearchGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
         this.SubGuiMap.Set("搜索", this.SearchGui)
 
         this.SearchProGui := SearchProGui()
-        this.SearchProGui.MacroEditGui := this
         this.SearchProGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
         this.SubGuiMap.Set("搜索Pro", this.SearchProGui)
 
-        this.FileGui := FileGui()
-        this.FileGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("文件", this.FileGui)
+        this.RunGui := RunGui()
+        this.RunGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
+        this.SubGuiMap.Set("运行", this.RunGui)
 
         this.CompareGui := CompareGui()
         this.CompareGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.CompareGui.MacroEditGui := this
         this.SubGuiMap.Set("如果", this.CompareGui)
 
-        this.CoordGui := CoordGui()
-        this.CoordGui.MacroEditGui := this
-        this.CoordGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("移动Pro", this.CoordGui)
+        this.MMProGui := MMProGui()
+        this.MMProGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
+        this.SubGuiMap.Set("移动Pro", this.MMProGui)
 
         this.OutputGui := OutputGui()
-        this.OutputGui.MacroEditGui := this
         this.OutputGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
         this.SubGuiMap.Set("输出", this.OutputGui)
 
-        this.StopGui := StopGui()
-        this.StopGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("终止", this.StopGui)
-
         this.VariableGui := VariableGui()
-        this.VariableGui.MacroEditGui := this
         this.VariableGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
         this.SubGuiMap.Set("变量", this.VariableGui)
 
+        this.ExVariableGui := ExVariableGui()
+        this.ExVariableGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
+        this.SubGuiMap.Set("变量提取", this.ExVariableGui)
+
         this.SubMacroGui := SubMacroGui()
         this.SubMacroGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("子宏", this.SubMacroGui)
+        this.SubGuiMap.Set("宏操作", this.SubMacroGui)
 
         this.OperationGui := OperationGui()
-        this.OperationGui.MacroEditGui := this
         this.OperationGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
         this.SubGuiMap.Set("运算", this.OperationGui)
 
         this.BGMouseGui := BGMouseGui()
-        this.BGMouseGui.MacroEditGui := this
         this.BGMouseGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
         this.SubGuiMap.Set("后台鼠标", this.BGMouseGui)
-    }
 
-    GetSubGuiSymbol(subGui) {
-        for key, value in this.SubGuiMap {
-            if (value == subGui)
-                return key
-        }
-        return ""
+        this.RMTCMDGui := RMTCMDGui()
+        this.RMTCMDGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
+        this.SubGuiMap.Set("RMT指令", this.RMTCMDGui)
     }
 
     ShowGui(CommandStr, ShowSaveBtn) {
@@ -127,320 +119,186 @@ class MacroEditGui {
             this.AddGui()
         }
 
-        MySoftData.MacroEditGui := this
-        MySoftData.MacroEditCon := this.MacroEditStrCon
         MySoftData.RecordToggleCon := this.RecordMacroCon
+        MySoftData.MacroEditGui := this
         this.Init(CommandStr, ShowSaveBtn)
-        this.RefreshCommandBtn()
-        this.ToggleFunc(true)
     }
 
     AddGui() {
         MyGui := Gui(, "指令编辑器")
         this.Gui := MyGui
-        MyGui.SetFont(, "Arial")
-        MyGui.SetFont("S10 W550 Q2", "Consolas")
+        MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
-        PosX := 10
         PosY := 10
-        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 800, 170), "当前宏指令")
-        PosY += 15
-        this.MacroEditStrCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX + 5, PosY, 790, 150), "")
-
-        PosX := 20
-        PosY += 160
-        this.DefaultFocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 80), "编辑模式：")
-        PosX += 80
-        this.EditModeCon := MyGui.Add("DropDownList", Format("x{} y{} w{} h{}", PosX, PosY - 3, 150, 100), ["末尾追加指令",
-            "调整光标行指令", "光标行插入指令"])
-        this.EditModeCon.OnEvent("Change", (*) => this.OnChangeEditMode())
-
-        PosX += 180
-        this.RecordMacroCon := MyGui.Add("Checkbox", Format("x{} y{} w{} h{}", PosX, PosY - 3, 110, 20), "指令并联录制")
-        this.RecordMacroCon.Value := false
-        this.RecordMacroCon.OnEvent("Click", (*) => this.OnChangeRecordMode())
-
-        PosX += 120
-        isHotKey := CheckIsHotKey(ToolCheckInfo.ToolRecordMacroHotKey)
-        CtrlType := isHotKey ? "Hotkey" : "Text"
-        con := MyGui.Add(CtrlType, Format("x{} y{} w{} h{}", posX, posY - 3, 100, 20), ToolCheckInfo.ToolRecordMacroHotKey
-        )
-        con.Enabled := false
-
-        PosY += 20
         PosX := 10
-        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", 10, PosY, 800, 150), "指令选项")
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 170, 430), "指令选项")
 
         PosY += 20
-        PosX := 20
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "间隔")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX := 15
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "间隔")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.IntervalGui))
         this.CmdBtnConMap.Set("间隔", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "按键")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX += 85
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "按键")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.KeyGui))
         this.CmdBtnConMap.Set("按键", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "搜索")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX := 15
+        PosY += 40
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "搜索")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.SearchGui))
         this.CmdBtnConMap.Set("搜索", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "搜索Pro")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX += 85
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "搜索Pro")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.SearchProGui))
         this.CmdBtnConMap.Set("搜索Pro", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "移动")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX := 15
+        PosY += 40
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "移动")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.MoveMoveGui))
         this.CmdBtnConMap.Set("移动", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "移动Pro")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
-        btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.CoordGui))
+        PosX += 85
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "移动Pro")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
+        btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.MMProGui))
         this.CmdBtnConMap.Set("移动Pro", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "输出")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX := 15
+        PosY += 40
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "输出")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.OutputGui))
         this.CmdBtnConMap.Set("输出", btnCon)
 
-        PosY += 35
-        PosX := 20
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "文件")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
-        btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.FileGui))
-        this.CmdBtnConMap.Set("文件", btnCon)
+        PosX += 85
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "运行")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
+        btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.RunGui))
+        this.CmdBtnConMap.Set("运行", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "变量")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX := 15
+        PosY += 40
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "变量")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.VariableGui))
         this.CmdBtnConMap.Set("变量", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "运算")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX += 85
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "变量提取")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
+        btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.ExVariableGui))
+        this.CmdBtnConMap.Set("变量提取", btnCon)
+
+        PosX := 15
+        PosY += 40
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "运算")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.OperationGui))
         this.CmdBtnConMap.Set("运算", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "如果")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX += 85
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "如果")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.CompareGui))
         this.CmdBtnConMap.Set("如果", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "终止")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
-        btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.StopGui))
-        this.CmdBtnConMap.Set("终止", btnCon)
+        PosX := 15
+        PosY += 40
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "RMT指令")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
+        btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.RMTCMDGui))
+        this.CmdBtnConMap.Set("RMT指令", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "子宏")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX += 85
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "宏操作")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.SubMacroGui))
-        this.CmdBtnConMap.Set("子宏", btnCon)
+        this.CmdBtnConMap.Set("宏操作", btnCon)
 
-        PosX += 100
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 80), "后台鼠标")
-        btnCon.SetFont((Format("S{} W{} Q{}", 12, 400, 5)))
+        PosX := 15
+        PosY += 40
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "后台鼠标")
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.BGMouseGui))
         this.CmdBtnConMap.Set("后台鼠标", btnCon)
 
-        PosX := 20
-        PosY += 110
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "Backspace")
+        PosX := 200
+        PosY := 10
+        this.RecordMacroCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "指令录制")
+        this.RecordMacroCon.Value := false
+        this.RecordMacroCon.OnEvent("Click", this.OnClickRecordTog.Bind(this))
+        PosX += 95
+        isHotKey := CheckIsHotKey(ToolCheckInfo.ToolRecordMacroHotKey)
+        CtrlType := isHotKey ? "Hotkey" : "Text"
+        con := MyGui.Add(CtrlType, Format("x{} y{} w{}", posX, posY - 3, 130), ToolCheckInfo.ToolRecordMacroHotKey
+        )
+        con.Enabled := false
+
+        PosX := 190
+        PosY += 25
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 620, 360), "当前宏指令")
+        PosY += 20
+        this.MacroTreeViewCon := MyGui.Add("TreeView", Format("x{} y{} w{} h{}", PosX + 5, PosY, 605, 335), "")
+        this.MacroTreeViewCon.OnEvent("ContextMenu", this.ShowContextMenu.Bind(this))  ; 右键菜单事件
+        this.MacroTreeViewCon.OnEvent("DoubleClick", this.OnDoubleClick.Bind(this))  ; 双击编辑指令
+
+        PosX := 190
+        PosY := 400
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "退格")
         btnCon.OnEvent("Click", (*) => this.Backspace())
 
-        PosX += 200
+        PosX += 150
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "清空指令")
         btnCon.OnEvent("Click", (*) => this.ClearStr())
 
-        PosX += 200
+        PosX += 150
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "确定")
         btnCon.OnEvent("Click", (*) => this.OnSureBtnClick())
 
-        PosX += 200
+        PosX += 150
         this.SaveBtnCtrl := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "应用并保存")
         this.SaveBtnCtrl.OnEvent("Click", (*) => this.OnSaveBtnClick())
 
-        MyGui.OnEvent("Close", (*) => this.ToggleFunc(false))
-        MyGui.Show(Format("w{} h{}", 820, 420))
+        MyGui.Show(Format("w{} h{}", 820, 450))
     }
 
     Init(CommandStr, ShowSaveBtn) {
         this.ShowSaveBtn := ShowSaveBtn
         this.SubMacroLastIndex := 0
         this.SaveBtnCtrl.Visible := this.ShowSaveBtn
-        this.EditModeCon.Value := this.EditModeType
-        this.MacroEditStrCon.Value := this.GetMacroEditStr(CommandStr)
-    }
-
-    RefreshCommandBtn() {
-        if (this.EditModeType == 1) {
-            for key, value in this.CmdBtnConMap {
-                value.Enabled := true
-            }
-        }
-        else if (this.EditModeType == 2) {
-            for key, value in this.CmdBtnConMap {
-                cmd := this.GetLineCmd(this.CurEditLineNum, key)
-                value.Enabled := cmd != ""
-            }
-        }
-        else if (this.EditModeType == 3) {
-            for key, value in this.CmdBtnConMap {
-                value.Enabled := true
-            }
-        }
-    }
-
-    ToggleFunc(state) {
-        if (state) {
-            SetTimer this.checkAction, 100
-        }
-        else {
-            SetTimer this.checkAction, 0
-        }
-    }
-
-    CheckIfChangeLineNum() {
-        lineNum := EditGetCurrentLine(this.MacroEditStrCon)
-        if (lineNum != this.CurEditLineNum) {
-            this.CurEditLineNum := lineNum
-            if (this.EditModeType != 1)
-                this.RefreshCommandBtn()
-        }
-    }
-
-    GetMacroEditStr(macro) {
-        CommandArr := SplitMacro(macro)
-        macroEditStr := ""
-        processedIndex := 0
-        for index, value in CommandArr {
-            if (processedIndex >= index)
-                continue
-            processedIndex := index
-            isInterval := StrCompare(SubStr(value, 1, 2), "间隔", false) == 0
-            if (isInterval) {
-                SubCommandArr := StrSplit(value, "_")
-                intervalValue := Integer(SubCommandArr[2])
-                loop {
-                    curIndex := index + A_Index
-                    if (curIndex > CommandArr.Length)
-                        break
-
-                    SubCommandArr := StrSplit(CommandArr[curIndex], "_")
-                    isIntervalAgain := StrCompare(SubStr(SubCommandArr[1], 1, 2), "间隔", false) == 0
-                    if (!isIntervalAgain)
-                        break
-                    intervalValue += Integer(SubCommandArr[2])
-                    processedIndex := curIndex
-                }
-                macroEditStr := index == 1 ? macroEditStr : macroEditStr ","
-                macroEditStr .= "间隔_" intervalValue "`n"
-                continue
-            }
-
-            isPressKey := StrCompare(SubStr(value, 1, 2), "按键", false) == 0
-            if (isPressKey) {
-                macroEditStr .= value
-                loop {
-                    curIndex := index + A_Index
-                    if (curIndex > CommandArr.Length)
-                        break
-
-                    SubCommandArr := StrSplit(CommandArr[curIndex], "_")
-                    isPressKeyAgain := StrCompare(SubStr(SubCommandArr[1], 1, 2), "按键", false) == 0
-                    if (!isPressKeyAgain)
-                        break
-                    macroEditStr .= "," CommandArr[curIndex]
-                    processedIndex := curIndex
-                }
-            }
-
-            if (!isPressKey && !isInterval) {
-                macroEditStr .= value
-            }
-
-            nextIndex := processedIndex + 1
-            isNextInterval := nextIndex <= CommandArr.Length
-            isNextInterval := isNextInterval && StrCompare(SubStr(CommandArr[nextIndex], 1, 2), "间隔", false) == 0
-            if (!isNextInterval) {
-                macroEditStr .= "`n"
-            }
-        }
-        return macroEditStr
-    }
-
-    GetMacroStr(LineArr) {
-        macroStr := ""
-        for index, value in LineArr {
-            macroStr .= value
-            if (index != LineArr.Length) {
-                macroStr .= ","
-            }
-        }
-        macroStr := Trim(macroStr, ",")
-        macroStr := RegExReplace(macroStr, ",+", ",")
-        return macroStr
-    }
-
-    GetFinallyMacroStr() {
-        MacroLineArr := StrSplit(this.MacroEditStrCon.Value, "`n")
-        macro := this.GetMacroStr(MacroLineArr)
-        return macro
-    }
-
-    GetMacroStrLineArr() {
-        MacroLineArr := StrSplit(this.MacroEditStrCon.Value, "`n")
-        if (MacroLineArr.Length == 0) {
-            MacroLineArr.Push("")
-        }
-        return MacroLineArr
-    }
-
-    GetLineCmd(lineNum, symbol) {
-        cmd := ""
-        lineArr := this.GetMacroStrLineArr()
-
-        cmdArr := StrSplit(lineArr[lineNum], ",")
-        for index, value in cmdArr {
-            paramArr := StrSplit(value, "_")
-            curSymbol := paramArr[1]
-            if (curSymbol == symbol) {
-                cmd := value
-                break
-            }
-        }
-
-        return cmd
+        this.TreeBranchMap.Clear()
+        this.InitTreeView(CommandStr)
     }
 
     Backspace() {
-        macro := this.GetFinallyMacroStr()
-        CommandArr := SplitMacro(macro)
-        CommandArr.Pop()
-        macro := this.GetMacroStr(CommandArr)
-        this.MacroEditStrCon.Value := this.GetMacroEditStr(macro)
+        if (this.MacroTreeViewCon.GetCount() == 0)
+            return
+        preItemID := this.MacroTreeViewCon.GetPrev(this.LastItemID)
+        this.MacroTreeViewCon.Delete(this.LastItemID)
+        this.LastItemID := preItemID
     }
 
     ClearStr() {
-        this.MacroEditStrCon.Value := ""
+        this.MacroTreeViewCon.Delete()
+    }
+
+    OnClickRecordTog(*) {
+        MySoftData.RecordToggleCon := this.RecordMacroCon
+        MySoftData.MacroEditGui := this
+        OnHotToolRecordMacro(true)
     }
 
     OnSaveBtnClick() {
-        macroStr := this.GetFinallyMacroStr()
+        macroStr := this.GetMacroStr(0)
         action := this.SureBtnAction
         action(macroStr)
 
@@ -450,140 +308,385 @@ class MacroEditGui {
         action := this.SaveBtnAction
         action()
         this.SureFocusCon.Focus()
-        this.ToggleFunc(false)
     }
 
     OnSureBtnClick() {
-        macroStr := this.GetFinallyMacroStr()
+        macroStr := this.GetMacroStr(0)
         action := this.SureBtnAction
         action(macroStr)
 
         this.SureBtnAction := ""
         this.Gui.Hide()
         this.SureFocusCon.Focus()
-        this.ToggleFunc(false)
     }
 
-    OnOpenSubGui(subGui) {
-        symbol := this.GetSubGuiSymbol(subGui)
-        lineNum := EditGetCurrentLine(this.MacroEditStrCon)
-        this.EditLineNum := lineNum
-        cmd := this.GetLineCmd(lineNum, symbol)
+    ShowContextMenu(ctrl, item, isRightClick, x, y) {
+        if (item == 0)
+            return
 
-        if (this.isContextEdit) {
-            subGui.ShowGui(cmd)
-        }
-        else if (this.EditModeType == 1) {
-            subGui.ShowGui("")
-        }
-        else if (this.EditModeType == 2) {
-            subGui.ShowGui(cmd)
-        }
-        else if (this.EditModeType == 3) {
-            subGui.ShowGui("")
-        }
-    }
+        if (this.ContextMenu == "") {
+            this.ContextMenu := Menu()
+            this.ContextMenu.Add("编辑", (*) => this.MenuHandler("编辑"))
 
-    OnSubGuiSureBtnClick(CommandStr) {
-        global MySoftData
-        LineArr := this.GetMacroStrLineArr()
-        if (this.isContextEdit) {
-            this.isContextEdit := false
-            LineArr := this.OnModifyCmd(LineArr, CommandStr)
-        }
-        else if (this.EditModeType == 1) {
-            LineArr := this.OnAddCmd(LineArr, CommandStr)
-        }
-        else if (this.EditModeType == 2) {
-            LineArr := this.OnModifyCmd(LineArr, CommandStr)
-        }
-        else if (this.EditModeType == 3) {
-            LineArr := this.OnInsertCmd(LineArr, CommandStr)
-        }
-        macro := this.GetMacroStr(LineArr)
-        this.MacroEditStrCon.Value := this.GetMacroEditStr(macro)
-        MySoftData.MacroEditGui := this
-        MySoftData.MacroEditCon := this.MacroEditStrCon
-        MySoftData.RecordToggleCon := this.RecordMacroCon
-        this.DefaultFocusCon.Focus()
-    }
+            this.ContextMenu.Add()  ; 分隔线
+            subMenu := Menu()
+            for value in this.CMDStrArr {
+                subMenu.Add(value, this.MenuHandler.Bind(this, "Pre_" value))
+            }
+            this.ContextMenu.Add("上方插入", subMenu)  ; 将子菜单添加到主菜单
+            subMenu := Menu()
+            for value in this.CMDStrArr {
+                subMenu.Add(value, this.MenuHandler.Bind(this, "Next_" value))
+            }
+            this.ContextMenu.Add("下方插入", subMenu)  ; 将子菜单添加到主菜单
 
-    OnAddCmd(LineArr, CommandStr) {
-        value := LineArr[LineArr.Length]
-        if (value == "") {
-            LineArr[LineArr.Length] := CommandStr
+            this.ContextMenu.Add()  ; 分隔线
+            this.ContextMenu.Add("复制指令", (*) => this.MenuHandler("复制指令"))
+            this.ContextMenu.Add("上方粘贴", (*) => this.MenuHandler("上方粘贴"))
+            this.ContextMenu.Add("下方粘贴", (*) => this.MenuHandler("下方粘贴"))
+
+            this.ContextMenu.Add()  ; 分隔线
+            this.ContextMenu.Add("删除", (*) => this.MenuHandler("删除"))
+        }
+
+        if (this.BranchContextMenu == "") {
+            this.BranchContextMenu := Menu()
+            this.BranchContextMenu.Add("删除", (*) => this.MenuHandler("删除"))
+        }
+
+        this.CurItemID := item
+        this.MacroTreeViewCon.Modify(this.CurItemID, "Select")
+        itemText := this.MacroTreeViewCon.GetText(this.CurItemID)
+        if (itemText == "真" || itemText == "假") {
+            this.BranchContextMenu.Show(x, y)
         }
         else {
-            LineArr[LineArr.Length] .= "," CommandStr
+            this.ContextMenu.Show(x, y)
         }
-        return LineArr
     }
 
-    OnModifyCmd(LineArr, CommandStr) {
-        value := LineArr[this.EditLineNum]
-        cmdArr := StrSplit(value, ",")
-        curCmdSymbol := StrSplit(CommandStr, "_")[1]
-        loop cmdArr.Length {
-            paramArr := StrSplit(cmdArr[A_Index], "_")
-            if (paramArr[1] == curCmdSymbol) {
-                cmdArr[A_Index] := CommandStr
-                break
+    OnDoubleClick(ctrl, info) {
+        if (info == 0)
+            return
+
+        itemText := this.MacroTreeViewCon.GetText(info)
+        if (itemText == "真" || itemText == "假")
+            return
+
+        this.CurItemID := info
+        paramsArr := StrSplit(itemText, "_")
+        subGui := this.SubGuiMap[paramsArr[1]]
+        this.OnOpenSubGui(subGui, 2)
+    }
+
+    MenuHandler(cmdStr, *) {
+        itemText := this.MacroTreeViewCon.GetText(this.CurItemID)
+        paramsArr := StrSplit(cmdStr, "_")
+        if (paramsArr.Length == 2) {
+            modeType := paramsArr[1] == "Pre" ? 3 : 4
+            this.EditModeType := modeType
+            subGui := this.SubGuiMap[paramsArr[2]]
+            this.OnOpenSubGui(subGui, modeType)
+            return
+        }
+
+        switch cmdStr {
+            case "编辑":
+            {
+                paramsArr := StrSplit(itemText, "_")
+                subGui := this.SubGuiMap[paramsArr[1]]
+                this.OnOpenSubGui(subGui, 2)
             }
-        }
-        newValue := ""
-        for index, value in cmdArr {
-            newValue .= "," value
-        }
-        newValue := Trim(newValue, ",")
-        LineArr[this.EditLineNum] := newValue
-        return LineArr
-    }
-
-    OnInsertCmd(LineArr, CommandStr) {
-        LineArr.InsertAt(this.EditLineNum, CommandStr)
-        return LineArr
-    }
-
-    OnChangeEditMode() {
-        this.EditModeType := this.EditModeCon.Value
-        this.CurEditLineNum := 1
-        this.RefreshCommandBtn()
-        this.DefaultFocusCon.Focus()
-    }
-
-    OnChangeRecordMode() {
-        state := this.RecordMacroCon.Value
-        OnToolRecordMacro()
-    }
-
-    OnFinishRecordMacro() {
-        macroStr := this.GetFinallyMacroStr()
-
-        macroArr := StrSplit(ToolCheckInfo.ToolTextCtrl.Value, "`n")
-        macro := macroStr "," this.GetMacroStr(macroArr)
-        macro := Trim(macro, ",")
-        this.MacroEditStrCon.Value := this.GetMacroEditStr(macro)
-        this.DefaultFocusCon.Focus()
-    }
-
-    CreateMenu() {
-        CMenu := Menu()
-        for key, value in this.CmdBtnConMap {
-            cmd := this.GetLineCmd(this.CurEditLineNum, key)
-            if (cmd != "") {
-                action := this.MenuHandler.Bind(this)
-                CMenu.Add("编辑" key, action)
+            case "复制指令":
+            {
+                A_Clipboard := itemText
             }
+            case "上方粘贴":
+            {
+                this.OnPreInsertCmd(A_Clipboard)
+            }
+            case "下方粘贴":
+            {
+                this.OnNextInsertCmd(A_Clipboard)
+            }
+            case "删除":
+            {
+                this.OnDeleteCmd()
+            }
+
         }
-        return CMenu
     }
 
-    MenuHandler(ItemName, ItemPos, MyMenu) {
-        symbol := StrReplace(ItemName, "编辑", "")
-        if (this.SubGuiMap.Has(symbol)) {
-            gui := this.SubGuiMap[symbol]
-            this.isContextEdit := true
-            this.OnOpenSubGui(gui)
+    InitTreeView(CommandStr) {
+        cmdArr := SplitMacro(CommandStr)
+        this.MacroTreeViewCon.Delete()
+        this.LastItemID := 0
+        for cmdStr in cmdArr {
+            root := this.MacroTreeViewCon.Add(cmdStr)
+            this.LastItemID := root
+            this.TreeAddBranch(root, cmdStr)
+        }
+    }
+
+    RefreshTree(itemID) {
+        CommandStr := this.MacroTreeViewCon.GetText(itemID)
+        paramsArr := StrSplit(CommandStr, "_")
+        if (this.TreeBranchMap.Has(paramsArr[2])) {
+            this.TreeBranchMap.Delete(paramsArr[2])
+        }
+        subItem := this.MacroTreeViewCon.GetChild(this.CurItemID)
+        while (subItem) {
+            this.MacroTreeViewCon.Delete(subItem)
+            subItem := this.MacroTreeViewCon.GetChild(this.CurItemID)
+        }
+        this.TreeAddBranch(this.CurItemID, CommandStr)
+        this.TreeExpand(this.CurItemID, 2)
+    }
+
+    TreeAddBranch(root, cmdStr) {
+        paramArr := StrSplit(cmdStr, "_")
+        IsSearch := StrCompare(paramArr[1], "搜索", false) == 0
+        IsSearchPro := StrCompare(paramArr[1], "搜索Pro", false) == 0
+        IsIf := StrCompare(paramArr[1], "如果", false) == 0
+
+        if (this.TreeBranchMap.Has(paramArr[2]))
+            return
+
+        TrueMacro := ""
+        FalseMacro := ""
+        if (IsIf) {
+            saveStr := IniRead(CompareFile, IniSection, paramArr[2], "")
+            Data := JSON.parse(saveStr, , false)
+
+            TrueMacro := Data.TrueMacro
+            FalseMacro := Data.FalseMacro
+        }
+        else if (IsSearch) {
+            saveStr := IniRead(SearchFile, IniSection, paramArr[2], "")
+            Data := JSON.parse(saveStr, , false)
+
+            TrueMacro := Data.TrueMacro
+            FalseMacro := Data.FalseMacro
+        }
+        else if (IsSearchPro) {
+            saveStr := IniRead(SearchProFile, IniSection, paramArr[2], "")
+            Data := JSON.parse(saveStr, , false)
+
+            TrueMacro := Data.TrueMacro
+            FalseMacro := Data.FalseMacro
+        }
+
+        if (TrueMacro != "" || FalseMacro != "") {
+            this.TreeBranchMap[paramArr[2]] := root
+        }
+
+        if (TrueMacro != "") {
+            trueRoot := this.MacroTreeViewCon.Add("真", root)
+            this.TreeAddSubTree(trueRoot, TrueMacro)
+        }
+
+        if (FalseMacro != "") {
+            falseRoot := this.MacroTreeViewCon.Add("假", root)
+            this.TreeAddSubTree(falseRoot, FalseMacro)
+        }
+    }
+
+    TreeAddSubTree(root, CommandStr) {
+        cmdArr := SplitMacro(CommandStr)
+        for cmdStr in cmdArr {
+            subRoot := this.MacroTreeViewCon.Add(cmdStr, root)
+            this.TreeAddBranch(subRoot, cmdStr)
+        }
+    }
+
+    ;打开子指令编辑器
+    OnOpenSubGui(subGui, modeType := 1) {
+        this.EditModeType := modeType
+        if ObjHasOwnProp(subGui, "VariableObjArr") {
+            macroStr := this.GetMacroStr(0)
+            VariableObjArr := GetGuiVariableObjArr(macroStr, this.VariableObjArr)
+            subGui.VariableObjArr := VariableObjArr
+        }
+
+        if (modeType == 2) {
+            CommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
+            subGui.ShowGui(CommandStr)
+            return
+        }
+        subGui.ShowGui("")
+    }
+
+    ;确定子指令编辑器
+    OnSubGuiSureBtnClick(CommandStr) {
+        if (this.EditModeType == 1) {
+            this.OnAddCmd(CommandStr)
+        }
+        else if (this.EditModeType == 2) {
+            this.OnModifyCmd(CommandStr)
+        }
+        else if (this.EditModeType == 3) {
+            this.OnPreInsertCmd(CommandStr)
+        }
+        else if (this.EditModeType == 4) {
+            this.OnNextInsertCmd(CommandStr)
+        }
+        MySoftData.RecordToggleCon := this.RecordMacroCon
+        MySoftData.MacroEditGui := this
+    }
+
+    ;添加指令
+    OnAddCmd(CommandStr) {
+        root := this.MacroTreeViewCon.Add(CommandStr)
+        this.TreeAddBranch(root, CommandStr)
+        this.LastItemID := root
+    }
+
+    ;修改指令
+    OnModifyCmd(CommandStr) {
+        this.MacroTreeViewCon.Modify(this.CurItemID, , CommandStr)
+        paramsArr := StrSplit(CommandStr, "_")
+        ParentID := this.MacroTreeViewCon.GetParent(this.CurItemID)
+        if (ParentID == 0) {
+            this.RefreshTree(this.CurItemID)
+            return
+        }
+
+        macroStr := this.GetMacroStr(ParentID)
+        isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
+        RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
+        RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
+        this.CurItemID := RealItemID
+        if (this.TreeBranchMap.Has(paramsArr[2])) {
+            this.TreeBranchMap.Delete(paramsArr[2])
+        }
+
+        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
+        this.RefreshTree(this.CurItemID)
+    }
+
+    OnDeleteCmd() {
+        ParentID := this.MacroTreeViewCon.GetParent(this.CurItemID)
+        if (ParentID == 0) {
+            this.MacroTreeViewCon.Delete(this.CurItemID)
+            return
+        }
+
+        itemText := this.MacroTreeViewCon.GetText(this.CurItemID)
+        isClear := false
+        if (itemText == "真" || itemText == "假") {
+            isTrueMacro := itemText == "真"
+            isClear := true
+            RealItemID := ParentID
+            RealCommandStr := this.MacroTreeViewCon.GetText(ParentID)
+            this.CurItemID := ParentID
+            macroStr := ""
+        }
+        else {
+            this.MacroTreeViewCon.Delete(this.CurItemID)
+            macroStr := this.GetMacroStr(ParentID)
+            isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
+            RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
+            RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
+            this.CurItemID := RealItemID
+        }
+
+        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, isClear)
+        this.RefreshTree(this.CurItemID)
+    }
+
+    ;插入指令
+    OnPreInsertCmd(CommandStr) {
+        ParentID := this.MacroTreeViewCon.GetParent(this.CurItemID)
+        PreItemID := this.MacroTreeViewCon.GetPrev(this.CurItemID)
+        Seq := PreItemID == 0 ? "First" : PreItemID
+        this.MacroTreeViewCon.Add(CommandStr, ParentID, Seq)
+        if (ParentID == 0) {
+            this.TreeAddBranch(this.CurItemID, CommandStr)
+            return
+        }
+
+        macroStr := this.GetMacroStr(ParentID)
+        isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
+        this.CurItemID := this.MacroTreeViewCon.GetParent(ParentID)
+        RealCommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
+        this.TreeAddBranch(this.CurItemID, CommandStr)
+    }
+
+    ;插入指令
+    OnNextInsertCmd(CommandStr) {
+        ParentID := this.MacroTreeViewCon.GetParent(this.CurItemID)
+        newItemID := this.MacroTreeViewCon.Add(CommandStr, ParentID, this.CurItemID)
+        if (this.CurItemID == this.LastItemID)
+            this.LastItemID := newItemID
+
+        if (ParentID == 0) {
+            this.TreeAddBranch(this.CurItemID, CommandStr)
+            return
+        }
+
+        macroStr := this.GetMacroStr(ParentID)
+        isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
+        this.CurItemID := this.MacroTreeViewCon.GetParent(ParentID)
+        RealCommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
+        this.TreeAddBranch(this.CurItemID, CommandStr)
+    }
+
+    TreeExpand(ItemID, Num) {
+        if (Num == 0)
+            return
+
+        rootItemID := this.MacroTreeViewCon.GetChild(ItemID)
+        while (rootItemID) {
+            this.MacroTreeViewCon.Modify(rootItemID, "Expand")
+            this.TreeExpand(rootItemID, Num - 1)
+            rootItemID := this.MacroTreeViewCon.GetNext(rootItemID)
+        }
+    }
+
+    GetMacroStr(ItemID) {
+        macroStr := ""
+        rootItemID := this.MacroTreeViewCon.GetChild(ItemID)
+        while (rootItemID) {
+            cmdStr := this.MacroTreeViewCon.GetText(rootItemID)
+            macroStr .= cmdStr ","
+            rootItemID := this.MacroTreeViewCon.GetNext(rootItemID)
+        }
+        macroStr := Trim(macroStr, ",")
+        return macroStr
+    }
+
+    SaveCommandData(RealCommandStr, macroStr, isTrue, isClear) {
+        paramArr := StrSplit(RealCommandStr, "_")
+        IsSearch := StrCompare(paramArr[1], "搜索", false) == 0
+        IsSearchPro := StrCompare(paramArr[1], "搜索Pro", false) == 0
+        IsIf := StrCompare(paramArr[1], "如果", false) == 0
+        FileName := ""
+        if (IsIf) {
+            FileName := CompareFile
+        } else if (IsSearch) {
+            FileName := SearchFile
+        } else if (IsSearchPro) {
+            FileName := SearchProFile
+        }
+        if (FileName == "")
+            return
+        saveStr := IniRead(FileName, IniSection, paramArr[2], "")
+        Data := JSON.parse(saveStr, , false)
+        if (isTrue && isClear)
+            Data.TrueMacro := ""
+        else if (isTrue && !isClear)
+            Data.TrueMacro := macroStr
+        else if (!isTrue && isClear)
+            Data.FalseMacro := ""
+        else {
+            Data.FalseMacro := macroStr
+        }
+        saveStr := JSON.stringify(Data, 0)
+        IniWrite(saveStr, FileName, IniSection, Data.SerialStr)
+        if (MySoftData.DataCacheMap.Has(Data.SerialStr)) {
+            MySoftData.DataCacheMap.Delete(Data.SerialStr)
         }
     }
 }

@@ -2,8 +2,7 @@ BindScrollHotkey(key, action) {
     if (MySoftData.SB == "")
         return
 
-    processInfo := Format("ahk_exe {}", "AutoHotkey64.exe")
-    HotIfWinActive(processInfo)
+    HotIfWinActive("RMTv")
     Hotkey(key, action)
     HotIfWinActive
 }
@@ -37,17 +36,19 @@ GetClosureAction(tableItem, macro, index, func) {     ;获取闭包函数
 OnTriggerMacroKeyAndInit(tableItem, macro, index) {
     tableItem.CmdActionArr[index] := []
     tableItem.KilledArr[index] := false
+    tableItem.PauseArr[index] := false
     tableItem.ActionCount[index] := 0
-    tableItem.VariableMapArr[index]["循环次数"] := 1
-    tableItem.SuccessClearActionArr[index] := Map()
+    tableItem.VariableMapArr[index]["当前循环次数"] := 1
     isContinue := tableItem.TKArr.Has(index) && MySoftData.ContinueKeyMap.Has(tableItem.TKArr[index]) && tableItem.LoopCountArr[
         index] == 1
     isLoop := tableItem.LoopCountArr[index] == -1
-
+    MySetTableItemState(tableItem.index, index, 1)
     loop {
         isOver := tableItem.ActionCount[index] >= tableItem.LoopCountArr[index]
         isFirst := tableItem.ActionCount[index] == 0
         isSecond := tableItem.ActionCount[index] == 1
+
+        WaitIfPaused(tableItem.index, index)
 
         if (tableItem.KilledArr[index])
             break
@@ -67,18 +68,29 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
 
         OnTriggerMacroOnce(tableItem, macro, index)
         tableItem.ActionCount[index]++
-        tableItem.VariableMapArr[index]["循环次数"] += 1
+        tableItem.VariableMapArr[index]["当前循环次数"] += 1
     }
-    ; OnFinishMacro(tableItem, macro, index)
+    OnFinishMacro(tableItem, macro, index)
+}
+
+OnFinishMacro(tableItem, macro, index) {
+    if (tableItem.TriggerTypeArr[index] == 4) { ;开关状态下
+        tableItem.ToggleStateArr[index] := false
+    }
+
+    itemState := tableItem.KilledArr[index] ? 3 : 0
+    MySetTableItemState(tableItem.index, index, itemState)
 }
 
 OnTriggerMacroOnce(tableItem, macro, index) {
     global MySoftData
     cmdArr := SplitMacro(macro)
 
-    loop cmdArr.Length {
+    for value in cmdArr {
         if (tableItem.KilledArr[index])
             break
+
+        WaitIfPaused(tableItem.index, index)
 
         paramArr := StrSplit(cmdArr[A_Index], "_")
         IsMouseMove := StrCompare(paramArr[1], "移动", false) == 0
@@ -86,47 +98,65 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         IsSearchPro := StrCompare(paramArr[1], "搜索Pro", false) == 0
         IsPressKey := StrCompare(paramArr[1], "按键", false) == 0
         IsInterval := StrCompare(paramArr[1], "间隔", false) == 0
-        IsFile := StrCompare(paramArr[1], "文件", false) == 0
+        IsRun := StrCompare(paramArr[1], "运行", false) == 0
         IsIf := StrCompare(paramArr[1], "如果", false) == 0
-        IsCoord := StrCompare(paramArr[1], "移动Pro", false) == 0
+        IsMMPro := StrCompare(paramArr[1], "移动Pro", false) == 0
         IsOutput := StrCompare(paramArr[1], "输出", false) == 0
-        IsStop := StrCompare(paramArr[1], "终止", false) == 0
         IsVariable := StrCompare(paramArr[1], "变量", false) == 0
-        IsSubMacro := StrCompare(paramArr[1], "子宏", false) == 0
+        IsExVariable := StrCompare(paramArr[1], "变量提取", false) == 0
+        IsSubMacro := StrCompare(paramArr[1], "宏操作", false) == 0
         IsOperation := StrCompare(paramArr[1], "运算", false) == 0
         IsBGMouse := StrCompare(paramArr[1], "后台鼠标", false) == 0
-        if (IsMouseMove) {
-            OnMouseMove(tableItem, cmdArr[A_Index], index)
+        IsRMT := StrCompare(paramArr[1], "RMT指令", false) == 0
+
+        if (MySoftData.CMDTip) {
+            NoRemark := IsMouseMove || IsPressKey || IsInterval || IsRMT
+            hasRemark := !NoRemark && paramArr.Length > 2
+            tipStr := hasRemark ? paramArr[1] "_" paramArr[3] : cmdArr[A_Index]
+            MyCMDReportAciton(tipStr)
         }
-        else if (IsSearch || IsSearchPro) {
-            OnSearch(tableItem, cmdArr[A_Index], index)
+
+        if (IsInterval) {
+            OnInterval(tableItem, cmdArr[A_Index], index)
         }
         else if (IsPressKey) {
             OnPressKey(tableItem, cmdArr[A_Index], index)
         }
-        else if (IsInterval) {
-            OnInterval(tableItem, cmdArr[A_Index], index)
+        else if (IsSearch || IsSearchPro) {
+            isLoopFound := OnSearch(tableItem, cmdArr[A_Index], index)
+            if (isLoopFound != "" && isLoopFound == false) {
+                cmdArr.InsertAt(A_Index + 1, cmdArr[A_Index])
+            }
         }
-        else if (IsFile) {
+        else if (IsMouseMove) {
+            OnMouseMove(tableItem, cmdArr[A_Index], index)
+        }
+        else if (IsMMPro) {
+            OnMMPro(tableItem, cmdArr[A_Index], index)
+        }
+        else if (IsRun) {
             OnRunFile(tableItem, cmdArr[A_Index], index)
         }
         else if (IsIf) {
             OnCompare(tableItem, cmdArr[A_Index], index)
         }
-        else if (IsCoord) {
-            OnCoord(tableItem, cmdArr[A_Index], index)
-        }
         else if (IsOutput) {
             OnOutput(tableItem, cmdArr[A_Index], index)
-        }
-        else if (IsStop) {
-            OnStop(tableItem, cmdArr[A_Index], index)
         }
         else if (IsVariable) {
             OnVariable(tableItem, cmdArr[A_Index], index)
         }
+        else if (IsExVariable) {
+            isLoopFound := OnExVariable(tableItem, cmdArr[A_Index], index)
+            if (isLoopFound != "" && isLoopFound == false) {
+                cmdArr.InsertAt(A_Index + 1, cmdArr[A_Index])
+            }
+        }
         else if (IsSubMacro) {
-            OnSubMacro(tableItem, cmdArr[A_Index], index)
+            newCmdArr := OnSubMacro(tableItem, cmdArr[A_Index], index)
+            if (newCmdArr != "") {
+                cmdArr.InsertAt(A_Index + 1, newCmdArr*)
+            }
         }
         else if (IsOperation) {
             OnOperation(tableItem, cmdArr[A_Index], index)
@@ -134,44 +164,50 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         else if (IsBGMouse) {
             OnBGMouse(tableItem, cmdArr[A_Index], index)
         }
+        else if (IsRMT) {
+            OnRMTCMD(tableItem, cmdArr[A_Index], index)
+        }
     }
 }
 
 OnSearch(tableItem, cmd, index) {
+
     paramArr := StrSplit(cmd, "_")
     dataFile := StrCompare(paramArr[1], "搜索", false) == 0 ? SearchFile : SearchProFile
-    saveStr := IniRead(dataFile, IniSection, paramArr[2], "")
-    Data := JSON.parse(saveStr, , false)
-    searchCount := Integer(Data.SearchCount)
-    searchInterval := Integer(Data.SearchInterval)
-    tableItem.SuccessClearActionArr[index].Set(Data.SerialStr, [])
-    MacroType := tableItem.MacroTypeArr[index]
+    Data := GetMacroCMDData(dataFile, paramArr[2])
+    if (Data.SearchCount == -1) {
+        isLoopFound := OnSearchOnce(tableItem, Data, index)
+        if (!isLoopFound) {
+            FloatInterval := GetFloatTime(Data.SearchInterval, MySoftData.PreIntervalFloat)
+            Sleep(FloatInterval)
+        }
+        return isLoopFound
+    }
+    else {
+        loop Data.SearchCount {
+            WaitIfPaused(tableItem.index, index)
 
-    LastSumTime := 0
-    loop searchCount {
-        if (!tableItem.SuccessClearActionArr[index].Has(Data.SerialStr)) ;第一次搜索成功就退出
-            break
+            if (tableItem.KilledArr[index])
+                return
 
-        if (tableItem.KilledArr[index])
-            break
+            isFound := OnSearchOnce(tableItem, Data, index)
+            if (isFound)
+                return
 
-        FloatInterval := GetFloatTime(searchInterval, MySoftData.PreIntervalFloat)
-        if (MacroType == 1) {
-            OnSearchOnce(tableItem, Data, index, A_Index == searchCount)
-            if (searchCount != A_Index)
+            if (Data.SearchCount > A_Index) {
+                FloatInterval := GetFloatTime(Data.SearchInterval, MySoftData.PreIntervalFloat)
                 Sleep(FloatInterval)
-        }
-        else if (MacroType == 2) {
-            if (A_Index == 1) {
-                OnSearchOnce(tableItem, Data, index, A_Index == searchCount)
             }
-            else {
-                action := OnSearchOnce.Bind(tableItem, Data, index, A_Index == searchCount)
-                tableItem.SuccessClearActionArr[index][Data.SerialStr].Push(action)
-                SetTimer action, -LastSumTime
-            }
-            LastSumTime := LastSumTime + FloatInterval
         }
+
+        if (Data.ResultToggle) {
+            VariableMap := tableItem.VariableMapArr[index]
+            VariableMap[Data.ResultSaveName] := Data.FalseValue
+        }
+
+        if (Data.FalseMacro == "")
+            return
+        OnTriggerMacroOnce(tableItem, Data.FalseMacro, index)
     }
 }
 
@@ -182,41 +218,36 @@ FindImage(targetPath, searchX, searchY, searchW, searchH, matchThreshold, x, y) 
         "Int", matchThreshold, "Int*", x, "Int*", y, "Cdecl Int")
 }
 
-OnSearchOnce(tableItem, Data, index, isFinally) {
+OnSearchOnce(tableItem, Data, index) {
     X1 := Integer(Data.StartPosX)
     Y1 := Integer(Data.StartPosY)
     X2 := Integer(Data.EndPosX)
     Y2 := Integer(Data.EndPosY)
     VariableMap := tableItem.VariableMapArr[index]
-    MacroType := tableItem.MacroTypeArr[index]
 
     CoordMode("Pixel", "Screen")
     if (Data.SearchType == 1) {
-        OutputVarX := 0
-        OutputVarY := 0
-        found := FindImage(Data.SearchImagePath, X1, Y1, X2 - X1, Y2 - Y1, Data.Similar, &OutputVarX, &
-            OutputVarY)
+        if (Data.SearchImageType == 1) {
+            OutputVarX := 0
+            OutputVarY := 0
+            found := FindImage(Data.SearchImagePath, X1, Y1, X2 - X1, Y2 - Y1, Data.Similar, &OutputVarX, &
+                OutputVarY)
+        }
+        else {
+            Similar := Integer(-2.55 * Data.Similar + 255)
+            SearchInfo := Format("*{} *w0 *h0 {}", Similar, Data.SearchImagePath)
+            found := ImageSearch(&OutputVarX, &OutputVarY, X1, Y1, X2, Y2, SearchInfo)
+        }
     }
     else if (Data.SearchType == 2) {
         color := "0X" Data.SearchColor
-        similar := Integer(-2.55 * Data.Similar + 255)
-        found := PixelSearch(&OutputVarX, &OutputVarY, X1, Y1, X2, Y2, color, similar)
+        Similar := Integer(-2.55 * Data.Similar + 255)
+        found := PixelSearch(&OutputVarX, &OutputVarY, X1, Y1, X2, Y2, color, Similar)
     }
     else if (Data.SearchType == 3) {
         text := Data.SearchText
+        hasValue := TryGetVariableValue(&text, tableItem, index, Data.SearchText, false)
         found := CheckScreenContainText(&OutputVarX, &OutputVarY, X1, Y1, X2, Y2, text, Data.OCRType)
-    }
-
-    if (found || isFinally) {
-        ;清除后续的搜索和搜索记录
-        if (tableItem.SuccessClearActionArr[index].Has(Data.SerialStr)) {
-            SuccessClearActionArr := tableItem.SuccessClearActionArr[index].Get(Data.SerialStr)
-            loop SuccessClearActionArr.Length {
-                action := SuccessClearActionArr[A_Index]
-                SetTimer action, 0
-            }
-            tableItem.SuccessClearActionArr[index].Delete(Data.SerialStr)
-        }
     }
 
     if (found) {
@@ -241,100 +272,74 @@ OnSearchOnce(tableItem, Data, index, isFinally) {
 
         Pos[1] := GetFloatValue(Pos[1], MySoftData.CoordXFloat)
         Pos[2] := GetFloatValue(Pos[2], MySoftData.CoordYFloat)
-        if (Data.AutoType == 3) {
+        if (Data.MouseActionType == 4) {
+            SetDefaultMouseSpeed(Speed)
+            Click(Format("{} {} {}"), Pos[1], Pos[2], 2)
+        }
+        if (Data.MouseActionType == 3) {
             SetDefaultMouseSpeed(Speed)
             Click(Format("{} {} {}"), Pos[1], Pos[2], Data.ClickCount)
         }
-        else if (Data.AutoType == 2) {
+        else if (Data.MouseActionType == 2) {
             MouseMove(Pos[1], Pos[2], Speed)
         }
 
-        if (Data.TrueCommandStr == "")
-            return
+        if (Data.TrueMacro == "")
+            return true
 
-        if (MacroType == 1) {
-            OnTriggerMacroOnce(tableItem, Data.TrueCommandStr, index)
-        }
-        else if (MacroType == 2) {
-            action := OnTriggerMacroOnce.Bind(tableItem, Data.TrueCommandStr, index)
-            SetTimer(action, -1)
-        }
+        OnTriggerMacroOnce(tableItem, Data.TrueMacro, index)
+        return true
     }
 
-    if (isFinally && !found) {
-
-        if (Data.ResultToggle) {
-            VariableMap[Data.ResultSaveName] := Data.FalseValue
-        }
-
-        if (Data.FalseCommandStr == "")
-            return
-
-        if (MacroType == 1) {
-            OnTriggerMacroOnce(tableItem, Data.FalseCommandStr, index)
-        }
-        else if (MacroType == 2) {
-            action := OnTriggerMacroOnce.Bind(tableItem, Data.FalseCommandStr, index)
-            SetTimer(action, -1)
-        }
-    }
+    return false
 }
 
 OnRunFile(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(FileFile, IniSection, paramArr[2], "")
-    fileData := JSON.parse(saveStr, , false)
+    Data := GetMacroCMDData(RunFile, paramArr[2])
 
-    if (fileData.ProcessName != "") {
-        Run(fileData.ProcessName)
-        return
-    }
-
-    isMp3 := RegExMatch(fileData.FilePath, ".mp3$")
-    if (isMp3 && fileData.BackPlay) {
-        playAudioCmd := Format('wscript.exe "{}" "{}"', vbsPath, fileData.FilePath)
+    isMp3 := RegExMatch(Data.RunPath, ".mp3$")
+    if (isMp3 && Data.BackPlay) {
+        playAudioCmd := Format('wscript.exe "{}" "{}"', VBSPath, Data.RunPath)
         Run(playAudioCmd)
         return
     }
 
-    Run(fileData.FilePath)
+    Run(Data.RunPath)
 }
 
 OnCompare(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(CompareFile, IniSection, paramArr[2], "")
-    data := JSON.parse(saveStr, , false)
+    Data := GetMacroCMDData(CompareFile, paramArr[2])
     VariableMap := tableItem.VariableMapArr[index]
-    result := data.LogicalType == 1 ? true : false
+    result := Data.LogicalType == 1 ? true : false
     loop 4 {
-        if (!data.ToggleArr[A_Index] || data.NameArr[A_Index] == "空")
+        if (!Data.ToggleArr[A_Index])
             continue
 
-        Name := data.NameArr[A_Index]
-        OhterName := data.VariableArr[A_Index]
-        if (!VariableMap.Has(Name)) {
-            MsgBox("当前环境不存在变量 " Name)
-            return
+        if (Data.CompareTypeArr[A_Index] == 7) {        ;变量是否存在
+            hasValue := TryGetVariableValue(&Value, tableItem, index, Data.NameArr[A_Index], false)
+            currentComparison := hasValue
+        }
+        else {
+            hasValue := TryGetVariableValue(&Value, tableItem, index, Data.NameArr[A_Index])
+            hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, Data.VariableArr[A_Index])
+            if (!hasValue || !hasOtherValue) {
+                return
+            }
+
+            currentComparison := false
+            switch Data.CompareTypeArr[A_Index] {
+                case 1: currentComparison := Value > OtherValue
+                case 2: currentComparison := Value >= OtherValue
+                case 3: currentComparison := Value == OtherValue
+                case 4: currentComparison := Value <= OtherValue
+                case 5: currentComparison := Value < OtherValue
+                case 6: currentComparison := CheckContainText(Value, OtherValue)
+            }
         }
 
-        if (OhterName != "空" && !VariableMap.Has(OhterName)) {
-            MsgBox("当前环境不存在变量 " OhterName)
-            return
-        }
-
-        Value := VariableMap[Name]
-        OtherValue := OhterName != "空" ? VariableMap[OhterName] : data.ValueArr[A_Index]
-
-        currentComparison := false
-        switch data.CompareTypeArr[A_Index] {
-            case 1: currentComparison := Value > OtherValue
-            case 2: currentComparison := Value >= OtherValue
-            case 3: currentComparison := Value == OtherValue
-            case 4: currentComparison := Value <= OtherValue
-            case 5: currentComparison := Value < OtherValue
-        }
-
-        if (data.LogicalType == 1) {
+        if (Data.LogicalType == 1) {
             result := result && currentComparison
             if (!result)
                 break
@@ -345,75 +350,56 @@ OnCompare(tableItem, cmd, index) {
         }
     }
 
-    if (data.SaveToggle) {
-        SaveValue := result ? data.TrueValue : data.FalseValue
-        VariableMap[data.SaveName] := SaveValue
+    if (Data.SaveToggle) {
+        SaveValue := result ? Data.TrueValue : Data.FalseValue
+        if (Data.IsGlobal) {
+            MySetGlobalVariable(Data.SaveName, SaveValue, Data.IsIgnoreExist)
+        }
+        else {
+            LocalVariableMap := tableItem.VariableMapArr[index]
+            if (!Data.IsIgnoreExist || !LocalVariableMap.Has(Data.SaveName))
+                LocalVariableMap[Data.SaveName] := SaveValue
+        }
     }
 
-    MacroType := tableItem.MacroTypeArr[index]
     macro := ""
-    macro := result && data.TrueMacro != "" ? data.TrueMacro : macro
-    macro := !result && data.FalseMacro != "" ? data.FalseMacro : macro
+    macro := result && Data.TrueMacro != "" ? Data.TrueMacro : macro
+    macro := !result && Data.FalseMacro != "" ? Data.FalseMacro : macro
     if (macro == "")
         return
 
-    if (MacroType == 1) {
-        OnTriggerMacroOnce(tableItem, macro, index)
-    }
-    else if (MacroType == 2) {
-        action := OnTriggerMacroOnce.Bind(tableItem, macro, index)
-        SetTimer(action, -1)
-    }
+    OnTriggerMacroOnce(tableItem, macro, index)
 }
 
-OnCoord(tableItem, cmd, index) {
+OnMMPro(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(CoordFile, IniSection, paramArr[2], "")
-    Data := JSON.parse(saveStr, , false)
-    MacroType := tableItem.MacroTypeArr[index]
+    Data := GetMacroCMDData(MMProFile, paramArr[2])
 
     LastSumTime := 0
     loop Data.Count {
+        WaitIfPaused(tableItem.index, index)
+
         if (tableItem.KilledArr[index])
             return
 
         FloatInterval := GetFloatTime(Data.Interval, MySoftData.PreIntervalFloat)
-        if (MacroType == 1) {
-            OnCoordOnce(tableItem, index, Data)
-            if (A_Index != Data.Count)
-                Sleep(FloatInterval)
-        }
-        else if (MacroType == 2) {
-            if (A_Index == 1) {
-                OnCoordOnce(tableItem, index, Data)
-            }
-            else {
-                tempAction := OnCoordOnce.Bind(tableItem, index, Data)
-                tableItem.CmdActionArr[index].Push(tempAction)
-                SetTimer tempAction, -LastSumTime
-            }
-            LastSumTime := LastSumTime + FloatInterval
-        }
+        OnMMProOnce(tableItem, index, Data)
+        if (A_Index != Data.Count)
+            Sleep(FloatInterval)
     }
 }
 
-OnCoordOnce(tableItem, index, Data) {
+OnMMProOnce(tableItem, index, Data) {
     SendMode("Event")
     CoordMode("Mouse", "Screen")
     Speed := 100 - Data.Speed
-    VariableMap := tableItem.VariableMapArr[index]
-    if (Data.NameX != "空" && !VariableMap.Has(Data.NameX)) {
-        MsgBox("当前环境不存在变量 " Data.NameX)
+
+    hasPosVarX := TryGetVariableValue(&PosX, tableItem, index, Data.PosVarX)
+    hasPosVarY := TryGetVariableValue(&PosY, tableItem, index, Data.PosVarY)
+    if (!hasPosVarX || !hasPosVarY) {
         return
     }
 
-    if (Data.NameY != "空" && !VariableMap.Has(Data.NameY)) {
-        MsgBox("当前环境不存在变量 " Data.NameY)
-        return
-    }
-
-    PosX := Data.NameX != "空" ? VariableMap[Data.NameX] : Data.PosX
-    PosY := Data.NameY != "空" ? VariableMap[Data.NameY] : Data.PosY
     PosX := GetFloatValue(PosX, MySoftData.CoordXFloat)
     PosY := GetFloatValue(PosY, MySoftData.CoordYFloat)
     if (Data.IsGameView) {
@@ -429,81 +415,60 @@ OnCoordOnce(tableItem, index, Data) {
 
 OnOutput(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(OutputFile, IniSection, paramArr[2], "")
-    Data := JSON.parse(saveStr, , false)
-    VariableMap := tableItem.VariableMapArr[index]
-    OutputText := Data.Text
-    if (Data.Name != "空" && Data.Name != "")
-        OutputText := VariableMap[Data.Name]
-    if (Data.IsCover) {
-        A_Clipboard := OutputText
+    Data := GetMacroCMDData(OutputFile, paramArr[2])
+    Content := ""
+    if (Data.ContentType == 1)
+        Content := GetOutPutContent(tableItem, index, Data.Text)
+    else if (Data.ContentType == 2) {
+        hasValue := TryGetVariableValue(&Content, tableItem, index, Data.VariName)
+        if (!hasValue)
+            return
+    }
+    else if (Data.ContentType == 3) {
+        Content := GetOutPutContent(tableItem, index, Data.Text)
+        hasValue := TryGetVariableValue(&VariValue, tableItem, index, Data.VariName, false)
+        if (hasValue)
+            Content := Content "" VariValue
     }
 
-    if (Data.OutputType == 1) {
-        SendText(OutputText)
+    if (Data.OutputType == 1) {     ;send
+        SendText(Content)
     }
-    else if (Data.OutputType == 2) {
+    else if (Data.OutputType == 2) {    ;粘贴
+        A_Clipboard := Content
         Send "{Blind}^v"
     }
-    else if (Data.OutputType == 3) {
+    else if (Data.OutputType == 3) {    ;粘贴
+        A_Clipboard := Content
         MyWinClip.Paste(A_Clipboard)
     }
-}
-
-OnStop(tableItem, cmd, index) {
-    paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(StopFile, IniSection, paramArr[2], "")
-    stopData := JSON.parse(saveStr, , false)
-    tableIndex := 0
-    if (stopData.StopType == 1) {       ;终止自己
-        KillTableItemMacro(tableItem, index)
-        return
+    else if (Data.OutputType == 4) {    ;提示
+        MyToolTipContent(Content)
     }
-    else if (stopData.StopType == 2) {      ;终止按键宏
-        tableIndex := 1
+    else if (Data.OutputType == 5) {    ;剪切板
+        A_Clipboard := Content
     }
-    else if (stopData.StopType == 3) {      ;终止字串宏
-        tableIndex := 2
+    else if (Data.OutputType == 6) {    ;弹窗
+        MyMsgBoxContent(Content)
     }
-    else if (stopData.StopType == 4) {      ;终止子宏
-        tableIndex := 3
+    else if (Data.OutputType == 7) {    ;语音
+        spovice := ComObject("sapi.spvoice")
+        spovice.Speak(Content)
     }
-    stopTableItem := MySoftData.TableInfo[tableIndex]
-    isWork := stopTableItem.IsWorkArr[stopData.StopIndex]
-    if (isWork || MySoftData.isWork) {
-        MySubMacroStopAction(tableIndex, stopData.StopIndex)
-        return
-    }
-
-    KillTableItemMacro(stopTableItem, stopData.StopIndex)
 }
 
 OnSubMacro(tableItem, cmd, index) {
+    global MySoftData
     paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(SubMacroFile, IniSection, paramArr[2], "")
-    Data := JSON.parse(saveStr, , false)
-    macroTableIndex := 1
-    macroItem := tableItem
-    macro := tableItem.MacroArr[index]
-    macroIndex := Data.Type != 1 ? Data.Index : index
-    if (Data.Type == 2) {
-        macroTableIndex := 1
-        macroItem := MySoftData.TableInfo[1]
-    }
-    else if (Data.Type == 3) {
-        macroTableIndex := 2
-        macroItem := MySoftData.TableInfo[2]
-    }
-    else if (Data.Type == 4) {
-        macroTableIndex := 3
-        macroItem := MySoftData.TableInfo[3]
-    }
+    Data := GetMacroCMDData(SubMacroFile, paramArr[2])
+    macroIndex := Data.MacroType == 1 ? index : Data.Index
+    macroTableIndex := Data.MacroType == 1 ? tableItem.Index : Data.MacroType - 1
+    macroItem := Data.MacroType == 1 ? tableItem : MySoftData.TableInfo[macroTableIndex]
 
     redirect := macroItem.SerialArr.Length < Data.Index || macroItem.SerialArr[Data.Index] != Data.MacroSerial
-    if (Data.Type != 1 && redirect) {
+    if (Data.MacroType != 1 && redirect) {
         loop macroItem.ModeArr.Length {
             if (Data.MacroSerial == macroItem.SerialArr[A_Index]) {
-                macro := macroItem.MacroArr[A_Index]
                 macroIndex := A_Index
                 break
             }
@@ -511,79 +476,120 @@ OnSubMacro(tableItem, cmd, index) {
     }
 
     if (Data.CallType == 1) {   ;插入
+        macro := macroItem.MacroArr[macroIndex]
+        resultMacro := macro
         LoopCount := macroItem.LoopCountArr[macroIndex]
         IsLoop := macroItem.LoopCountArr[macroIndex] == -1
-        loop {
-            if (!IsLoop && LoopCount <= 0)
-                break
-
-            OnTriggerMacroOnce(tableItem, macro, index)
-            LoopCount -= 1
+        if (!IsLoop) {
+            loop LoopCount {
+                if (A_Index == 1)
+                    continue
+                resultMacro .= "," macro
+            }
         }
+        return SplitMacro(resultMacro)
     }
     else if (Data.CallType == 2) {  ;触发
-        if (Data.Type != 1 && macroItem.MacroTypeArr[macroIndex] == 1) { ;串联
-            MyTriggerSubMacro(macroTableIndex, macroIndex)
+        MyTriggerSubMacro(macroTableIndex, macroIndex)
+    }
+    else if (Data.CallType == 3) {  ;暂停
+        MySetItemPauseState(macroTableIndex, macroIndex, 1)
+    }
+    else if (Data.CallType == 4) {  ;取消暂停
+        MySetItemPauseState(macroTableIndex, macroIndex, 0)
+    }
+    else if (Data.CallType == 5) {  ;终止
+        isWork := macroItem.IsWorkArr[macroIndex]
+        if (isWork || MySoftData.isWork) {
+            MySubMacroStopAction(macroTableIndex, macroIndex)
             return
         }
-        action := OnTriggerMacroKeyAndInit.Bind(macroItem, macro, macroIndex)
-        SetTimer(action, -1)
+
+        KillTableItemMacro(macroItem, macroIndex)
     }
 }
 
 OnVariable(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(VariableFile, IniSection, paramArr[2], "")
-    variableData := JSON.parse(saveStr, , false)
-    count := variableData.SearchCount
-    interval := variableData.SearchInterval
-    tableItem.SuccessClearActionArr[index].Set(variableData.ExtractStr, [])
-    VariableMap := tableItem.VariableMapArr[index]
-
-    if (variableData.CreateType == 3) {     ;提取
-        OnExtractingVariablesOnce(tableItem, index, variableData, count == 1)
-        loop count {
-            if (A_Index == 1)
-                continue
-
-            if (!tableItem.SuccessClearActionArr[index].Has(variableData.ExtractStr)) ;第一次比较成功就退出
-                break
-
-            tempAction := OnExtractingVariablesOnce.Bind(tableItem, index, variableData, A_Index == count)
-            leftTime := GetFloatTime((Integer(interval) * (A_Index - 1)), MySoftData.PreIntervalFloat)
-            tableItem.SuccessClearActionArr[index][variableData.ExtractStr].Push(tempAction)
-            SetTimer tempAction, -leftTime
-        }
-        return
-    }
+    Data := GetMacroCMDData(VariableFile, paramArr[2])
+    LocalVariableMap := tableItem.VariableMapArr[index]
     loop 4 {
-        if (!variableData.ToggleArr[A_Index])
+        if (!Data.ToggleArr[A_Index])
             continue
+        VariableName := Data.VariableArr[A_Index]
+        if (Data.OperaTypeArr[A_Index] == 4) {  ;删除
+            if (Data.IsGlobal) {
+                MyDelGlobalVariable(VariableName)
+            }
+            else if (!Data.IsGlobal && LocalVariableMap.Has(VariableName))
+                LocalVariableMap.Delete(VariableName)
 
-        name := variableData.NameArr[A_Index]   ;赋值
-        value := variableData.ValueArr[A_Index]
-        if (variableData.CreateType == 2) {     ;选择复制
-            copyName := variableData.SelectCopyNameArr[A_Index]
-            if (copyName == "X坐标" || copyName == "Y坐标") {
-                CoordMode("Mouse", "Screen")
-                MouseGetPos &mouseX, &mouseY
-                value := copyName == "X坐标" ? mouseX : mouseY
-            }
-            else if (VariableMap.Has(copyName)) {
-                value := VariableMap[copyName]
-            }
+            continue
         }
-        VariableMap[name] := value
+
+        Value := 0
+        if (Data.OperaTypeArr[A_Index] == 1) {   ;数值
+            hasValue := TryGetVariableValue(&Value, tableItem, index, Data.CopyVariableArr[A_Index])
+            if (!hasValue)
+                return
+        }
+        if (Data.OperaTypeArr[A_Index] == 2) {  ;随机
+            hasMin := TryGetVariableValue(&minValue, tableItem, index, Data.MinVariableArr[A_Index])
+            hasMax := TryGetVariableValue(&maxValue, tableItem, index, Data.MaxVariableArr[A_Index])
+            if (!hasMin || !hasMax)
+                return
+            Value := Random(minValue, maxValue)
+        }
+        if (Data.OperaTypeArr[A_Index] == 3) {  ;字符
+            Value := Data.CopyVariableArr[A_Index]
+        }
+
+        if (Data.IsGlobal) {
+            MySetGlobalVariable(VariableName, Value, Data.IsIgnoreExist)
+        }
+        else {
+            if (!Data.IsIgnoreExist || !LocalVariableMap.Has(VariableName))
+                LocalVariableMap[VariableName] := Value
+        }
     }
 }
 
-OnExtractingVariablesOnce(tableItem, index, variableData, isFinally) {
-    X1 := variableData.StartPosX
-    Y1 := variableData.StartPosY
-    X2 := variableData.EndPosX
-    Y2 := variableData.EndPosY
-    if (variableData.ExtractType == 1) {
-        TextObjs := GetScreenTextObjArr(X1, Y1, X2, Y2, variableData.OCRType)
+OnExVariable(tableItem, cmd, index) {
+    paramArr := StrSplit(cmd, "_")
+    Data := GetMacroCMDData(ExVariableFile, paramArr[2])
+    count := Data.SearchCount
+    interval := Data.SearchInterval
+
+    if (Data.SearchCount == -1) {
+        return OnExVariableOnce(tableItem, index, Data)
+    }
+    else {
+        loop Data.SearchCount {
+            WaitIfPaused(tableItem.index, index)
+
+            if (tableItem.KilledArr[index])
+                return
+
+            isFound := OnExVariableOnce(tableItem, index, Data)
+            if (isFound)
+                return
+
+            if (Data.SearchCount > A_Index) {
+                FloatInterval := GetFloatTime(Data.SearchInterval, MySoftData.PreIntervalFloat)
+                Sleep(FloatInterval)
+            }
+        }
+    }
+}
+
+OnExVariableOnce(tableItem, index, Data) {
+    X1 := Data.StartPosX
+    Y1 := Data.StartPosY
+    X2 := Data.EndPosX
+    Y2 := Data.EndPosY
+
+    if (Data.ExtractType == 1) {
+        TextObjs := GetScreenTextObjArr(X1, Y1, X2, Y2, Data.OCRType)
         TextObjs := TextObjs == "" ? [] : TextObjs
     }
     else {
@@ -596,17 +602,23 @@ OnExtractingVariablesOnce(tableItem, index, variableData, isFinally) {
     }
 
     isOk := false
-    VariableMap := tableItem.VariableMapArr[index]
-    for index, value in TextObjs {
-        baseVariableArr := ExtractNumbers(value.Text, variableData.ExtractStr)
+    for _, value in TextObjs {
+        baseVariableArr := ExtractNumbers(value.Text, Data.ExtractStr)
         if (baseVariableArr == "")
             continue
 
         loop baseVariableArr.Length {
-            if (variableData.ToggleArr[A_Index]) {
-                name := variableData.NameArr[A_Index]
+            if (Data.ToggleArr[A_Index]) {
+                name := Data.VariableArr[A_Index]
                 value := baseVariableArr[A_Index]
-                VariableMap[name] := value
+                if (Data.IsGlobal) {
+                    MySetGlobalVariable(name, Value, Data.IsIgnoreExist)
+                }
+                else {
+                    LocalVariableMap := tableItem.VariableMapArr[index]
+                    if (!Data.IsIgnoreExist || !LocalVariableMap.Has(name))
+                        LocalVariableMap[name] := Value
+                }
             }
         }
 
@@ -614,62 +626,43 @@ OnExtractingVariablesOnce(tableItem, index, variableData, isFinally) {
         break
     }
 
-    if (isOk || isFinally) {
-        ;清除后续的搜索和搜索记录
-        if (tableItem.SuccessClearActionArr[index].Has(variableData.ExtractStr)) {
-            SuccessClearActionArr := tableItem.SuccessClearActionArr[index].Get(variableData.ExtractStr)
-            loop SuccessClearActionArr.Length {
-                action := SuccessClearActionArr[A_Index]
-                SetTimer action, 0
-            }
-            tableItem.SuccessClearActionArr[index].Delete(variableData.ExtractStr)
-        }
-    }
+    return isOk
 }
 
 OnOperation(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(OperationFile, IniSection, paramArr[2], "")
-    Data := JSON.parse(saveStr, , false)
-    VariableMap := tableItem.VariableMapArr[index]
+    Data := GetMacroCMDData(OperationFile, paramArr[2])
     loop 4 {
-        if (!Data.ToggleArr[A_Index] || Data.NameArr[A_Index] == "空")
+        if (!Data.ToggleArr[A_Index])
             continue
         Name := Data.NameArr[A_Index]
         SymbolArr := Data.SymbolGroups[A_Index]
         ValueArr := Data.ValueGroups[A_Index]
-        Value := GetVariableOperationResult(VariableMap, Name, SymbolArr, ValueArr)
-        if (Data.UpdateTypeArr[A_Index] == 1) {
-            VariableMap[Name] := Value
+        Value := GetVariableOperationResult(tableItem, index, Name, SymbolArr, ValueArr)
+
+        if (Data.IsGlobal) {
+            MySetGlobalVariable(Data.UpdateNameArr[A_Index], Value, Data.IsIgnoreExist)
         }
         else {
-            VariableMap[Data.UpdateNameArr[A_Index]] := Value
+            LocalVariableMap := tableItem.VariableMapArr[index]
+            if (!Data.IsIgnoreExist || !LocalVariableMap.Has(Data.UpdateNameArr[A_Index]))
+                LocalVariableMap[Data.UpdateNameArr[A_Index]] := Value
         }
     }
 }
 
 OnBGMouse(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    saveStr := IniRead(BGMouseFile, IniSection, paramArr[2], "")
-    Data := JSON.parse(saveStr, , false)
+    Data := GetMacroCMDData(BGMouseFile, paramArr[2])
 
     WM_DOWN_ARR := [0x201, 0x204, 0x207]    ;左键，中键，右键
     WM_UP_ARR := [0x202, 0x205, 0x208]    ;左键，中键，右键
     WM_DCLICK_ARR := [0x203, 0x206, 0x209]    ;左键，中键，右键
-
-    VariableMap := tableItem.VariableMapArr[index]
-    if (Data.PosXName != "空" && !VariableMap.Has(Data.PosXName)) {
-        MsgBox("当前环境不存在变量 " Data.PosXName)
+    hasPosVarX := TryGetVariableValue(&PosX, tableItem, index, Data.PosVarX)
+    hasPosVarY := TryGetVariableValue(&PosY, tableItem, index, Data.PosVarY)
+    if (!hasPosVarX || !hasPosVarY) {
         return
     }
-
-    if (Data.PosYName != "空" && !VariableMap.Has(Data.PosYName)) {
-        MsgBox("当前环境不存在变量 " Data.PosYName)
-        return
-    }
-
-    PosX := Data.PosXName != "空" ? VariableMap[Data.PosXName] : Data.PosX
-    PosY := Data.PosYName != "空" ? VariableMap[Data.PosYName] : Data.PosY
     PosX := GetFloatValue(PosX, MySoftData.CoordXFloat)
     PosY := GetFloatValue(PosY, MySoftData.CoordYFloat)
 
@@ -729,13 +722,27 @@ OnMouseMove(tableItem, cmd, index) {
     }
 }
 
+OnRMTCMD(tableItem, cmd, index) {
+    paramArr := StrSplit(cmd, "_")
+    MyExcuteRMTCMDAction(paramArr[2])
+}
+
 OnInterval(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    interval := Integer(paramArr[2])
+    if (paramArr.Length == 2) {
+        interval := Integer(paramArr[2])
+    }
+    else {
+        hasInterval := TryGetVariableValue(&interval, tableItem, index, paramArr[3])
+        if (!hasInterval)
+            return
+    }
     FloatInterval := GetFloatTime(interval, MySoftData.IntervalFloat)
     curTime := 0
     clip := Min(500, FloatInterval)
     while (curTime < FloatInterval) {
+        WaitIfPaused(tableItem.index, index)
+
         if (tableItem.KilledArr[index])
             break
         Sleep(clip)
@@ -748,46 +755,26 @@ OnPressKey(tableItem, cmd, index) {
     paramArr := SplitKeyCommand(cmd)
     isJoyKey := SubStr(paramArr[2], 1, 3) == "Joy"
     isJoyAxis := StrCompare(SubStr(paramArr[2], 1, 7), "JoyAxis", false) == 0
-    action := tableItem.ModeArr[index] == 1 ? SendGameModeKeyClick : SendNormalKeyClick
+    action := tableItem.ModeArr[index] == 2 ? SendGameModeKeyClick : SendNormalKeyClick
     action := isJoyKey ? SendJoyBtnClick : action
     action := isJoyAxis ? SendJoyAxisClick : action
 
-    holdTime := Integer(paramArr[3])
-    keyType := paramArr.Length >= 4 ? Integer(paramArr[4]) : 1
+    keyType := Integer(paramArr[3])
+    holdTime := paramArr.Length >= 4 ? Integer(paramArr[4]) : 100
     count := paramArr.Length >= 5 ? Integer(paramArr[5]) : 1
     IntervalTime := paramArr.Length >= 6 ? Integer(paramArr[6]) : 1000
-    MacroType := tableItem.MacroTypeArr[index]
 
-    LastSumTime := 0
     loop count {
+        WaitIfPaused(tableItem.index, index)
+
         if (tableItem.KilledArr[index])
             break
 
         FloatHold := GetFloatTime(holdTime, MySoftData.HoldFloat)
         FloatInterval := GetFloatTime(IntervalTime, MySoftData.PreIntervalFloat)
-        if (MySoftData.isWork && MacroType == 1) {
-            action(paramArr[2], FloatHold, tableItem, index, keyType)
-            if (A_Index != count)
-                Sleep(FloatInterval)
-        }
-        else if (MacroType == 1) {
-            action(paramArr[2], FloatHold, tableItem, index, keyType)
-            if (keyType == 1)
-                Sleep(FloatHold)
-            if (A_Index != count)
-                Sleep(FloatInterval)
-        }
-        else if (MacroType == 2) {
-            if (A_Index == 1) {
-                action(paramArr[2], FloatHold, tableItem, index, keyType)
-            }
-            else {
-                tempAction := action.Bind(paramArr[2], FloatHold, tableItem, index, keyType)
-                tableItem.CmdActionArr[index].Push(tempAction)
-                SetTimer tempAction, -LastSumTime
-            }
-            LastSumTime := LastSumTime + FloatInterval + FloatHold
-        }
+        action(paramArr[2], FloatHold, tableItem, index, keyType)
+        if (keyType == 3 && A_Index != count)
+            Sleep(FloatInterval)
     }
 }
 
@@ -798,7 +785,7 @@ OnReplaceDownKey(tableItem, info, index) {
 
     loop infos.Length {
         assistKey := infos[A_Index]
-        if (mode == 1) {
+        if (mode == 2) {
             SendGameModeKey(assistKey, 1, tableItem, index)
         }
         else {
@@ -814,7 +801,7 @@ OnReplaceUpKey(tableItem, info, index) {
 
     loop infos.Length {
         assistKey := infos[A_Index]
-        if (mode == 1) {
+        if (mode == 2) {
             SendGameModeKey(assistKey, 0, tableItem, index)
         }
         else {
@@ -824,197 +811,15 @@ OnReplaceUpKey(tableItem, info, index) {
 
 }
 
-;软件宏
-OnSoftTriggerKey(tableItem, info, index) {
-    run info
-}
-
 ;按钮回调
 GetTableClosureAction(action, TableItem, index) {
     funcObj := action.Bind(TableItem, index)
     return (*) => funcObj()
 }
 
-OnChangeTriggerType(tableItem, index) {
-    typeValue := tableItem.TriggerTypeConArr[index].Value
-    enableHoldTime := typeValue == 5    ;长按才能编辑长按时间
-    tableItem.HoldTimeConArr[index].Enabled := enableHoldTime
-}
-
 MenuReload(*) {
-    SaveWinPos()
+    IniWrite(MySoftData.TabCtrl.Value, IniFile, IniSection, "TableIndex")
     Reload()
-}
-
-OnChangeSrollValue(*) {
-    wParam := InStr(A_ThisHotkey, "Down") ? 1 : 0
-    lParam := 0
-    msg := GetKeyState("Shift") ? 0x114 : 0x115
-    MySoftData.SB.ScrollMsg(wParam, lParam, msg, MySoftData.MyGui.Hwnd)
-    for index, value in MySoftData.GroupFixedCons {
-        value.redraw()
-    }
-}
-
-OnToolRecordMacro(*) {
-    global ToolCheckInfo, MySoftData
-    spacialKeyArr := ["NumpadEnter"]
-    ToolCheckInfo.IsToolRecord := !ToolCheckInfo.IsToolRecord
-    ToolCheckInfo.ToolCheckRecordMacroCtrl.Value := ToolCheckInfo.IsToolRecord
-    if (MySoftData.MacroEditGui != "") {
-        MySoftData.RecordToggleCon.Value := ToolCheckInfo.IsToolRecord
-    }
-    state := ToolCheckInfo.IsToolRecord
-    StateSymbol := state ? "On" : "Off"
-    loop 255 {
-        key := Format("$*~vk{:X}", A_Index)
-        if (ToolCheckInfo.RecordSpecialKeyMap.Has(A_Index)) {
-            keyName := GetKeyName(Format("vk{:X}", A_Index))
-            key := Format("$*~sc{:X}", GetKeySC(keyName))
-        }
-
-        try {
-            Hotkey(key, OnRecordMacroKeyDown, StateSymbol)
-            Hotkey(key " Up", OnRecordMacroKeyUp, StateSymbol)
-        }
-        catch {
-            continue
-        }
-    }
-
-    loop spacialKeyArr.Length {
-        key := Format("$*~sc{:X}", GetKeySC(spacialKeyArr[A_Index]))
-        Hotkey(key, OnRecordMacroKeyDown, StateSymbol)
-        Hotkey(key " Up", OnRecordMacroKeyUp, StateSymbol)
-    }
-
-    Hotkey(key, OnRecordMacroKeyDown, StateSymbol)
-    Hotkey(key " Up", OnRecordMacroKeyUp, StateSymbol)
-
-    if (state) {
-        ToolCheckInfo.RecordNodeArr := []
-        ToolCheckInfo.RecordKeyboardArr := []
-        ToolCheckInfo.RecordHoldKeyMap := Map()
-
-        node := RecordNodeData()
-        node.StartTime := GetCurMSec()
-        ToolCheckInfo.RecordNodeArr.Push(node)
-
-        CoordMode("Mouse", "Screen")
-        MouseGetPos &mouseX, &mouseY
-        ToolCheckInfo.RecordLastMousePos := [mouseX, mouseY]
-    }
-    else {
-        if (ToolCheckInfo.RecordNodeArr.Length > 0) {
-            node := ToolCheckInfo.RecordNodeArr[ToolCheckInfo.RecordNodeArr.Length]
-            node.EndTime := GetCurMSec()
-        }
-        OnFinishRecordMacro()
-    }
-}
-
-OnRecordMacroKeyDown(*) {
-    key := StrReplace(A_ThisHotkey, "$", "")
-    key := StrReplace(key, "*~", "")
-    keyName := GetKeyName(key)
-    if (ToolCheckInfo.RecordHoldKeyMap.Has(keyName))
-        return
-    ToolCheckInfo.RecordHoldKeyMap.Set(keyName, true)
-
-    node := ToolCheckInfo.RecordNodeArr[ToolCheckInfo.RecordNodeArr.Length]
-    node.EndTime := GetCurMSec()
-
-    CoordMode("Mouse", "Screen")
-    MouseGetPos &mouseX, &mouseY
-    data := KeyboardData()
-    data.StartTime := GetCurMSec()
-    data.NodeSerial := ToolCheckInfo.RecordNodeArr.Length
-    data.keyName := keyName
-    data.StartPos := [mouseX, mouseY]
-    ToolCheckInfo.RecordKeyboardArr.Push(data)
-
-    node := RecordNodeData()
-    node.StartTime := GetCurMSec()
-    ToolCheckInfo.RecordNodeArr.Push(node)
-
-    if (keyName == "WheelUp" || keyName == "WheelDown") {
-        ToolCheckInfo.RecordHoldKeyMap.Delete(keyName)
-        data.EndTime := data.StartTime + 50
-        data.EndPos := [mouseX, mouseY]
-    }
-}
-
-OnRecordMacroKeyUp(*) {
-    key := StrReplace(A_ThisHotkey, "$", "")
-    key := StrReplace(key, "*~", "")
-    key := StrReplace(key, " Up", "")
-    keyName := GetKeyName(key)
-    if (ToolCheckInfo.RecordHoldKeyMap.Has(keyName))
-        ToolCheckInfo.RecordHoldKeyMap.Delete(keyName)
-
-    for index, value in ToolCheckInfo.RecordKeyboardArr {
-        if (value.keyName == keyName && value.EndTime == 0) {
-            CoordMode("Mouse", "Screen")
-            MouseGetPos &mouseX, &mouseY
-            value.EndTime := GetCurMSec()
-            value.EndPos := [mouseX, mouseY]
-            break
-        }
-    }
-}
-
-OnFinishRecordMacro() {
-    macro := ""
-    for index, value in ToolCheckInfo.RecordNodeArr {
-        macro .= "间隔_" value.Span() ","
-
-        for key, value in ToolCheckInfo.RecordKeyboardArr {
-            if (value.NodeSerial != index || value.EndTime == 0)
-                continue
-            keyName := value.keyName
-            IsMouse := keyName == "LButton" || keyName == "RButton" || keyName == "MButton"
-            IsKeyboard := !IsMouse
-
-            if (IsMouse && ToolCheckInfo.RecordMouseValue) {
-                isRelative := ToolCheckInfo.RecordMouseRelativeValue
-                posX := isRelative ? value.StartPos[1] - ToolCheckInfo.RecordLastMousePos[1] : value.StartPos[1]
-                posY := isRelative ? value.StartPos[2] - ToolCheckInfo.RecordLastMousePos[2] : value.StartPos[2]
-                symbol := isRelative ? "_100_1" : ""
-                macro .= "移动_" posX "_" posY symbol ","
-                macro .= "按键_" value.keyName "_" value.Span() ","
-
-                if (value.StartPos[1] != value.EndPos[1] || value.StartPos[2] != value.EndPos[2]) {
-                    posX := isRelative ? value.EndPos[1] - value.StartPos[1] : value.EndPos[1]
-                    posY := isRelative ? value.EndPos[2] - value.StartPos[2] : value.EndPos[2]
-                    speed := Max(100 - Integer(value.Span() * 0.02), 90)
-                    symbol := isRelative ? "_" speed "_1" : "_" speed
-                    macro .= "移动_" posX "_" posY symbol ","
-                }
-
-                ToolCheckInfo.RecordLastMousePos[1] := value.EndPos[1]
-                ToolCheckInfo.RecordLastMousePos[2] := value.EndPos[2]
-            }
-
-            if (IsKeyboard && ToolCheckInfo.RecordKeyboardValue) {
-                macro .= "按键_" value.keyName "_" value.Span() ","
-            }
-        }
-    }
-    macro := Trim(macro, ",")
-    macro := GetRecordMacroEditStr(macro)
-    macro := Trim(macro, ",")
-    macro := Trim(macro, "`n")
-    ToolCheckInfo.ToolTextCtrl.Value := macro
-    if (MySoftData.MacroEditGui != "") {
-        MySoftData.MacroEditCon.Value .= macro
-    }
-    A_Clipboard := macro
-}
-
-OnChangeRecordOption(*) {
-    ToolCheckInfo.RecordKeyboardValue := ToolCheckInfo.RecordKeyboardCtrl.Value
-    ToolCheckInfo.RecordMouseValue := ToolCheckInfo.RecordMouseCtrl.Value
-    ToolCheckInfo.RecordMouseRelativeValue := ToolCheckInfo.RecordMouseRelativeCtrl.value
 }
 
 OnToolTextFilterSelectImage(*) {
@@ -1022,7 +827,7 @@ OnToolTextFilterSelectImage(*) {
     path := FileSelect(, , "选择图片")
     if (path == "")
         return
-    ocr := ToolCheckInfo.OCRTypeCtrl.Value == 1 ? MySpeedOcr : MyStandardOcr
+    ocr := ToolCheckInfo.OCRTypeCtrl.Value == 1 ? MyChineseOcr : MyEnglishOcr
     result := ocr.ocr_from_file(path)
     ToolCheckInfo.ToolTextCtrl.Value := result
     A_Clipboard := result
@@ -1030,31 +835,6 @@ OnToolTextFilterSelectImage(*) {
 
 OnClearToolText(*) {
     ToolCheckInfo.ToolTextCtrl.Value := ""
-}
-
-OnToolTextFilterScreenShot(*) {
-    A_Clipboard := ""  ; 清空剪贴板
-    Run("ms-screenclip:")
-    SetTimer(OnToolTextCheckScreenShot, 500)  ; 每 500 毫秒检查一次剪贴板
-}
-
-OnToolTextCheckScreenShot() {
-    ; 如果剪贴板中有图像
-    if DllCall("IsClipboardFormatAvailable", "uint", 8)  ; 8 是 CF_BITMAP 格式
-    {
-        filePath := A_WorkingDir "\Images\TextFilter.png"
-        if (!DirExist(A_WorkingDir "\Images")) {
-            DirCreate(A_WorkingDir "\Images")
-        }
-
-        SaveClipToBitmap(filePath)
-        ocr := ToolCheckInfo.OCRTypeCtrl.Value == 1 ? MySpeedOcr : MyStandardOcr
-        result := ocr.ocr_from_file(filePath)
-        ToolCheckInfo.ToolTextCtrl.Value := result
-        A_Clipboard := result
-        ; 停止监听
-        SetTimer(, 0)
-    }
 }
 
 OnShowWinChanged(*) {
@@ -1065,7 +845,7 @@ OnShowWinChanged(*) {
 
 OnBootStartChanged(*) {
     global MySoftData ; 访问全局变量
-    MySoftData.IsBootStart := !MySoftData.IsBootStart
+    MySoftData.IsBootStart := MySoftData.BootStartCtrl.Value
     regPath := "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run"
     softPath := A_ScriptFullPath
     if (MySoftData.IsBootStart) {
@@ -1074,22 +854,26 @@ OnBootStartChanged(*) {
     else {
         RegDelete(regPath, "RMT")
     }
+    IniWrite(MySoftData.BootStartCtrl.Value, IniFile, IniSection, "IsBootStart")
 }
 
 ;按键模拟
-SendGameModeKeyClick(key, holdTime, tableItem, index, keyType) {
-    if (MySoftData.isWork && keyType == 1) {
-        SendGameModeKey(Key, 1, tableItem, index)
+SendGameModeKeyClick(ComboKey, holdTime, tableItem, index, keyType) {
+    KeyArr := GetComboKeyArr(ComboKey)
+    if (keyType == 1 || keyType == 3) {
+        for key in KeyArr {
+            SendGameModeKey(key, 1, tableItem, index)
+        }
+    }
+
+    if (keyType == 3) {
         Sleep(holdTime)
-        SendGameModeKey(Key, 0, tableItem, index)
     }
-    else if (keyType == 1) {
-        SendGameModeKey(key, 1, tableItem, index)
-        SetTimer(() => SendGameModeKey(key, 0, tableItem, index), -holdTime)
-    }
-    else {
-        state := keyType == 2 ? 1 : 0
-        SendGameModeKey(key, state, tableItem, index)
+
+    if (keyType == 2 || keyType == 3) {
+        for key in KeyArr {
+            SendGameModeKey(key, 0, tableItem, index)
+        }
     }
 }
 
@@ -1099,7 +883,7 @@ SendGameModeKey(Key, state, tableItem, index) {
     VK := GetKeyVK(Key)
     SC := GetKeySC(Key)
 
-    if (VK == 1 || VK == 2 || VK == 4) {   ; 鼠标左键、右键、中键
+    if (VK == 1 || VK == 2 || VK == 4 || VK == 158 || VK == 159 || VK == 5 || VK == 6) {   ; 鼠标左键、右键、中键、下滑，上滑
         SendGameMouseKey(key, state, tableItem, index)
         return
     }
@@ -1127,45 +911,72 @@ SendGameModeKey(Key, state, tableItem, index) {
 }
 
 SendGameMouseKey(key, state, tableItem, index) {
-    ; 鼠标按下和松开的标志
+    scrollStep := 0
+    mouseData := 0  ; 用于存储滚轮或侧键的数据（120/-120 或 0x0001/0x0002）
+
     if (StrCompare(Key, "LButton", false) == 0) {
-        mouseDown := 0x0002
-        mouseUp := 0x0004
+        mouseDown := 0x0002  ; MOUSEEVENTF_LEFTDOWN
+        mouseUp := 0x0004    ; MOUSEEVENTF_LEFTUP
     }
     else if (StrCompare(Key, "RButton", false) == 0) {
-        mouseDown := 0x0008
-        mouseUp := 0x0010
+        mouseDown := 0x0008  ; MOUSEEVENTF_RIGHTDOWN
+        mouseUp := 0x0010    ; MOUSEEVENTF_RIGHTUP
     }
     else if (StrCompare(Key, "MButton", false) == 0) {
-        mouseDown := 0x0020
-        mouseUp := 0x0040
+        mouseDown := 0x0020  ; MOUSEEVENTF_MIDDLEDOWN
+        mouseUp := 0x0040    ; MOUSEEVENTF_MIDDLEUP
+    }
+    else if (StrCompare(Key, "WheelUp", false) == 0) {
+        mouseDown := 0x0800  ; MOUSEEVENTF_WHEEL
+        mouseUp := 0x0000    ; 滚轮没有 "UP" 事件
+        mouseData := 120     ; +120 表示向上滚动
+    }
+    else if (StrCompare(Key, "WheelDown", false) == 0) {
+        mouseDown := 0x0800  ; MOUSEEVENTF_WHEEL
+        mouseUp := 0x0000    ; 滚轮没有 "UP" 事件
+        mouseData := -120    ; -120 表示向下滚动
+    }
+    else if (StrCompare(Key, "XButton1", false) == 0) {
+        mouseDown := 0x0080  ; MOUSEEVENTF_XDOWN
+        mouseUp := 0x0100    ; MOUSEEVENTF_XUP
+        mouseData := 0x0001  ; 表示 XButton1
+    }
+    else if (StrCompare(Key, "XButton2", false) == 0) {
+        mouseDown := 0x0080  ; MOUSEEVENTF_XDOWN
+        mouseUp := 0x0100    ; MOUSEEVENTF_XUP
+        mouseData := 0x0002  ; 表示 XButton2
     }
 
     if (state == 1) {
-        DllCall("mouse_event", "UInt", mouseDown, "UInt", 0, "UInt", 0, "UInt", 0, "UInt", 0)
+        DllCall("mouse_event", "UInt", mouseDown, "UInt", 0, "UInt", 0, "UInt", mouseData, "UInt", 0)
         tableItem.HoldKeyArr[index][key] := "GameMouse"
     }
     else {
-        DllCall("mouse_event", "UInt", mouseUp, "UInt", 0, "UInt", 0, "UInt", 0, "UInt", 0)
+        if (mouseUp != 0) {  ; 只有非滚轮事件才发送 UP
+            DllCall("mouse_event", "UInt", mouseUp, "UInt", 0, "UInt", 0, "UInt", mouseData, "UInt", 0)
+        }
         if (tableItem.HoldKeyArr[index].Has(key)) {
             tableItem.HoldKeyArr[index].Delete(key)
         }
     }
 }
 
-SendNormalKeyClick(Key, holdTime, tableItem, index, keyType) {
-    if (MySoftData.isWork && keyType == 1) {
-        SendNormalKey(Key, 1, tableItem, index)
+SendNormalKeyClick(ComboKey, holdTime, tableItem, index, keyType) {
+    KeyArr := GetComboKeyArr(ComboKey)
+    if (keyType == 1 || keyType == 3) {
+        for ComboKey in KeyArr {
+            SendNormalKey(ComboKey, 1, tableItem, index)
+        }
+    }
+
+    if (keyType == 3) {
         Sleep(holdTime)
-        SendNormalKey(Key, 0, tableItem, index)
     }
-    else if (keyType == 1) {
-        SendNormalKey(Key, 1, tableItem, index)
-        SetTimer(() => SendNormalKey(Key, 0, tableItem, index), -holdTime)
-    }
-    else {
-        state := keyType == 2 ? 1 : 0
-        SendNormalKey(Key, state, tableItem, index)
+
+    if (keyType == 2 || keyType == 3) {
+        for ComboKey in KeyArr {
+            SendNormalKey(ComboKey, 0, tableItem, index)
+        }
     }
 }
 
@@ -1203,13 +1014,17 @@ SendJoyBtnClick(key, holdTime, tableItem, index, keyType) {
         MsgBox("使用手柄功能前,请先安装Joy目录下的vJoy驱动!")
         return
     }
-    if (keyType == 1) {
+
+    if (keyType == 1 || keyType == 3) {
         SendJoyBtnKey(key, 1, tableItem, index)
-        SetTimer(() => SendJoyBtnKey(key, 0, tableItem, index), -holdTime)
     }
-    else {
-        state := keyType == 2 ? 1 : 0
-        SendJoyBtnKey(key, state, tableItem, index)
+
+    if (keyType == 3) {
+        Sleep(holdTime)
+    }
+
+    if (keyType == 2 || keyType == 3) {
+        SendJoyBtnKey(key, 0, tableItem, index)
     }
 }
 
@@ -1233,13 +1048,16 @@ SendJoyAxisClick(key, holdTime, tableItem, index, keyType) {
         return
     }
 
-    if (keyType == 1) {
+    if (keyType == 1 || keyType == 3) {
         SendJoyAxisKey(key, 1, tableItem, index)
-        SetTimer(() => SendJoyAxisKey(key, 0, tableItem, index), -holdTime)
     }
-    else {
-        state := keyType == 2 ? 1 : 0
-        SendJoyAxisKey(key, state, tableItem, index)
+
+    if (keyType == 3) {
+        Sleep(holdTime)
+    }
+
+    if (keyType == 2 || keyType == 3) {
+        SendJoyAxisKey(key, 0, tableItem, index)
     }
 }
 

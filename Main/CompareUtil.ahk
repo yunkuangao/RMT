@@ -20,6 +20,7 @@ ExtractNumbers(Text, Pattern) {
     Pattern := RegExReplace(Pattern, "[.*+?()\[\]{}|^$\\]", "\$0")
     ; 将 pattern 中的中英文冒号统一替换为正则通配 [:：]
     Pattern := RegExReplace(Pattern, "[:：]", "[:：]")
+    Pattern := RegExReplace(Pattern, "[,，]", "[,，]")
     SymbolMap := GetAmpersandSequence(Pattern)
 
     ; 优化数字匹配模式，区分千分位和普通数字
@@ -47,7 +48,7 @@ ExtractNumbers(Text, Pattern) {
 
 BuildNumberPattern() {
     ; 千分位模式：必须包含逗号且格式正确
-    ThousandFormat := "\d{1,3}(?:,\d{3})+(?:\.\d+)?"
+    ThousandFormat := "\d{1,3}(?:[,，]\d{3})+(?:\.\d+)?"
     ; 普通数字模式：不包含逗号或仅含小数点
     NormalFormat := "[+-]?\d+(?:\.\d+)?"
     ; 小数模式：以小数点开头

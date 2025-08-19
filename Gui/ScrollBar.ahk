@@ -80,7 +80,7 @@ class ScrollBar {
             ; Set the guiObj property to the first parameter
             this.guiObj := guiObj
             ; Show both scroll bars
-            this.ShowScrollBar(this.SB_BOTH, true)
+            this.ShowScrollBar(this.SB_VERT, true)
 
             ; Create a buffer for the rectangle
             this.Rect := Buffer(16)
@@ -120,7 +120,7 @@ class ScrollBar {
                 this.ScrollInf.nPage := width
 
                 ; Set the scroll info for the horizontal scroll bar
-                this.SetScrollInfo(this.SB_HORZ, true)
+                ; this.SetScrollInfo(this.SB_HORZ, true)
 
                 ; Set the mask to retrieve all scroll info
                 this.ScrollInf.fMask := this.SIF_ALL
@@ -160,7 +160,7 @@ class ScrollBar {
         this.GetEdges(&Left, &Right, &Top, &Bottom)
 
         standardDPI := 96
-        scaleValue := A_ScreenDPI /standardDPI
+        scaleValue := A_ScreenDPI / standardDPI
         ; Calculate the scroll width and height
         ScrollWidth := (Right - Left) * scaleValue
         ScrollHeight := (Bottom - Top) * scaleValue
@@ -180,7 +180,7 @@ class ScrollBar {
         this.ScrollInf.nPage := this.GetWidth()
 
         ; Set the scroll info for the horizontal scroll bar
-        this.SetScrollInfo(this.SB_HORZ, true)
+        ; this.SetScrollInfo(this.SB_HORZ, true)
 
         /*
         The code below checks if the left or top position of the content is less than 0 and if
@@ -228,6 +228,9 @@ class ScrollBar {
                 this.ScrollAction(this.SB_VERT, wParam)
                 this.ScrollWindow(0, this.oldPos - this.ScrollInf.nPos)
                 this.UpdateFixedControlsPosition()
+        }
+        for index, value in MySoftData.GroupFixedCons {
+            value.redraw()
         }
     }
 

@@ -7,7 +7,7 @@
 #Include "..\Main\CompareUtil.ahk"
 #Include "..\Joy\SuperCvJoyInterface.ahk"
 #Include "..\Joy\JoyMacro.ahk"
-#Include "..\RapidOcr\RapidOcr.ahk"
+#Include "..\Plugins\RapidOcr\RapidOcr.ahk"
 #Include "..\Plugins\WinClipAPI.ahk"
 #Include "..\Plugins\WinClip.ahk"
 #Include "WorkUtil.ahk"
@@ -20,30 +20,43 @@ global parentHwnd := A_Args[1]
 global workIndex := A_Args[2]
 global MySoftData := SoftData()
 global ToolCheckInfo := ToolCheck()
-global MyvJoy := SuperCvJoyInterface().GetMyvJoy()
+if (CheckIfInstallVjoy()) {
+    global MyvJoy := SuperCvJoyInterface().GetMyvJoy()
+}
 global MyJoyMacro := JoyMacro()
 global MyWinClip := WinClip()
+global IniFile := A_WorkingDir "\..\Setting\MainSettings.ini"
+LoadMainSetting()   ;加载配置
 InitWorkFilePath()  ;初始化文件路径
-LoadSetting()   ;加载配置
+LoadCurMacroSetting()   ;加载当前配置宏
 InitData()
 InitWork()
 
 ;放后面初始化，因为这初始化时间比较长
-global MySpeedOcr := RapidOcr(A_ScriptDir "\..")
-global MyStandardOcr := RapidOcr(A_ScriptDir "\..", 2)
+global MyChineseOcr := RapidOcr(A_ScriptDir "\..")
+global MyEnglishOcr := RapidOcr(A_ScriptDir "\..", 2)
 global MyPToken := Gdip_Startup()
-global MySubMacroStopAction := SubMacroStopAction
-global MyTriggerSubMacro := TriggerSubMacro
+global MySubMacroStopAction := WorkSubMacroStopAction
+global MyTriggerSubMacro := WorkTriggerSubMacro
+global MySetGlobalVariable := WorkSetGlobalVariable
+global MyDelGlobalVariable := WorkDelGlobalVariable
+global MyCMDReportAciton := WorkCMDReport
+global MyExcuteRMTCMDAction := WorkExcuteRMTCMDAction
+global MySetTableItemState := WorkSetTableItemState
+global MySetItemPauseState := WorkSetItemPauseState
+global MyMsgBoxContent := WorkMsgBoxContent
+global MyToolTipContent := WorkToolTipContent
 WorkOpenCVLoadDll()
 
 ; 注册消息
-OnMessage(WM_TR_MACRO, MsgTriggerMacroHandler)
-OnMessage(WM_STOP_MACRO, MsgStopMacroHandler)
-OnMessage(WM_CLEAR_WORK, MsgExitHandler)
+OnMessage(WM_TR_MACRO, OnWorkTriggerMacro)
+OnMessage(WM_STOP_MACRO, OnWorkStopMacro)
+OnMessage(WM_CLEAR_WORK, OnExit)
+OnMessage(WM_COPYDATA, OnWorkGetCmdStr)
 
 myTitle := "RMTWork" workIndex
 mygui := Gui("+ToolWindow")          ; 创建 GUI，无标题栏
 mygui.Title := myTitle               ; 设置窗口标题（这才是 WinGetTitle 能读到的）
 mygui.Show("Hide")                   ; 隐藏窗口
 global myHwnd := mygui.Hwnd
-MsgSendHandler(WM_LOAD_WORK, workIndex, 0)
+MsgPostHandler(WM_LOAD_WORK, workIndex, 0)

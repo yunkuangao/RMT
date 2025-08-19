@@ -106,8 +106,7 @@ class ReplaceKeyGui {
         {
             MyGui := Gui()
             this.Gui := MyGui
-            MyGui.SetFont(, "Arial")
-            MyGui.SetFont("S10 W550 Q2", "Consolas")
+            MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
             MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", 10, 10, 1260, 500), "请从下面选框中勾选替换后的按键：")
             PosX := 20

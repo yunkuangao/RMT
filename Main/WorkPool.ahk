@@ -1,7 +1,7 @@
 #Requires AutoHotkey v2.0
 class WorkPool {
     __New() {
-        this.maxSize := MySoftData.MutiThread ? MySoftData.MutiThreadNum : 0
+        this.maxSize := MySoftData.MutiThreadNum
         this.pool := []              ; 对象池数组
         this.hwndMap := Map()
         this.pidMap := Map()
@@ -9,10 +9,11 @@ class WorkPool {
             workPath := A_ScriptDir "\Thread\Work" A_Index ".exe"
             Run (Format("{} {} {}", workPath, MySoftData.MyGui.Hwnd, A_Index))
         }
-        OnMessage(WM_LOAD_WORK, this.MsgFinishLoad.Bind(this))  ; 工作器完成工作回调
-        OnMessage(WM_RELEASE_WORK, this.MsgReleaseHandler.Bind(this))  ; 工作器完成工作回调
-        OnMessage(WM_STOP_MACRO, this.MsgStopMacro.Bind(this))  ;终止其他宏
-        OnMessage(WM_TR_MACRO, this.MsgTriggerMacro.Bind(this)) ;触发宏
+        OnMessage(WM_LOAD_WORK, this.OnFinishLoad.Bind(this))  ; 工作器完成工作回调
+        OnMessage(WM_RELEASE_WORK, this.OnRelease.Bind(this))  ; 工作器完成工作回调
+        OnMessage(WM_STOP_MACRO, this.OnStopMacro.Bind(this))  ;终止其他宏
+        OnMessage(WM_TR_MACRO, this.OnTriggerMacro.Bind(this)) ;触发宏
+        OnMessage(WM_COPYDATA, this.OnGetCmd.Bind(this)) ;接收到命令
     }
 
     __Delete() {
@@ -70,7 +71,20 @@ class WorkPool {
         }
     }
 
-    MsgReleaseHandler(wParam, lParam, msg, hwnd) {
+    SendMessage(type, workPath, str) {
+        CopyDataStruct := Buffer(3 * A_PtrSize)  ; 分配结构的内存区域.
+        ; 首先设置结构的 cbData 成员为字符串的大小, 包括它的零终止符:
+        SizeInBytes := (StrLen(str) + 1) * 2
+        NumPut("Ptr", SizeInBytes  ; 操作系统要求这个需要完成.
+            , "Ptr", StrPtr(str)  ; 设置 lpData 为到字符串自身的指针.
+            , CopyDataStruct, A_PtrSize)
+        hwnd := this.GetWorkHwnd(workPath)
+        try {
+            SendMessage(type, 0, CopyDataStruct, , "ahk_id " hwnd)
+        }
+    }
+
+    OnRelease(wParam, lParam, msg, hwnd) {
         tableIndex := wParam
         itemIndex := lParam
         tableItem := MySoftData.TableInfo[tableIndex]
@@ -80,12 +94,12 @@ class WorkPool {
         tableItem.IsWorkArr[itemIndex] := false
     }
 
-    MsgFinishLoad(wParam, lParam, msg, hwnd) {
+    OnFinishLoad(wParam, lParam, msg, hwnd) {
         workPath := A_ScriptDir "\Thread\Work" wParam ".exe"
         this.pool.Push(workPath)
     }
 
-    MsgStopMacro(wParam, lParam, msg, hwnd) {
+    OnStopMacro(wParam, lParam, msg, hwnd) {
         tableIndex := wParam
         itemIndex := lParam
         tableItem := MySoftData.TableInfo[tableIndex]
@@ -99,7 +113,46 @@ class WorkPool {
         KillTableItemMacro(tableItem, itemIndex)
     }
 
-    MsgTriggerMacro(wParam, lParam, msg, hwnd) {
+    OnTriggerMacro(wParam, lParam, msg, hwnd) {
         TriggerSubMacro(wParam, lParam)
+    }
+
+    OnGetCmd(wParam, lParam, msg, hwnd) {
+        StringAddress := NumGet(lParam, 2 * A_PtrSize, "Ptr")  ; 检索 CopyDataStruct 的 lpData 成员.
+        Cmd := StrGet(StringAddress)  ; 从结构中复制字符串.
+        paramArr := StrSplit(Cmd, "_")
+        isSetVari := StrCompare(paramArr[1], "SetVari", false) == 0
+        isDelVari := StrCompare(paramArr[1], "DelVari", false) == 0
+        isReport := StrCompare(paramArr[1], "Report", false) == 0
+        isRMT := StrCompare(paramArr[1], "RMT", false) == 0
+        isItemState := StrCompare(paramArr[1], "ItemState", false) == 0
+        isPauseState := StrCompare(paramArr[1], "PauseState", false) == 0
+        isMsgBox := StrCompare(paramArr[1], "MsgBox", false) == 0
+        isToolTip := StrCompare(paramArr[1], "ToolTip", false) == 0
+        if (isSetVari) {
+            SetGlobalVariable(paramArr[2], paramArr[3], false)
+        }
+        else if (isDelVari) {
+            DelGlobalVariable(paramArr[2])
+        }
+        else if (isReport) {
+            CMDStr := SubStr(Cmd, 8)
+            CMDReport(CMDStr)
+        }
+        else if (isRMT) {
+            MyExcuteRMTCMDAction(paramArr[2])
+        }
+        else if (isItemState) {
+            MySetTableItemState(paramArr[2], paramArr[3], paramArr[4])
+        }
+        else if (isPauseState) {
+            MySetItemPauseState(paramArr[2], paramArr[3], paramArr[4])
+        }
+        else if (isMsgBox) {
+            MyMsgBoxContent(paramArr[2])
+        }
+        else if (isToolTip) {
+            MyToolTipContent(paramArr[2])
+        }
     }
 }

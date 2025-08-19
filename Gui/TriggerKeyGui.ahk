@@ -7,6 +7,7 @@ class TriggerKeyGui {
         this.SaveBtnAction := ""
         this.SureFocusCon := ""
 
+        this.HotkeyCon := ""
         this.CheckedBox := []
         this.ConMap := Map()
         this.CheckedInfoCon := ""
@@ -14,6 +15,10 @@ class TriggerKeyGui {
         this.SaveBtnCtrl := {}
         this.showSaveBtn := false
 
+        this.Args := ""
+        this.HoldTimeLabelCon := ""
+        this.HoldTimeCon := ""
+        this.HoldTimeTipCon := ""
         this.EnableTriggerKeyCon := ""
 
         this.ModifyKeys := ["Shift", "Alt", "Ctrl", "Win", "LShift", "RShift", "LAlt", "RAlt", "LCtrl", "RCtrl", "LWin",
@@ -23,6 +28,14 @@ class TriggerKeyGui {
 
         this.ModifyKeyMap := Map("LAlt", "<!", "RAlt", ">!", "Alt", "!", "LWin", "<#", "RWin", ">#", "Win", "#",
             "LCtrl", "<^", "RCtrl", ">^", "Ctrl", "^", "LShift", "<+", "RShift", ">+", "Shift", "+")
+    }
+
+    OnSureHotkey() {
+        triggerKey := this.HotkeyCon.Value
+        symbol := this.EnableTriggerKeyCon.Value ? "~" : ""
+        triggerKey := symbol triggerKey
+        this.Init(triggerKey)
+        this.Refresh()
     }
 
     ;选项相关
@@ -109,7 +122,7 @@ class TriggerKeyGui {
         return true
     }
 
-    Init(triggerKey, showSaveBtn) {
+    Init(triggerKey) {
         this.CheckedBox := []
         loopCount := 0
         this.EnableTriggerKeyCon.Value := RegExMatch(triggerKey, "~")
@@ -148,7 +161,17 @@ class TriggerKeyGui {
             con.Value := 1
         }
 
-        this.showSaveBtn := showSaveBtn
+        this.showSaveBtn := !this.Args.IsToolEdit
+        this.HoldTimeCon.Visible := !this.Args.IsToolEdit
+        this.HoldTimeLabelCon.Visible := !this.Args.IsToolEdit
+        this.HoldTimeTipCon.Visible := !this.Args.IsToolEdit
+        if (!this.Args.IsToolEdit) {
+            this.HoldTimeCon.Value := this.Args.tableItem.HoldTimeArr[this.Args.tableIndex]
+        }
+        else {
+            this.EnableTriggerKeyCon.Value := true
+            this.EnableTriggerKeyCon.Enabled := false
+        }
     }
 
     GetTriggerKey() {
@@ -185,6 +208,7 @@ class TriggerKeyGui {
             MsgBox("当前配置无效,请浏览勾选规则后，检查配置,有异议请联系UP: 浮生若梦的兔子。")
             return false
         }
+        this.TrySaveHoldTime()
         triggerKey := this.GetTriggerKey()
         action := this.SureBtnAction
         action(triggerKey)
@@ -198,6 +222,7 @@ class TriggerKeyGui {
             MsgBox("当前配置无效,请浏览勾选规则后，检查配置,有异议请联系UP: 浮生若梦的兔子。")
             return false
         }
+        this.TrySaveHoldTime()
         triggerKey := this.GetTriggerKey()
         action := this.SureBtnAction
         action(triggerKey)
@@ -208,8 +233,15 @@ class TriggerKeyGui {
         this.SureFocusCon.Focus()
     }
 
+    TrySaveHoldTime() {
+        if (this.Args.IsToolEdit)
+            return
+
+        this.Args.tableItem.HoldTimeArr[this.Args.tableIndex] := this.HoldTimeCon.Value
+    }
+
     ;UI相关
-    ShowGui(triggerKey, showSaveBtn) {
+    ShowGui(triggerKey, Args) {
 
         if (this.Gui != "") {
             this.Gui.Show()
@@ -217,8 +249,8 @@ class TriggerKeyGui {
         else {
             this.AddGui()
         }
-
-        this.Init(triggerKey, showSaveBtn)
+        this.Args := Args
+        this.Init(triggerKey)
         this.Refresh()
     }
 
@@ -226,12 +258,13 @@ class TriggerKeyGui {
         {
             MyGui := Gui()
             this.Gui := MyGui
-            MyGui.SetFont(, "Arial")
-            MyGui.SetFont("S10 W550 Q2", "Consolas")
+            MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
-            MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", 10, 10, 1260, 500), "请从下面选框中勾选触发宏的按键：")
+            PosX := 10
+            PosY := 10
+            MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 1260, 500), "请从下面选框中勾选触发宏的按键：")
             PosX := 20
-            PosY := 30
+            PosY += 20
             MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "键盘")
 
             PosX := 20
@@ -830,12 +863,12 @@ class TriggerKeyGui {
             con.OnEvent("Click", (*) => this.OnCheckedKey("Volume_Down"))
             this.ConMap.Set("Volume_Down", con)
 
-            PosX += 80
+            PosX += 90
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "增加音量")
             con.OnEvent("Click", (*) => this.OnCheckedKey("Volume_Up"))
             this.ConMap.Set("Volume_Up", con)
 
-            PosX += 80
+            PosX += 90
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "下一首")
             con.OnEvent("Click", (*) => this.OnCheckedKey("Media_Next"))
             this.ConMap.Set("Media_Next", con)
@@ -1088,57 +1121,57 @@ class TriggerKeyGui {
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyXMin"))
             this.ConMap.Set("JoyXMin", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyXMax")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyXMax"))
             this.ConMap.Set("JoyXMax", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyYMin")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyYMin"))
             this.ConMap.Set("JoyYMin", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyYMax")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyYMax"))
             this.ConMap.Set("JoyYMax", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyZMin")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyZMin"))
             this.ConMap.Set("JoyZMin", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyZMax")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyZMax"))
             this.ConMap.Set("JoyZMax", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyRMin")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyRMin"))
             this.ConMap.Set("JoyRMin", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyRMax")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyRMax"))
             this.ConMap.Set("JoyRMax", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyUMin")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyUMin"))
             this.ConMap.Set("JoyUMin", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyUMax")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyUMax"))
             this.ConMap.Set("JoyUMax", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyVMin")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyVMin"))
             this.ConMap.Set("JoyVMin", con)
 
-            PosX += 75
+            PosX += 85
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "JoyVMax")
             con.OnEvent("Click", (*) => this.OnCheckedKey("JoyVMax"))
             this.ConMap.Set("JoyUMax", con)
@@ -1165,49 +1198,73 @@ class TriggerKeyGui {
             this.ConMap.Set("JoyPOV_27000", con)
 
         }
+        FlagSY := PosY
 
-        PosY += 50
+        PosY += 45
+        PosX := 10
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 550, 100), "操作选项")
+
+        PosY += 20
         PosX := 20
-        MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000),
-        "特殊按键：Shift, Alt, Ctrl, Win, LShift, RShift, LAlt, RAlt, LCtrl, RCtrl, LWin, RWin")
-        PosY += 20
-        MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000), "普通按键：除特殊按键的其他按键")
-        PosY += 20
-        MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000),
-        "勾选规则1：特殊按键中可以 同时勾选多个按键 或 不选，普通按键中只能 勾选一个按键 或 不选")
-        PosY += 20
-        MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000), "勾选规则2：手柄按钮、摇杆只能单独选")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "键盘触发键检测：")
 
-        PosY += 20
+        PosX += 120
+        this.HotkeyCon := MyGui.Add("Hotkey", Format("x{} y{} w140", PosX, PosY - 3))
+
+        PosX += 150
+        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), "确定")
+        con.OnEvent("Click", (*) => this.OnSureHotkey())
+
+        PosY += 30
+        PosX := 20
+        this.HoldTimeLabelCon := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "触发键长按时间：")
+        this.HoldTimeCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX + 120, PosY - 2, 100), "500")
+        this.HoldTimeTipCon := MyGui.Add("Text", Format("x{} y{}", PosX + 220, PosY), "（此设置只在触发模式是【长按】时有效）")
+
+        PosY += 25
         con := MyGui.Add("Checkbox", Format("x{} y{} w{} h{}", PosX, PosY, 180, 20), "保留触发键原本功能")
         con.OnEvent("Click", (*) => this.OnChangeEnableTriggerKey())
         this.EnableTriggerKeyCon := con
 
-        PosY += 30
+        PosY := FlagSY
+        PosY += 50
+        PosX := 600
+        MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 650),
+        "特殊按键：Shift, Alt, Ctrl, Win, LShift, RShift, LAlt, RAlt, LCtrl, RCtrl, LWin, RWin")
+        PosY += 25
+        MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 650), "普通按键：除特殊按键的其他按键")
+        PosY += 25
+        MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 650),
+        "勾选规则1：特殊按键中可以 同时勾选多个按键 或 不选，普通按键中只能 勾选一个按键 或 不选")
+        PosY += 25
+        MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 650), "勾选规则2：手柄按钮、摇杆只能单独选")
+        FlagEY := PosY
+
+        PosY := FlagEY + 30
         PosX := 20
-        con := MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000), "当前配置的触发键：无")
+        con := MyGui.Add("Text", Format("x{} y{} w400", PosX, PosY), "当前配置的触发键：无")
         this.CheckedInfoCon := con
 
-        PosY += 30
-        PosX := 20
+        PosX := 600
         con := MyGui.Add("Text", Format("x{} y{} h{}  Center Background{}", PosX, PosY, 20, "FF0000"),
         "当前配置无效,请浏览勾选规则后，检查配置")
         con.Visible := false
         this.CheckedInvalidTipCon := con
 
-        PosY += 30
+        PosY += 40
+        PosX := 280
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "清空选项")
         btnCon.OnEvent("Click", (*) => this.ClearCheckedBox())
 
-        PosX += 200
+        PosX += 280
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "确定选项")
         btnCon.OnEvent("Click", (*) => this.OnSureBtnClick())
 
-        PosX += 200
+        PosX += 280
         this.SaveBtnCtrl := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "应用并保存")
         this.SaveBtnCtrl.OnEvent("Click", (*) => this.OnSaveBtnClick())
 
-        MyGui.Show(Format("w{} h{}", 1280, 750))
+        MyGui.Show(Format("w{} h{}", 1280, 720))
     }
 
     Refresh() {
@@ -1237,7 +1294,7 @@ class TriggerKeyGui {
             }
         }
 
-        if (hasJoy) {
+        if (hasJoy || this.Args.IsToolEdit) {
             this.EnableTriggerKeyCon.Value := 1
             this.EnableTriggerKeyCon.Enabled := false
         }
@@ -1260,5 +1317,13 @@ class TriggerKeyGui {
 
     OnChangeEnableTriggerKey() {
         this.Refresh()
+    }
+}
+
+class TriggerKeyGuiArgs {
+    __New() {
+        this.IsToolEdit := false
+        this.tableItem := ""
+        this.tableIndex := ""
     }
 }

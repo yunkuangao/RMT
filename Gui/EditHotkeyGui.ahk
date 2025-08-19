@@ -3,19 +3,20 @@
 class EditHotkeyGui {
     __new() {
         this.Gui := ""
+        this.ShowCon := ""
         this.KeyCon := ""
         this.OnlyTriggerKey := false
         this.TriggerStrBtnCon := ""
     }
 
-    ShowGui(KeyCon, OnlyTriggerKey) {
+    ShowGui(ShowCon, KeyCon, OnlyTriggerKey) {
         if (this.Gui != "") {
             this.Gui.Show()
         }
         else {
             this.AddGui()
         }
-
+        this.ShowCon := ShowCon
         this.KeyCon := KeyCon
         this.OnlyTriggerKey := OnlyTriggerKey
         this.TriggerStrBtnCon.Enabled := !this.OnlyTriggerKey
@@ -24,8 +25,7 @@ class EditHotkeyGui {
     AddGui() {
         MyGui := Gui(, "快捷方式编辑")
         this.Gui := MyGui
-        MyGui.SetFont(, "Arial")
-        MyGui.SetFont("S12 W550 Q2", "Consolas")
+        MyGui.SetFont("S12 W550 Q2", MySoftData.FontType)
 
         PosX := 75
         PosY := 30
@@ -42,8 +42,24 @@ class EditHotkeyGui {
 
     OnEditHotKey(gui) {
         triggerKey := this.KeyCon.Value
-        gui.SureBtnAction := (sureTriggerStr) => this.KeyCon.Value := sureTriggerStr
-        gui.ShowGui(triggerKey, false)
+        gui.SureBtnAction := this.OnSubSureBtn.Bind(this)
+        args := TriggerKeyGuiArgs()
+        args.IsToolEdit := true
+        gui.ShowGui(triggerKey, args)
         this.Gui.Hide()
     }
+
+    OnSubSureBtn(sureTriggerStr) {
+        if (sureTriggerStr != "" && SubStr(sureTriggerStr, 1, 1) == "~") {
+            sureTriggerStr := SubStr(sureTriggerStr, 2)
+        }
+        this.KeyCon.Value := sureTriggerStr
+        this.KeyCon.Enabled := false
+        this.KeyCon.Visible := true
+        this.ShowCon.Visible := false
+    }
+}
+
+OnOpenEditHotkeyGui(showCon, keyCon, OnlyTriggerKey, *) {
+    MyEditHotkeyGui.ShowGui(showCon, keyCon, OnlyTriggerKey)
 }

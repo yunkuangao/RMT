@@ -4,7 +4,7 @@ class OperationSubGui {
     __new() {
         this.Gui := ""
         this.SureBtnAction := ""
-        this.MacroEditGui := ""
+        this.VariableObjArr := []
         this.FocusCon := ""
         this.Index := 0
         this.Name := ""
@@ -12,8 +12,7 @@ class OperationSubGui {
         this.ValueArr := []
 
         this.ExpressionCon := ""
-        this.ValueCon := ""
-        this.NameCon := ""
+        this.OperaVariableCon := ""
         this.BaseValueCon := ""
         this.BaseResultCon := ""
     }
@@ -25,36 +24,35 @@ class OperationSubGui {
         else {
             this.AddGui()
         }
-        macro := this.MacroEditGui.GetFinallyMacroStr()
-        VariableArr := GetSelectVariableObjArr(macro)
+
         this.Index := index
         this.Name := Name
-        this.ExpressionCon.Value := cmd != "" ? cmd : Name
         this.SymbolArr := SymbolArr
         this.ValueArr := ValurArr
 
-        this.NameCon.Delete()
-        this.NameCon.Add(VariableArr)
-        this.NameCon.Text := "空"
+        this.OperaVariableCon.Delete()
+        this.OperaVariableCon.Add(this.VariableObjArr)
+        this.OperaVariableCon.Text := "10"
+        if (IsNumber(this.Name)) {
+            this.BaseValueCon.Value := this.Name
+        }
+        this.UpdateExpression()
+        this.UpdateExampleValue()
         this.FocusCon.Focus()
     }
 
     AddGui() {
         MyGui := Gui(, "变量换算编辑")
         this.Gui := MyGui
-        MyGui.SetFont(, "Arial")
-        MyGui.SetFont("S10 W550 Q2", "Consolas")
+        MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
         PosX := 10
         PosY := 10
-        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 350), "选择/输入为空时与操作值进行运算，否则与选择/输入的变量值运算")
+        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 350),
+        "运算符：+（加）、-（减）、*（乘）、（/）除、`n^（乘方）、..（字符拼接）")
 
         PosX := 10
-        PosY += 30
-        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 300, 20), "..按钮字符拼接操作")
-
-        PosX := 10
-        PosY += 25
+        PosY += 40
         this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 300, 20), "当前运算表达式")
         PosY += 20
         this.ExpressionCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "")
@@ -62,11 +60,9 @@ class OperationSubGui {
 
         PosX := 10
         PosY += 25
-        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 300, 20), "操作值               选择/输入")
-        PosY += 20
-        this.ValueCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX, PosY, 100, 20), "0")
-        PosX += 150
-        this.NameCon := MyGui.Add("ComboBox", Format("x{} y{} w{}", PosX, PosY, 100), [])
+        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY + 3, 120, 20), "被操作数值/变量：")
+        PosX += 120
+        this.OperaVariableCon := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX, PosY, 120), [])
 
         PosX := 10
         PosY += 30
@@ -87,14 +83,14 @@ class OperationSubGui {
         con.OnEvent("Click", (*) => this.OnClickOperatorBtn(".."))
 
         PosY += 40
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 120, 20), "假如操作变量是：")
-        this.BaseValueCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX + 110, PosY - 3, 50, 20), "10")
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 120, 20), "假定操作变量值：")
+        this.BaseValueCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX + 120, PosY - 3, 50, 20), "10")
         this.BaseValueCon.OnEvent("Change", (*) => this.OnChangeBaseValue())
 
         PosY += 20
         PosX := 10
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 120, 20), "换算后的变量是：")
-        this.BaseResultCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX + 125, PosY, 120, 20), "10")
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 120, 20), "换算后的结果是：")
+        this.BaseResultCon := MyGui.Add("Text", Format("x{} y{} h{}", PosX + 125, PosY, 20), "10")
 
         PosY += 30
         PosX := 10
@@ -107,28 +103,22 @@ class OperationSubGui {
     }
 
     OnChangeBaseValue() {
+        if (!IsNumber(this.BaseValueCon.Value)) {
+            MsgBox("假定操作变量值必须是数字")
+            return
+        }
         this.UpdateExampleValue()
     }
 
     OnClickOperatorBtn(Symbol) {
-        text := this.Name
-        Value := this.ValueCon.Value
-        if (this.NameCon.Text != "空" && this.NameCon.Text != "")
-            Value := "&" this.NameCon.Text
-
+        if (this.BaseValueCon.Value == "") {
+            MsgBox("被操作数值/变量不能为空")
+            return
+        }
+        Value := this.OperaVariableCon.Text
         this.SymbolArr.Push(Symbol)
         this.ValueArr.Push(Value)
-        loop this.SymbolArr.Length {
-            leftBracket := A_Index == 1 ? "" : "("
-            rightBracket := A_Index == 1 ? "" : ")"
-            CurSymbol := this.SymbolArr[A_Index]
-            CurValue := this.ValueArr[A_Index]
-            if (SubStr(CurValue, 1, 1) == "&")
-                CurValue := SubStr(CurValue, 2)
-            text := leftBracket text rightBracket CurSymbol CurValue
-        }
-        this.ExpressionCon.Value := text
-        this.UpdateExampleValue()
+        this.UpdateExpression()
     }
 
     OnBackspaceBtnClick() {
@@ -136,19 +126,7 @@ class OperationSubGui {
             return
         this.SymbolArr.Pop()
         this.ValueArr.Pop()
-
-        text := this.Name
-        loop this.SymbolArr.Length {
-            leftBracket := A_Index == 1 ? "" : "("
-            rightBracket := A_Index == 1 ? "" : ")"
-            Symbol := this.SymbolArr[A_Index]
-            Value := this.ValueArr[A_Index]
-            if (SubStr(Value, 1, 1) == "&")
-                Value := SubStr(Value, 2)
-            text := leftBracket text rightBracket Symbol Value
-        }
-        this.ExpressionCon.Value := text
-        this.UpdateExampleValue()
+        this.UpdateExpression()
     }
 
     OnClickSureBtn() {
@@ -160,18 +138,26 @@ class OperationSubGui {
         this.Gui.Hide()
     }
 
+    UpdateExpression() {
+        text := this.Name
+        loop this.SymbolArr.Length {
+            leftBracket := A_Index == 1 ? "" : "("
+            rightBracket := A_Index == 1 ? "" : ")"
+            Symbol := this.SymbolArr[A_Index]
+            Value := this.ValueArr[A_Index]
+            text := leftBracket text rightBracket Symbol Value
+        }
+        this.ExpressionCon.Value := text
+        this.UpdateExampleValue()
+    }
+
     UpdateExampleValue() {
         HasVariable := false
         loop this.ValueArr.Length {
-            if (SubStr(this.ValueArr[A_Index], 1, 1) == "&") {
-                HasVariable := true
-                break
+            if (!IsNumber(this.ValueArr[A_Index])) {
+                this.BaseResultCon.Value := "表达式中有变量无法进行预算"
+                return
             }
-        }
-
-        if (HasVariable) {
-            this.BaseResultCon.Value := "有变量无法预算"
-            return
         }
 
         sum := GetOperationResult(this.BaseValueCon.Value, this.SymbolArr, this.ValueArr)

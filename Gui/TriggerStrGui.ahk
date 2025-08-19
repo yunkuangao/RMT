@@ -72,7 +72,7 @@ class TriggerStrGui {
     }
 
     ;UI相关
-    ShowGui(triggerKey, showSaveBtn) {
+    ShowGui(triggerKey, args) {
 
         if (this.Gui != "") {
             this.Gui.Show()
@@ -81,17 +81,17 @@ class TriggerStrGui {
             this.AddGui()
         }
 
+        showSaveBtn := !args.IsToolEdit
         this.Init(triggerKey, showSaveBtn)
         this.Refresh()
     }
 
     AddGui() {
         {
-            MyGui := Gui()
+            MyGui := Gui(, "字串触发编辑器")
             this.Gui := MyGui
-            MyGui.SetFont(, "Arial")
-            MyGui.SetFont("S10 W550 Q2", "Consolas")
-            MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", 10, 10, 1150, 260), "请从下面字符中组合你想要触发宏的字串：")
+            MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
+            MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", 10, 10, 1120, 230), "请从下面字符中组合你想要触发宏的字串：")
 
             PosX := 20
             PosY := 40
@@ -420,7 +420,7 @@ class TriggerStrGui {
 
         }
 
-        PosY += 90
+        PosY += 50
         PosX := 20
         con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 120), "不需要终止符")
         con.OnEvent("Click", (*) => this.OnClickNoEndCharCon())
@@ -456,22 +456,23 @@ class TriggerStrGui {
         this.SettingTipCon := con
 
         PosY += 30
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "Backspace")
+        PosX := 50
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "退格")
         btnCon.OnEvent("Click", (*) => this.Backspace())
 
-        PosX += 200
+        PosX += 240
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "清空字串")
         btnCon.OnEvent("Click", (*) => this.ClearStr())
 
-        PosX += 200
+        PosX += 240
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "确定选项")
         btnCon.OnEvent("Click", (*) => this.OnSureBtnClick())
 
-        PosX += 200
+        PosX += 240
         this.SaveBtnCtrl := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "应用并保存")
         this.SaveBtnCtrl.OnEvent("Click", (*) => this.OnSaveBtnClick())
 
-        MyGui.Show(Format("w{} h{}", 1280, 500))
+        MyGui.Show(Format("w{} h{}", 1150, 460))
     }
 
     ;按钮点击回调
