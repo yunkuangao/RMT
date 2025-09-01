@@ -11,8 +11,11 @@ class JoyMacro {
         Action() {
             if (this.processName != "") {
                 infoStr := GetParamsWinInfoStr(this.processName)
-                if (!WinActivate(infoStr))
-                    return
+                try {
+                    if (!WinActivate(infoStr))
+                        return
+                }
+
             }
 
             action := this.actionFunc

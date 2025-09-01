@@ -110,8 +110,10 @@ TimingChecker() {
         ProcessName := tableItem.ProcessNameArr.Length >= index ? tableItem.ProcessNameArr[index] : ""
         if (ProcessName != "") {
             infoStr := GetParamsWinInfoStr(ProcessName)
-            if (!WinActivate(infoStr))
-                return
+            try {
+                if (!WinActivate(infoStr))
+                    return
+            }
         }
 
         UpdateTimingNextTime(Data)

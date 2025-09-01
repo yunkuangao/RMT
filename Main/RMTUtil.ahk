@@ -441,16 +441,23 @@ ExcuteRMTCMDAction(cmdStr) {
         MySoftData.CMDTipCtrl.Value := true
         MySoftData.CMDTip := true
         SetCMDTipValue(true)
-        MyCMDTipGui.Gui.Hide()
+        if (!IsObject(MyCMDTipGui.Gui))
+            return
+        MyCMDTipGui.ShowGui("开启指令显示")
     }
     else if (cmdStr == "关闭指令显示") {
         MySoftData.CMDTipCtrl.Value := false
         MySoftData.CMDTip := false
         SetCMDTipValue(false)
-        style := WinGetStyle(MyCMDTipGui.Gui.Hwnd)
-        isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
-        if (isVisible)
-            MyCMDTipGui.Gui.Hide()
+        if (!IsObject(MyCMDTipGui.Gui))
+            return
+
+        try {
+            style := WinGetStyle(MyCMDTipGui.Gui.Hwnd)
+            isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+            if (isVisible)
+                MyCMDTipGui.Gui.Hide()
+        }
     }
     else if (cmdStr == "启用键鼠") {
         BlockInput false
