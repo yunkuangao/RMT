@@ -107,7 +107,7 @@ TimingChecker() {
         if (Data.NextTriggerTime == "" || CurTime < Data.NextTriggerTime)
             continue
 
-        ProcessName := tableItem.ProcessNameArr.Length >= index ? tableItem.ProcessNameArr[index] : ""
+        ProcessName := tableItem.FrontInfoArr.Length >= index ? tableItem.FrontInfoArr[index] : ""
         if (ProcessName != "") {
             infoStr := GetParamsWinInfoStr(ProcessName)
             try {

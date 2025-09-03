@@ -358,7 +358,7 @@ BindTabHotKey() {
             actionArr := GetMacroAction(tableIndex, index)
             isJoyKey := RegExMatch(tableItem.TKArr[index], "Joy")
             isHotstring := SubStr(tableItem.TKArr[index], 1, 1) == ":"
-            curProcessName := tableItem.ProcessNameArr.Length >= index ? tableItem.ProcessNameArr[index] : ""
+            curProcessName := tableItem.FrontInfoArr.Length >= index ? tableItem.FrontInfoArr[index] : ""
 
             if (curProcessName != "") {
                 HotIfWinActive(GetParamsWinInfoStr(curProcessName))

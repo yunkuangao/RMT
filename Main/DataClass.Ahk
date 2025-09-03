@@ -5,7 +5,7 @@ class TableItem {
         this.HoldTimeArr := []
         this.ModeArr := []
         this.ForbidArr := []
-        this.ProcessNameArr := []
+        this.FrontInfoArr := []
         this.LoopCountArr := []
         this.RemarkArr := []
         this.TriggerTypeArr := []
@@ -40,6 +40,16 @@ class TableItem {
         this.OffSetPosY := 0        ;   偏移值
         this.AllConArr := []
         this.IsWorkIndexArr := []        ;work正在执行中
+    
+        this.FoldInfo := ""  ;折叠筐保存信息
+    }
+}
+
+class ItemFoldInfo {
+    __New() {
+        this.RemarkArr := []    ;折叠框备注
+        this.IndexSpanArr := []     ;范围索引
+        this.FoldStateArr := []    ;折叠状态
     }
 }
 

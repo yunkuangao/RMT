@@ -31,7 +31,7 @@ OnOpen() {
 }
 
 RefreshGui() {
-    MySoftData.MyGui.Show(Format("w{} h{} center", 1050, 540))
+    MySoftData.MyGui.Show(Format("w{} h{} center", 1060, 540))
 }
 
 RefreshToolUI() {
@@ -63,7 +63,7 @@ AddUI() {
         func(A_Index)
     }
     MySoftData.TabCtrl.UseTab()
-    MySoftData.TabCtrl.Move(MySoftData.TabPosX, MySoftData.TabPosY, 910, 520)
+    MySoftData.TabCtrl.Move(MySoftData.TabPosX, MySoftData.TabPosY, 920, 520)
     MySoftData.TabCtrl.OnEvent("Change", OnTabValueChanged)
 
     AddSliderUI()

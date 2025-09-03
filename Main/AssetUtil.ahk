@@ -368,13 +368,14 @@ ReadTableItemInfo(index) {
     savedTKArrStr := IniRead(MacroFile, IniSection, symbol "TKArr", "")
     savedModeArrStr := IniRead(MacroFile, IniSection, symbol "ModeArr", "")
     savedForbidArrStr := IniRead(MacroFile, IniSection, symbol "ForbidArr", "")
-    savedProcessNameStr := IniRead(MacroFile, IniSection, symbol "ProcessNameArr", "")
+    savedProcessNameStr := IniRead(MacroFile, IniSection, symbol "FrontInfoArr", "")
     savedRemarkArrStr := IniRead(MacroFile, IniSection, symbol "RemarkArr", "")
     savedLoopCountStr := IniRead(MacroFile, IniSection, symbol "LoopCountArr", "")
     savedHoldTimeArrStr := IniRead(MacroFile, IniSection, symbol "HoldTimeArr", "")
     savedTriggerTypeArrStr := IniRead(MacroFile, IniSection, symbol "TriggerTypeArr", "")
     savedSerialStr := IniRead(MacroFile, IniSection, symbol "SerialArr", "")
     savedTimingSerialStr := IniRead(MacroFile, IniSection, symbol "TimingSerialArr", "")
+    savedFoldInfoStr := IniRead(MacroFile, IniSection, symbol "FoldInfo", "")
 
     if (!MySoftData.HasSaved) {
         if (savedTKArrStr == "")
@@ -397,19 +398,27 @@ ReadTableItemInfo(index) {
             savedSerialStr := defaultInfo[9]
         if (savedTimingSerialStr == "")
             savedTimingSerialStr := GetSerialStr("Timing")
+        if (savedFoldInfoStr == "") {
+            defaultFoldInfo := ItemFoldInfo()
+            defaultFoldInfo.RemarkArr := ["RMT默认初始化配置"]
+            defaultFoldInfo.IndexSpanArr := ["1-1"]
+            defaultFoldInfo.FoldStateArr := [true]
+            savedFoldInfoStr := JSON.stringify(defaultFoldInfo, 0)
+        }
     }
 
     tableItem := MySoftData.TableInfo[index]
     SetArr(savedTKArrStr, "π", tableItem.TKArr)
     SetArr(savedModeArrStr, "π", tableItem.ModeArr)
     SetArr(savedForbidArrStr, "π", tableItem.ForbidArr)
-    SetArr(savedProcessNameStr, "π", tableItem.ProcessNameArr)
+    SetArr(savedProcessNameStr, "π", tableItem.FrontInfoArr)
     SetArr(savedRemarkArrStr, "π", tableItem.RemarkArr)
     SetIntArr(savedLoopCountStr, "π", tableItem.LoopCountArr)
     SetArr(savedHoldTimeArrStr, "π", tableItem.HoldTimeArr)
     SetArr(savedTriggerTypeArrStr, "π", tableItem.TriggerTypeArr)
     SetArr(savedSerialStr, "π", tableItem.SerialArr)
     SetArr(savedTimingSerialStr, "π", tableItem.TimingSerialArr)
+    tableItem.FoldInfo := JSON.parse(savedFoldInfoStr, , false)
 
     loop tableItem.ModeArr.length {
         str := IniRead(MacroFile, IniSection, symbol "MacroArr" A_Index, "")
@@ -537,16 +546,21 @@ GetTableItemDefaultInfo(index) {
 SaveTableItemInfo(index) {
     SavedInfo := GetSavedTableItemInfo(index)
     symbol := GetTableSymbol(index)
+    tableItem := MySoftData.TableInfo[index]
     IniWrite(SavedInfo[1], MacroFile, IniSection, symbol "TKArr")
     IniWrite(SavedInfo[2], MacroFile, IniSection, symbol "ModeArr")
     IniWrite(SavedInfo[3], MacroFile, IniSection, symbol "HoldTimeArr")
     IniWrite(SavedInfo[4], MacroFile, IniSection, symbol "ForbidArr")
-    IniWrite(SavedInfo[5], MacroFile, IniSection, symbol "ProcessNameArr")
+    IniWrite(SavedInfo[5], MacroFile, IniSection, symbol "FrontInfoArr")
     IniWrite(SavedInfo[6], MacroFile, IniSection, symbol "RemarkArr")
     IniWrite(SavedInfo[7], MacroFile, IniSection, symbol "LoopCountArr")
     IniWrite(SavedInfo[8], MacroFile, IniSection, symbol "TriggerTypeArr")
     IniWrite(SavedInfo[9], MacroFile, IniSection, symbol "SerialArr")
     IniWrite(SavedInfo[10], MacroFile, IniSection, symbol "TimingSerialArr")
+
+    FoldInfoStr := JSON.stringify(tableItem.FoldInfo, 0)
+    IniWrite(FoldInfoStr, MacroFile, IniSection, symbol "FoldInfo")
+
     SaveTableItemMacro(index)
 }
 
@@ -570,7 +584,7 @@ GetSavedTableItemInfo(index) {
     ModeArrStr := ""
     HoldTimeArrStr := ""
     ForbidArrStr := ""
-    ProcessNameArrStr := ""
+    FrontInfoArrStr := ""
     RemarkArrStr := ""
     LoopCountArrStr := ""
     TriggerTypeArrStr := ""
@@ -585,7 +599,7 @@ GetSavedTableItemInfo(index) {
         ModeArrStr .= tableItem.ModeConArr[A_Index].Value
         ForbidArrStr .= tableItem.ForbidConArr[A_Index].Value
         HoldTimeArrStr .= tableItem.HoldTimeArr[A_Index]
-        ProcessNameArrStr .= tableItem.ProcessNameConArr[A_Index].Value
+        FrontInfoArrStr .= tableItem.ProcessNameConArr[A_Index].Value
         RemarkArrStr .= tableItem.RemarkConArr.Length >= A_Index ? tableItem.RemarkConArr[A_Index].Value : ""
         TriggerTypeArrStr .= tableItem.TriggerTypeConArr.Length >= A_Index ? tableItem.TriggerTypeConArr[A_Index].Value :
             ""
@@ -598,7 +612,7 @@ GetSavedTableItemInfo(index) {
             ModeArrStr .= "π"
             HoldTimeArrStr .= "π"
             ForbidArrStr .= "π"
-            ProcessNameArrStr .= "π"
+            FrontInfoArrStr .= "π"
             RemarkArrStr .= "π"
             LoopCountArrStr .= "π"
             TriggerTypeArrStr .= "π"
@@ -607,7 +621,7 @@ GetSavedTableItemInfo(index) {
         }
     }
 
-    return [TKArrStr, ModeArrStr, HoldTimeArrStr, ForbidArrStr, ProcessNameArrStr, RemarkArrStr,
+    return [TKArrStr, ModeArrStr, HoldTimeArrStr, ForbidArrStr, FrontInfoArrStr, RemarkArrStr,
         LoopCountArrStr, TriggerTypeArrStr, SerialArrStr, TimingSerialArrStr]
 }
 

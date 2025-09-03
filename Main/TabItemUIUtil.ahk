@@ -24,28 +24,59 @@ LoadTabConent(index) {
     con := MyGui.Add("Text", Format("x{} y{}", MySoftData.TabPosX + 690, tableItem.underPosY), "指定前台触发")
     tableItem.AllConArr.Push(ItemConInfo(con))
 
-    UpdateUnderPosY(index, 20)
-    LoadTabItem(index)
+    UpdateUnderPosY(index, 30)
+    LoadItemFold(index)
 }
 
-LoadTabItem(index) {
+LoadItemFold(index) {
     tableItem := MySoftData.TableInfo[index]
-    isMacro := CheckIsMacroTable(index)
-    isNormal := CheckIsNormalTable(index)
-    isSubMacro := CheckIsSubMacroTable(index)
-    isNoTriggerKey := CheckIsNoTriggerKey(index)
-    isTiming := CheckIsTimingMacroTable(index)
-    curIndex := 0
+    FoldInfo := tableItem.FoldInfo
     MyGui := MySoftData.MyGui
-    TabPosX := MySoftData.TabPosX
-    subMacroWidth := isNoTriggerKey ? 75 : 0
-    isTriggerStr := CheckIsStringMacroTable(index)
-    EditTriggerAction := isTriggerStr ? OnTableEditTriggerStr : OnTableEditTriggerKey
-    EditTriggerAction := isTiming ? OnTableEditTiming : EditTriggerAction
-    EditMacroAction := isMacro ? OnTableEditMacro : OnTableEditReplaceKey
-    loop tableItem.ModeArr.Length {
-        LoadTabItemUI(tableItem, A_Index, false)
+    for foldIndex, IndexSpanStr in FoldInfo.IndexSpanArr {
+        if (FoldInfo.FoldStateArr[foldIndex])
+            UpdateUnderPosY(index, 20)
+
+        con := MyGui.Add("Text", Format("x{} y{}", MySoftData.TabPosX + 20, tableItem.UnderPosY + 2), "备注：")
+        tableItem.AllConArr.Push(ItemConInfo(con))
+
+        con := MyGui.Add("Edit", Format("x{} y{} w150", MySoftData.TabPosX + 60, tableItem.UnderPosY), FoldInfo.RemarkArr[
+            foldIndex])
+        tableItem.AllConArr.Push(ItemConInfo(con))
+
+        con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 230, tableItem.UnderPosY - 3), "新增宏")
+        tableItem.AllConArr.Push(ItemConInfo(con))
+
+        con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 300, tableItem.UnderPosY - 3), "新增模块")
+        tableItem.AllConArr.Push(ItemConInfo(con))
+
+        con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 385, tableItem.UnderPosY - 3), "删除该模块")
+        tableItem.AllConArr.Push(ItemConInfo(con))
+
+        con := MyGui.Add("CheckBox", Format("x{} y{}", MySoftData.TabPosX + 490, tableItem.UnderPosY + 2), "禁用")
+        tableItem.AllConArr.Push(ItemConInfo(con))
+
+        con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 840, tableItem.UnderPosY), "▼")   ;▲
+        tableItem.AllConArr.Push(ItemConInfo(con))
+
+        UpdateUnderPosY(index, 40)
+        IndexSpan := StrSplit(IndexSpanStr, "-")
+        if (!IsInteger(IndexSpan[1]) || !IsInteger(IndexSpan[2]))
+            continue
+
+        loop IndexSpan[2] - IndexSpan[1] + 1 {
+            curIndex := A_Index + IndexSpan[1] - 1
+            LoadTabItemUI(tableItem, curIndex, false)
+        }
     }
+}
+
+GetFoldGroupHeight(FoldInfo, index) {
+    height := 40
+    IndexSpan := StrSplit(FoldInfo.IndexSpanArr[index], "-")
+    if (!IsInteger(IndexSpan[1]) || !IsInteger(IndexSpan[2]))
+        return height
+    height := height + (IndexSpan[2] - IndexSpan[1] + 1) * 70
+    return height
 }
 
 OnAddTabItem(*) {
@@ -61,7 +92,7 @@ OnAddTabItem(*) {
     tableItem.MacroArr.Push("")
     tableItem.ModeArr.Push(1)
     tableItem.ForbidArr.Push(0)
-    tableItem.ProcessNameArr.Push("")
+    tableItem.FrontInfoArr.Push("")
     tableItem.RemarkArr.Push("")
     tableItem.LoopCountArr.Push("1")
     tableItem.HoldTimeArr.Push(500)
@@ -94,12 +125,12 @@ LoadTabItemUI(tableItem, itemIndex, isAdd) {
     HeightValue := 70
     InfoHeight := 60
 
-    colorCon := MyGui.Add("Pic", Format("x{} y{} w{} h27", TabPosX + 10, tableItem.underPosY, 29),
+    colorCon := MyGui.Add("Pic", Format("x{} y{} w{} h27", TabPosX + 20, tableItem.underPosY, 29),
     "Images\Soft\GreenColor.png")
     colorCon.Visible := false
     tableItem.AllConArr.Push(ItemConInfo(colorCon))
 
-    IndexCon := MyGui.Add("Text", Format("x{} y{} w{} +BackgroundTrans", TabPosX + 10, tableItem.underPosY + 5,
+    IndexCon := MyGui.Add("Text", Format("x{} y{} w{} +BackgroundTrans", TabPosX + 20, tableItem.underPosY + 5,
         30), ItemIndex ".")
     tableItem.AllConArr.Push(ItemConInfo(IndexCon))
 
@@ -110,7 +141,7 @@ LoadTabItemUI(tableItem, itemIndex, isAdd) {
     TriggerTypeCon.Visible := isNoTriggerKey ? false : true
     tableItem.AllConArr.Push(ItemConInfo(TriggerTypeCon))
 
-    TkCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", TabPosX + 10, tableItem.underPosY + 33, 100,),
+    TkCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", TabPosX + 20, tableItem.underPosY + 33, 100,),
     "")
     TkCon.Visible := isNoTriggerKey ? false : true
     TkCon.Value := tableItem.TKArr.Length >= ItemIndex ? tableItem.TKArr[ItemIndex] : ""
@@ -150,7 +181,7 @@ LoadTabItemUI(tableItem, itemIndex, isAdd) {
     con := MyGui.Add("Text", Format("x{} y{} w60", TabPosX + 650, tableItem.underPosY + 4), "前台:")
     tableItem.AllConArr.Push(ItemConInfo(con))
     FrontCon := MyGui.Add("Edit", Format("x{} y{} w140", TabPosX + 690, tableItem.underPosY), "")
-    FrontCon.value := tableItem.ProcessNameArr.Length >= ItemIndex ? tableItem.ProcessNameArr[ItemIndex] :
+    FrontCon.value := tableItem.FrontInfoArr.Length >= ItemIndex ? tableItem.FrontInfoArr[ItemIndex] :
         ""
     tableItem.AllConArr.Push(ItemConInfo(FrontCon))
 
