@@ -206,6 +206,7 @@ InitFilePath() {
     FileInstall("Images\Soft\GreenColor.png", "Images\Soft\GreenColor.png", 1)
     FileInstall("Images\Soft\RedColor.png", "Images\Soft\RedColor.png", 1)
     FileInstall("Images\Soft\YellowColor.png", "Images\Soft\YellowColor.png", 1)
+    FileInstall("Images\Soft\Target.png", "Images\Soft\Target.png", 1)
 
     global VBSPath := A_WorkingDir "\VBS\PlayAudio.vbs"
     global MacroFile := A_WorkingDir "\Setting\" MySoftData.CurSettingName "\MacroFile.ini"

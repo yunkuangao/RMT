@@ -14,6 +14,7 @@
 #Include Gui\FreePasteGui.ahk
 #Include Gui\MacroEditGui.ahk
 #Include Gui\ReplaceKeyGui.ahk
+#Include Gui\TargetGui.ahk
 #Include Gui\ToolRecordSettingGui.ahk
 #Include Gui\CMDTipGui.ahk
 #Include Gui\FrontInfoGui.ahk
@@ -56,6 +57,7 @@ global MyFrontInfoGui := FrontInfoGui()
 global MyCMDTipGui := CMDTipGui()
 global MyTimingGui := TimingGui()
 global MySlider := VerticalSlider()
+global MyTargetGui := TargetGui()
 global MyMsgboxGui := CustomMsgBoxGui()
 global MyCMDTipSettingGui := CMDTipSettingGui()
 global MyToolRecordSettingGui := ToolRecordSettingGui()
@@ -83,3 +85,7 @@ SetGlobalVar()      ;缓存全局变量
 PluginInit()
 TimingCheck()       ;轮询检测触发
 BindKey()           ;绑定快捷键
+
+WheelLeft:: {
+    MyTargetGui.ShowGui()
+}
