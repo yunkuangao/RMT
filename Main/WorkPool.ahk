@@ -20,8 +20,12 @@ class WorkPool {
         this.Clear()
     }
 
-    CheckHasWork() {
+    CheckHasFreeWorker() {
         return this.pool.Length >= 1
+    }
+
+    CheckEnableMutiThread() {
+        return this.maxSize >= 1
     }
 
     ; 从池中获取一个对象

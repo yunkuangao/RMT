@@ -506,7 +506,7 @@ OnSoftKeyUp(key, *) {
 OnToggleTriggerMacro(tableIndex, itemIndex) {
     tableItem := MySoftData.TableInfo[tableIndex]
     macro := tableItem.MacroArr[itemIndex]
-    hasWork := MyWorkPool.CheckHasWork()
+    hasWork := MyWorkPool.CheckHasFreeWorker()
 
     if (hasWork) {
         workPath := MyWorkPool.Get()
@@ -537,7 +537,7 @@ TriggerMacroHandler(tableIndex, itemIndex, *) {
     tableItem := MySoftData.TableInfo[tableIndex]
     macro := tableItem.MacroArr[itemIndex]
     isWork := tableItem.IsWorkIndexArr[itemIndex]
-    hasWork := MyWorkPool.CheckHasWork()
+    hasWork := MyWorkPool.CheckHasFreeWorker()
     if (isWork)
         return
 

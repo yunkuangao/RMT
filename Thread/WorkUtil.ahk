@@ -116,6 +116,7 @@ WorkSetGlobalVariable(Name, Value, ignoreExist) {
     global MySoftData
     if (ignoreExist && MySoftData.VariableMap.Has(Name))
         return
+    MySoftData.VariableMap[Name] := Value
     str := Format("SetVari_{}_{}", Name, Value)
     MsgSendHandler(str)
 }

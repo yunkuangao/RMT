@@ -235,7 +235,7 @@ SubMacroStopAction(tableIndex, itemIndex) {
 TriggerSubMacro(tableIndex, itemIndex) {
     tableItem := MySoftData.TableInfo[tableIndex]
     macro := tableItem.MacroArr[itemIndex]
-    hasWork := MyWorkPool.CheckHasWork()
+    hasWork := MyWorkPool.CheckHasFreeWorker()
 
     if (tableItem.IsWorkIndexArr[itemIndex])     ;正在执行不能再次触发
         return
@@ -257,8 +257,8 @@ SetGlobalVariable(Name, Value, ignoreExist) {
     if (ignoreExist && MySoftData.VariableMap.Has(Name))
         return
     MySoftData.VariableMap[Name] := Value
-    hasWork := MyWorkPool.CheckHasWork()
-    if (hasWork) {
+    IsMuti := MyWorkPool.CheckEnableMutiThread()
+    if (IsMuti) {
         loop MyWorkPool.maxSize {
             workPath := A_ScriptDir "\Thread\Work" A_Index ".exe"
             str := Format("SetVari_{}_{}", Name, Value)
@@ -271,8 +271,8 @@ DelGlobalVariable(Name) {
     global MySoftData
     if (MySoftData.VariableMap.Has(Name))
         MySoftData.VariableMap.Delete(Name)
-    hasWork := MyWorkPool.CheckHasWork()
-    if (hasWork) {
+    IsMuti := MyWorkPool.CheckEnableMutiThread()
+    if (IsMuti) {
         loop MyWorkPool.maxSize {
             workPath := A_ScriptDir "\Thread\Work" A_Index ".exe"
             str := Format("DelVari_{}", Name)
@@ -282,8 +282,8 @@ DelGlobalVariable(Name) {
 }
 
 SetCMDTipValue(value) {
-    hasWork := MyWorkPool.CheckHasWork()
-    if (hasWork) {
+    IsMuti := MyWorkPool.CheckEnableMutiThread()
+    if (IsMuti) {
         loop MyWorkPool.maxSize {
             workPath := A_ScriptDir "\Thread\Work" A_Index ".exe"
             str := Format("CMDTip_{}", value)
@@ -601,7 +601,7 @@ FullCopyCmd(cmd) {
     Data := GetMacroCMDData(dataFile, paramArr[2])
     Data.SerialStr := SubStr(Data.SerialStr, 1, StrLen(Data.SerialStr) - 7) GetRandomStr(7)
     paramArr[2] := Data.SerialStr
-    
+
     if (ObjHasOwnProp(Data, "TrueMacro")) {
         Data.TrueMacro := FullCopyMacro(Data.TrueMacro)
     }
