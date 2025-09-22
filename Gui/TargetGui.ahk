@@ -12,10 +12,10 @@ class TargetGui {
         this.CoordX := 1920
         this.CoordY := 1080
 
-        this.RowColorNum := 5
-        this.ColColorNum := 7
-        this.GuiWidth := 175
-        this.GuiHeight := 115
+        this.RowColorNum := 9
+        this.ColColorNum := 13
+        this.GuiWidth := 200
+        this.GuiHeight := 130
     }
 
     ShowGui() {
@@ -42,15 +42,15 @@ class TargetGui {
             RowValue := A_Index
             loop this.ColColorNum {
                 ColValue := A_Index
-                PosX := StartPosX + (ColValue - 1) * 15
-                PosY := StartPosY + (RowValue - 1) * 15
+                PosX := StartPosX + (ColValue - 1) * 10
+                PosY := StartPosY + (RowValue - 1) * 10
                 Con := this.Gui.Add("Text", Format("x{} y{} w{} h{} Background{}", PosX, PosY, 15, 15, "FF0000"), "")
-                this.ColorConMap.Set(Format("{}-{}", RowValue, ColValue), Con)
+                this.ColorConMap.Set(Format("{}-{}", ColValue, RowValue), Con)
             }
         }
 
-        this.ColorCon := this.Gui.Add("Text", Format("x{} y{} w{} h{} Background{}", 5, 60, 50, 50, "FF0000"), "")
-        this.CoordCon := this.Gui.Add("Text", Format("x{} y{} w{}", 60, 80, 100, "FF0000"), "1920,1080")
+        this.ColorCon := this.Gui.Add("Text", Format("x{} y{} w{} h{} Background{}", 5, 75, 50, 50, "FF0000"), "")
+        this.CoordCon := this.Gui.Add("Text", Format("x{} y{} w{}", 60, 100, 100, "FF0000"), "1920,1080")
 
         this.OverlayCon := this.Gui.Add("Text", "x0 y0 w" this.GuiWidth " h" this.GuiHeight " BackgroundTrans")
         this.OverlayCon.OnEvent("Click", this.GuiDrag.Bind(this))
@@ -80,15 +80,19 @@ class TargetGui {
 
     RefreshMapImage() {
         this.Gui.GetPos(&x, &y, &w, &h)
+        ColorValueMap := GetPixelColorMap(x - 1, y - 1, 9, 13)
         x := x - 1 - (this.ColColorNum - 1) / 2
         y := y - 1 - (this.RowColorNum - 1) / 2
+
         CoordMode("Pixel", "Screen")
         loop this.RowColorNum {
             RowValue := A_Index
             loop this.ColColorNum {
                 ColValue := A_Index
-                ColorValue := PixelGetColor(x + ColValue - 1, y + RowValue - 1)
-                Con := this.ColorConMap[Format("{}-{}", RowValue, ColValue)]
+                ; ColorValue := PixelGetColor(x + ColValue - 1, y + RowValue - 1)
+                Key := Format("{}-{}", ColValue, RowValue)
+                Con := this.ColorConMap[Key]
+                ColorValue := ColorValueMap[Key]
                 Con.Opt("Background" ColorValue)
                 Con.Redraw()
             }

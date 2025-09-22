@@ -85,7 +85,7 @@ SetGlobalVar()      ;缓存全局变量
 PluginInit()
 TimingCheck()       ;轮询检测触发
 BindKey()           ;绑定快捷键
-
+    
 WheelLeft:: {
     MyTargetGui.ShowGui()
 }

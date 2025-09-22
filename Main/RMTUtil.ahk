@@ -637,3 +637,55 @@ FullCopyMacro(MacroStr) {
     }
     return result
 }
+
+GetPixelColorMap(CentPosX, CentPosY, Row, Col) {
+    width := Col
+    height := Row
+    PosX := CentPosX - (Col - 1) / 2
+    PosY := CentPosY - (Row - 1) / 2
+    pBitmap := Gdip_BitmapFromScreen(PosX "|" PosY "|" width "|" height)
+    ResultMap := Map()
+    loop Row {
+        rowValue := A_Index
+        loop Col {
+            colValue := A_Index
+            Value := Gdip_GetPixel(pBitmap, colValue, rowValue)
+            Key := Format("{}-{}", colValue, rowValue)
+            RGB_Value := Value & 0xFFFFFF  ; 移除Alpha通道，保留RGB
+            ResultMap.Set(Key, 0x00FF00)
+        }
+    }
+    return ResultMap
+}
+
+SavePixelImage(PosX, PosY, SavePath) {
+    ; 创建位图
+    RowNum := 9
+    ColNum := 13
+    width := 130, height := 90
+    pBitmap := Gdip_CreateBitmap(width, height)
+    G := Gdip_GraphicsFromImage(pBitmap)
+    CoordMode("Pixel", "Screen")
+
+    loop RowNum {
+        RowValue := A_Index
+        loop ColNum {
+            ColValue := A_Index
+
+            CurPosX := PosX - (ColNum - 1) / 2 + ColValue
+            CurPosY := PosY - (RowNum - 1) / 2 + RowValue
+            ColorValue := PixelGetColor(CurPosX, CurPosY)
+            ColorValue := "0xFF" SubStr(ColorValue, 3)
+            pBrush := Gdip_BrushCreateSolid(ColorValue)
+            Gdip_FillRectangle(G, pBrush, (ColValue - 1) * 10, (RowValue - 1) * 10, 10, 10)
+            Gdip_DeleteBrush(pBrush)
+        }
+    }
+
+    ; 保存临时图片文件
+    Gdip_SaveBitmapToFile(pBitmap, SavePath)
+
+    ; 清理资源
+    Gdip_DeleteGraphics(G)
+    Gdip_DisposeImage(pBitmap)
+}
