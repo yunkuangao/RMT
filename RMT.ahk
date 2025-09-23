@@ -85,18 +85,3 @@ SetGlobalVar()      ;缓存全局变量
 PluginInit()
 TimingCheck()       ;轮询检测触发
 BindKey()           ;绑定快捷键
-    
-;截图左键特殊启动
-
-; Hotkey("~a", actionDown1)
-; Hotkey("a", actionDown)
-
-; actionDown(*) {
-;     Send("b")
-;     ; Hotkey("a", actionDown, "Off")
-;     Hotkey("~a", actionDown1, "On")
-; }
-
-; actionDown1(*) {
-;     Send("c")
-; }
