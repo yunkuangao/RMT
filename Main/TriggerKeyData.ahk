@@ -193,5 +193,9 @@ class TriggerKeyData {
                 MyTargetGui.OnLButtonUp(this.Key)
             }
         }
+
+        if (this.Key == "enter") {
+            MyTargetGui.OnEnterUp(this.Key)
+        }
     }
 }

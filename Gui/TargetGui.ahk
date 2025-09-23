@@ -82,6 +82,13 @@ class TargetGui {
 
     ;双击确定关闭
     GuiDoubleClick(*) {
+        if (this.Gui == "")
+            return
+        style := WinGetStyle(this.Gui.Hwnd)
+        isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+        if (!isVisible)
+            return
+    
         this.Gui.Hide()
         if (this.SureAction == "")
             return
@@ -90,8 +97,30 @@ class TargetGui {
     }
 
     OnLButtonUp(*) {
+        if (this.Gui == "")
+            return
+        style := WinGetStyle(this.Gui.Hwnd)
+        isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+        if (!isVisible)
+            return
+
         this.RefreshCoord()
         this.RefreshMapImage()
+    }
+
+    OnEnterUp(*) {
+        if (this.Gui == "")
+            return
+        style := WinGetStyle(this.Gui.Hwnd)
+        isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+        if (!isVisible)
+            return
+
+        this.Gui.Hide()
+        if (this.SureAction == "")
+            return
+        action := this.SureAction
+        action(this.CoordX, this.CoordY, this.ColorValue)
     }
 
     OnArrowKeyDown(key) {

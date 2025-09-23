@@ -291,7 +291,7 @@ class SoftData {
         this.CMDFontColor := "000000"
 
         this.TriggerKeyMap := Map()
-        this.SoftHotKeyArr := ["~WheelUp", "~WheelDown", "~LButton", "~Left", "~Right", "~Up", "~Down"]
+        this.SoftHotKeyArr := ["~WheelUp", "~WheelDown", "~LButton", "~Left", "~Right", "~Up", "~Down", "~Enter"]
     }
 }
 

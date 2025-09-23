@@ -54,10 +54,16 @@ class MMProGui {
 
         PosY += 30
         PosX := 10
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 400), "F1:选取当前坐标")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY + 3, 400), "F1:选取当前坐标")
+
+        PosX += 160
+        Con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "定位取色器")
+        Con.OnEvent("Click", this.OnClickTargeterBtn.Bind(this))
+        Con := MyGui.Add("Button", Format("x{} y{} w30", PosX + 102, PosY), "?")
+        Con.OnEvent("Click", this.OnClickTargeterHelpBtn.Bind(this))
 
         PosX := 10
-        PosY += 20
+        PosY += 30
         this.MousePosCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 380, 20), "当前鼠标位置:0,0")
 
         PosY += 20
@@ -104,7 +110,7 @@ class MMProGui {
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
         MyGui.OnEvent("Close", (*) => this.ToggleFunc(false))
-        MyGui.Show(Format("w{} h{}", 480, 290))
+        MyGui.Show(Format("w{} h{}", 480, 300))
     }
 
     Init(cmd) {
@@ -149,7 +155,7 @@ class MMProGui {
         tableItem.ActionCount[1] := 0
         tableItem.VariableMapArr[1] := Map()
         tableItem.index := 1
-    
+
         OnMMPro(tableItem, this.GetCommandStr(), 1)
     }
 
@@ -182,6 +188,21 @@ class MMProGui {
             Hotkey("F1", (*) => this.SureMMPro(), "Off")
         }
     }
+
+    OnSureTarget(PosX, PosY, Color) {
+        this.PosVarXCon.Text := PosX
+        this.PosVarYCon.Text := PosY
+    }
+
+    OnClickTargeterBtn(*) {
+        MyTargetGui.SureAction := this.OnSureTarget.Bind(this)
+        MyTargetGui.ShowGui()
+    }
+
+    OnClickTargeterHelpBtn(*) {
+        MsgBox("1.左键拖拽改变位置`n2.上下左右方向键微调位置`n3.左键双击或回车键关闭取色器，同时确定点位信息", "定位取色器操作说明")
+    }
+
 
     OnClickSureBtn() {
         valid := this.CheckIfValid()

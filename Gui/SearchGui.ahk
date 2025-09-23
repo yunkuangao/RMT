@@ -81,13 +81,19 @@ class SearchGui {
         con := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY, 25), "F2")
         con.Enabled := false
         PosX += 30
-        MyGui.Add("Text", Format("x{} y{} h{} Center", PosX, PosY + 3, 25), "选取当前颜色")
+        MyGui.Add("Text", Format("x{} y{} h{} Center", PosX, PosY + 3, 25), "截图")
 
-        PosX += 130
+        PosX += 80
         con := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY, 25), "F3")
         con.Enabled := false
         PosX += 30
-        MyGui.Add("Text", Format("x{} y{} h{} Center", PosX, PosY + 3, 25), "截图")
+        MyGui.Add("Text", Format("x{} y{} h{} Center", PosX, PosY + 3, 25), "选取当前颜色")
+
+        PosX += 120
+        Con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY - 2), "定位取色器")
+        Con.OnEvent("Click", this.OnClickTargeterBtn.Bind(this))
+        Con := MyGui.Add("Button", Format("x{} y{} w30", PosX + 102, PosY - 2), "?")
+        Con.OnEvent("Click", this.OnClickTargeterHelpBtn.Bind(this))
 
         PosX := 10
         PosY += 30
@@ -291,15 +297,15 @@ class SearchGui {
             SetTimer this.PosAction, 100
             Hotkey("!l", MacroAction, "On")
             Hotkey("F1", (*) => this.OnF1(), "On")
-            Hotkey("F2", (*) => this.SureColor(), "On")
-            Hotkey("F3", (*) => this.OnScreenShotBtnClick(), "On")
+            Hotkey("F2", (*) => this.OnScreenShotBtnClick(), "On")
+            Hotkey("F3", (*) => this.SureColor(), "On")
         }
         else {
             SetTimer this.PosAction, 0
             Hotkey("!l", MacroAction, "Off")
             Hotkey("F1", (*) => this.OnF1(), "Off")
-            Hotkey("F2", (*) => this.SureColor(), "Off")
-            Hotkey("F3", (*) => this.OnScreenShotBtnClick(), "Off")
+            Hotkey("F2", (*) => this.OnScreenShotBtnClick(), "Off")
+            Hotkey("F3", (*) => this.SureColor(), "Off")
         }
     }
 
@@ -357,6 +363,25 @@ class SearchGui {
             ; 停止监听
             SetTimer(, 0)
         }
+    }
+
+    OnSureTarget(PosX, PosY, Color) {
+        ColorText := StrReplace(Color, "0x", "")
+        this.HexColorCon.Value := ColorText
+        this.HexColor := ColorText
+        this.HexColorTipCon.Visible := true
+        this.HexColorTipCon.Opt(Format("+Background0x{}", this.HexColorCon.Value))
+        this.HexColorTipCon.Redraw()
+        this.OnSetSearchArea(PosX, PosY, PosX, PosY)
+    }
+
+    OnClickTargeterBtn(*) {
+        MyTargetGui.SureAction := this.OnSureTarget.Bind(this)
+        MyTargetGui.ShowGui()
+    }
+
+    OnClickTargeterHelpBtn(*) {
+        MsgBox("1.左键拖拽改变位置`n2.上下左右方向键微调位置`n3.左键双击或回车键关闭取色器，同时确定点位信息", "定位取色器操作说明")
     }
 
     OnScreenShotGetArea(x1, y1, x2, y2) {
