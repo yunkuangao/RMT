@@ -871,17 +871,20 @@ CheckIsSubMacroTable(index) {
     return false
 }
 
-CheckIsHotKey(key) {
+CheckIsNormalHotKey(key) {
     if (SubStr(key, 1, 1) == ":")
         return false
 
-    if (SubStr(key, 1, 3) == "Joy")
+    if (InStr(key, "Joy"))
         return false
 
-    if (SubStr(key, 1, 7) == "XButton")
+    if (InStr(key, "XButton"))
         return false
 
-    if (SubStr(key, 1, 5) == "Wheel")
+    if (InStr(key, "Wheel"))
+        return false
+
+    if (InStr(key, "Button"))
         return false
 
     if (MySoftData.SpecialKeyMap.Has(key))
@@ -891,7 +894,7 @@ CheckIsHotKey(key) {
 }
 
 GetHotKeyCtrlType(key) {
-    isHotKey := CheckIsHotKey(key)
+    isHotKey := CheckIsNormalHotKey(key)
     CtrlType := isHotKey ? "Hotkey" : "Text"
     return CtrlType
 }

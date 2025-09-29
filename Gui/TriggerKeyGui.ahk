@@ -169,7 +169,7 @@ class TriggerKeyGui {
             this.HoldTimeCon.Value := this.Args.tableItem.HoldTimeArr[this.Args.tableIndex]
         }
         else {
-            this.EnableTriggerKeyCon.Value := true
+            this.EnableTriggerKeyCon.Value := false
             this.EnableTriggerKeyCon.Enabled := false
         }
     }
@@ -1295,7 +1295,7 @@ class TriggerKeyGui {
         }
 
         if (hasJoy || this.Args.IsToolEdit) {
-            this.EnableTriggerKeyCon.Value := 1
+            this.EnableTriggerKeyCon.Value := 0
             this.EnableTriggerKeyCon.Enabled := false
         }
         else {

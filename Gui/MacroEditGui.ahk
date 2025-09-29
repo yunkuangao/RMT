@@ -236,7 +236,7 @@ class MacroEditGui {
         this.RecordMacroCon.Value := false
         this.RecordMacroCon.OnEvent("Click", this.OnClickRecordTog.Bind(this))
         PosX += 95
-        isHotKey := CheckIsHotKey(ToolCheckInfo.ToolRecordMacroHotKey)
+        isHotKey := CheckIsNormalHotKey(ToolCheckInfo.ToolRecordMacroHotKey)
         CtrlType := isHotKey ? "Hotkey" : "Text"
         con := MyGui.Add(CtrlType, Format("x{} y{} w{}", posX, posY - 3, 130), ToolCheckInfo.ToolRecordMacroHotKey
         )

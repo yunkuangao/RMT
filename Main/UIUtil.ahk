@@ -170,7 +170,7 @@ AddToolUI(index) {
     posY += 35
     MyGui.Add("Text", Format("x{} y{}", posX + 20, posY), "鼠标信息：")
 
-    isHotKey := CheckIsHotKey(ToolCheckInfo.ToolCheckHotkey)
+    isHotKey := CheckIsNormalHotKey(ToolCheckInfo.ToolCheckHotkey)
     CtrlType := isHotKey ? "Hotkey" : "Text"
     con := MyGui.Add(CtrlType, Format("x{} y{} w{}", posX + 120, posY - 3, 130), ToolCheckInfo.ToolCheckHotkey)
     con.Enabled := false
@@ -223,7 +223,7 @@ AddToolUI(index) {
     posY += 40
     MyGui.Add("Text", Format("x{} y{}", posX + 20, posY), "截图和自由贴：")
 
-    isHotKey := CheckIsHotKey(ToolCheckInfo.ScreenShotHotKey)
+    isHotKey := CheckIsNormalHotKey(ToolCheckInfo.ScreenShotHotKey)
     CtrlType := isHotKey ? "Hotkey" : "Text"
     con := MyGui.Add(CtrlType, Format("x{} y{} w{}", posX + 120, posY - 3, 130), ToolCheckInfo.ScreenShotHotKey
     )
@@ -232,7 +232,7 @@ AddToolUI(index) {
     con := MyGui.Add("Button", Format("x{} y{} w{}", posX + 260, posY - 5, 100), "截图")
     con.OnEvent("Click", OnToolScreenShot)
 
-    isHotKey := CheckIsHotKey(ToolCheckInfo.FreePasteHotKey)
+    isHotKey := CheckIsNormalHotKey(ToolCheckInfo.FreePasteHotKey)
     CtrlType := isHotKey ? "Hotkey" : "Text"
     con := MyGui.Add(CtrlType, Format("x{} y{} w{}", posX + 400, posY - 3, 130), ToolCheckInfo.FreePasteHotKey
     )
@@ -244,7 +244,7 @@ AddToolUI(index) {
     posY += 40
     MyGui.Add("Text", Format("x{} y{}", posX + 20, posY), "指令录制：")
 
-    isHotKey := CheckIsHotKey(ToolCheckInfo.ToolRecordMacroHotKey)
+    isHotKey := CheckIsNormalHotKey(ToolCheckInfo.ToolRecordMacroHotKey)
     CtrlType := isHotKey ? "Hotkey" : "Text"
     con := MyGui.Add(CtrlType, Format("x{} y{} w{}", posX + 120, posY - 3, 130), ToolCheckInfo.ToolRecordMacroHotKey
     )
@@ -260,7 +260,7 @@ AddToolUI(index) {
     posY += 40
     MyGui.Add("Text", Format("x{} y{}", posX + 20, posY), "图片文本提取：")
 
-    isHotKey := CheckIsHotKey(ToolCheckInfo.ToolTextFilterHotKey)
+    isHotKey := CheckIsNormalHotKey(ToolCheckInfo.ToolTextFilterHotKey)
     CtrlType := isHotKey ? "Hotkey" : "Text"
     con := MyGui.Add(CtrlType, Format("x{} y{} w{}", posX + 120, posY - 3, 130), ToolCheckInfo.ToolTextFilterHotKey
     )
