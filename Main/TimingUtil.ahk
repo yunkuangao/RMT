@@ -152,7 +152,7 @@ GetTimingInterval(Data) {
 }
 
 HandleOnSoftStart(tableItem) {
-    if (MySoftData.IsLastSaved)
+    if (MySoftData.IsReload)
         return
     
     for index, value in tableItem.ModeArr {

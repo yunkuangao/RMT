@@ -307,7 +307,7 @@ LoadMainSetting() {
     MySoftData.CurSettingName := IniRead(IniFile, IniSection, "CurSettingName", "RMT默认配置")
     MySoftData.SettingArrStr := IniRead(IniFile, IniSection, "SettingArrStr", "RMT默认配置")
     MySoftData.HasSaved := IniRead(IniFile, IniSection, "HasSaved", false)
-    MySoftData.IsLastSaved := IniRead(IniFile, IniSection, "LastSaved", false)
+    MySoftData.IsReload := IniRead(IniFile, IniSection, "IsReload", false)
     MySoftData.NormalPeriod := IniRead(IniFile, IniSection, "NormalPeriod", 50)
     MySoftData.HoldFloat := IniRead(IniFile, IniSection, "HoldFloat", 0)
     MySoftData.PreIntervalFloat := IniRead(IniFile, IniSection, "PreIntervalFloat", 0)

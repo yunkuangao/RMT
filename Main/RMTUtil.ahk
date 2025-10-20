@@ -51,7 +51,7 @@ OnSaveSetting(*) {
     IniWrite(MySoftData.MacroTotalCount, IniFile, IniSection, "MacroTotalCount")
     IniWrite(MySoftData.LastShowMonth, IniFile, IniSection, "LastShowMonth")
     IniWrite(true, IniFile, IniSection, "HasSaved")
-    IniWrite(true, IniFile, IniSection, "LastSaved")
+    IniWrite(true, IniFile, IniSection, "IsReload")
     SaveCurWinPos()
 
     MySoftData.CMDPosX := IniWrite(MySoftData.CMDPosX, IniFile, IniSection, "CMDPosX")
@@ -207,6 +207,15 @@ InitFilePath() {
     FileInstall("Images\Soft\RedColor.png", "Images\Soft\RedColor.png", 1)
     FileInstall("Images\Soft\YellowColor.png", "Images\Soft\YellowColor.png", 1)
     FileInstall("Images\Soft\Target.png", "Images\Soft\Target.png", 1)
+
+    ;图标
+    FileInstall("Images\Soft\Key.png", "Images\Soft\Key.png", 1)
+    FileInstall("Images\Soft\Interval.png", "Images\Soft\Interval.png", 1)
+    FileInstall("Images\Soft\Operation.png", "Images\Soft\Operation.png", 1)
+    FileInstall("Images\Soft\Output.png", "Images\Soft\Output.png", 1)
+    FileInstall("Images\Soft\Run.png", "Images\Soft\Run.png", 1)
+    FileInstall("Images\Soft\Search.png", "Images\Soft\Search.png", 1)
+    FileInstall("Images\Soft\SearchPro.png", "Images\Soft\SearchPro.png", 1)
 
     global VBSPath := A_WorkingDir "\VBS\PlayAudio.vbs"
     global MacroFile := A_WorkingDir "\Setting\" MySoftData.CurSettingName "\MacroFile.ini"

@@ -794,6 +794,7 @@ GetTableClosureAction(action, TableItem, index) {
 
 MenuReload(*) {
     IniWrite(MySoftData.TabCtrl.Value, IniFile, IniSection, "TableIndex")
+    IniWrite(true, IniFile, IniSection, "IsReload")
     Reload()
 }
 

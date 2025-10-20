@@ -43,6 +43,10 @@ class MacroEditGui {
         this.CMDStrArr := ["间隔", "按键", "搜索", "搜索Pro", "移动", "移动Pro", "输出", "运行", "变量", "变量提取", "运算", "如果", "宏操作",
             "RMT指令",
             "后台鼠标"]
+        this.IconMap := Map("间隔", "Icon1", "按键", "Icon2", "搜索", "Icon3", "搜索Pro", "Icon3", "移动", "Icon5", "移动Pro",
+            "Icon6", "输出", "Icon7",
+            "运行", "Icon8", "变量", "Icon9", "变量提取", "Icon10", "运算", "Icon11", "如果", "Icon12", "宏操作", "Icon13", "RMT指令",
+            "Icon14", "后台鼠标", "Icon15", "真", "Icon16", "假", "Icon17")
 
         this.InitSubGui()
     }
@@ -116,6 +120,23 @@ class MacroEditGui {
         }
         else {
             this.AddGui()
+            ImageListID := IL_Create(15)
+            this.MacroTreeViewCon.SetImageList(ImageListID)
+            IL_Add(ImageListID, "Images\Soft\Key.png")
+            IL_Add(ImageListID, "Images\Soft\Interval.png")
+            IL_Add(ImageListID, "Images\Soft\Search.png")       ;移动
+            IL_Add(ImageListID, "Images\Soft\SearchPro.png")    ;移动Pro
+            IL_Add(ImageListID, "Images\Soft\Search.png")
+            IL_Add(ImageListID, "Images\Soft\SearchPro.png")
+            IL_Add(ImageListID, "Images\Soft\Output.png")
+            IL_Add(ImageListID, "Images\Soft\Run.png")
+            IL_Add(ImageListID, "Images\Soft\Search.png")       ;变量
+            IL_Add(ImageListID, "Images\Soft\SearchPro.png")    ;变量提取
+            IL_Add(ImageListID, "Images\Soft\Operation.png")    
+            IL_Add(ImageListID, "Images\Soft\SearchPro.png")    ;如果
+            IL_Add(ImageListID, "Images\Soft\Search.png")       ;RMT指令
+            IL_Add(ImageListID, "Images\Soft\SearchPro.png")    ;宏操作
+            IL_Add(ImageListID, "Images\Soft\SearchPro.png")    ;后台鼠标
         }
 
         MySoftData.RecordToggleCon := this.RecordMacroCon
@@ -130,7 +151,7 @@ class MacroEditGui {
 
         PosY := 10
         PosX := 10
-        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 170, 430), "指令选项")
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 170, 530), "指令选项")
 
         PosY += 20
         PosX := 15
@@ -244,14 +265,14 @@ class MacroEditGui {
 
         PosX := 190
         PosY += 25
-        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 620, 360), "当前宏指令")
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 720, 460), "当前宏指令")
         PosY += 20
-        this.MacroTreeViewCon := MyGui.Add("TreeView", Format("x{} y{} w{} h{}", PosX + 5, PosY, 605, 335), "")
+        this.MacroTreeViewCon := MyGui.Add("TreeView", Format("x{} y{} w{} h{}", PosX + 5, PosY, 705, 435), "")
         this.MacroTreeViewCon.OnEvent("ContextMenu", this.ShowContextMenu.Bind(this))  ; 右键菜单事件
         this.MacroTreeViewCon.OnEvent("DoubleClick", this.OnDoubleClick.Bind(this))  ; 双击编辑指令
 
         PosX := 190
-        PosY := 400
+        PosY := 500
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "退格")
         btnCon.OnEvent("Click", (*) => this.Backspace())
 
@@ -267,7 +288,7 @@ class MacroEditGui {
         this.SaveBtnCtrl := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "应用并保存")
         this.SaveBtnCtrl.OnEvent("Click", (*) => this.OnSaveBtnClick())
 
-        MyGui.Show(Format("w{} h{}", 820, 450))
+        MyGui.Show(Format("w{} h{}", 920, 550))
     }
 
     Init(CommandStr, ShowSaveBtn) {
@@ -433,7 +454,8 @@ class MacroEditGui {
         this.MacroTreeViewCon.Delete()
         this.LastItemID := 0
         for cmdStr in cmdArr {
-            root := this.MacroTreeViewCon.Add(cmdStr)
+            iconStr := this.GetCmdIconStr(cmdStr)
+            root := this.MacroTreeViewCon.Add(cmdStr, 0, iconStr)
             this.LastItemID := root
             this.TreeAddBranch(root, cmdStr)
         }
@@ -496,10 +518,12 @@ class MacroEditGui {
             FalseMacro := Data.FalseMacro
         }
 
-        trueRoot := this.MacroTreeViewCon.Add("真", root)
+        iconStr := this.GetCmdIconStr("真")
+        trueRoot := this.MacroTreeViewCon.Add("真", root, iconStr)
         this.TreeAddSubTree(trueRoot, TrueMacro)
 
-        falseRoot := this.MacroTreeViewCon.Add("假", root)
+        iconStr := this.GetCmdIconStr("假")
+        falseRoot := this.MacroTreeViewCon.Add("假", root, iconStr)
         this.TreeAddSubTree(falseRoot, FalseMacro)
     }
 
@@ -509,7 +533,8 @@ class MacroEditGui {
 
         cmdArr := SplitMacro(CommandStr)
         for cmdStr in cmdArr {
-            subRoot := this.MacroTreeViewCon.Add(cmdStr, root)
+            iconStr := this.GetCmdIconStr(cmdStr)
+            subRoot := this.MacroTreeViewCon.Add(cmdStr, root, iconStr)
             this.TreeAddBranch(subRoot, cmdStr)
         }
     }
@@ -554,7 +579,8 @@ class MacroEditGui {
 
     ;添加指令
     OnAddCmd(CommandStr) {
-        root := this.MacroTreeViewCon.Add(CommandStr)
+        iconStr := this.GetCmdIconStr(CommandStr)
+        root := this.MacroTreeViewCon.Add(CommandStr, 0, iconStr)
         this.TreeAddBranch(root, CommandStr)
         this.LastItemID := root
     }
@@ -614,7 +640,8 @@ class MacroEditGui {
         ParentID := this.MacroTreeViewCon.GetParent(this.CurItemID)
         PreItemID := this.MacroTreeViewCon.GetPrev(this.CurItemID)
         Seq := PreItemID == 0 ? "First" : PreItemID
-        newItemID := this.MacroTreeViewCon.Add(CommandStr, ParentID, Seq)
+        iconStr := this.GetCmdIconStr(CommandStr)
+        newItemID := this.MacroTreeViewCon.Add(CommandStr, ParentID, Seq " " iconStr)
         if (ParentID == 0) {
             this.TreeAddBranch(newItemID, CommandStr)
             return
@@ -631,7 +658,8 @@ class MacroEditGui {
     ;插入指令
     OnNextInsertCmd(CommandStr) {
         ParentID := this.MacroTreeViewCon.GetParent(this.CurItemID)
-        newItemID := this.MacroTreeViewCon.Add(CommandStr, ParentID, this.CurItemID)
+        iconStr := this.GetCmdIconStr(CommandStr)
+        newItemID := this.MacroTreeViewCon.Add(CommandStr, ParentID, this.CurItemID " " iconStr)
         if (this.CurItemID == this.LastItemID)
             this.LastItemID := newItemID
 
@@ -649,7 +677,8 @@ class MacroEditGui {
     }
 
     OnNodeAddCmd(CommandStr) {
-        newItemID := this.MacroTreeViewCon.Add(CommandStr, this.CurItemID)
+        iconStr := this.GetCmdIconStr(CommandStr)
+        newItemID := this.MacroTreeViewCon.Add(CommandStr, this.CurItemID, iconStr)
         macroStr := this.GetMacroStr(this.CurItemID)
         isTrueMacro := this.MacroTreeViewCon.GetText(this.CurItemID) == "真"
 
@@ -681,6 +710,14 @@ class MacroEditGui {
         }
         macroStr := Trim(macroStr, ",")
         return macroStr
+    }
+
+    GetCmdIconStr(cmdStr) {
+        paramArr := StrSplit(cmdStr, "_")
+        if (this.IconMap.Has(paramArr[1])) {
+            return this.IconMap.Get(paramArr[1])
+        }
+        return ""
     }
 
     SaveCommandData(RealCommandStr, macroStr, isTrue, isClear) {

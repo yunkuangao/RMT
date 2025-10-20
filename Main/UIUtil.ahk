@@ -27,15 +27,15 @@ OnOpen() {
         IniWrite(true, IniFile, IniSection, "AgreeAgreement")
     }
 
-    if (!MySoftData.IsExecuteShow)
+    if (!MySoftData.IsExecuteShow && !MySoftData.IsReload)
         return
 
     RefreshGui()
 }
 
 RefreshGui() {
-    IniWrite(false, IniFile, IniSection, "LastSaved")
-    if (MySoftData.IsLastSaved) {
+    IniWrite(false, IniFile, IniSection, "IsReload")
+    if (MySoftData.IsReload) {
         LastWinPosStr := IniRead(IniFile, IniSection, "LastWinPos", "")
         WinPosArr := StrSplit(LastWinPosStr, "π")
         if (WinPosArr.Length == 2 && IsNumber(WinPosArr[1]) && IsNumber(WinPosArr[2])) {

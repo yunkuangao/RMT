@@ -233,7 +233,7 @@ class SoftData {
         this.CoordYFloat := 0
         this.SoftBGColorCon := ""
         this.SoftBGColor := ""
-        this.IsLastSaved := false
+        this.IsReload := false  ;重载
         this.TableIndex := 1
         this.HasSaved := false
         this.MacroEditGui := ""
