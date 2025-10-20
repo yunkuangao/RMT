@@ -6,7 +6,7 @@ class VerticalSlider {
         this.BaseOffsetY := 45      ;基础偏移值
         this.AeraHeight := 500       ;区域高度
         this.ContentHeight := ""    ;内容高度
-        this.BarHeight := 500       ;滑动棒的高度
+        this.BarHeight := 550       ;滑动棒的高度
         this.BarMaxPosY := ""       ;滑动棒最大移动位置y
         this.CurBarOffsetPosY := ""       ;当前棒位置
         this.ShowSlider := false

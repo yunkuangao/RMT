@@ -15,6 +15,7 @@ BindShortcut(triggerInfo, action) {
 
 ;按键宏命令
 OnTriggerMacroKeyAndInit(tableItem, macro, index) {
+    MySoftData.MacroTotalCount += 1
     tableItem.KilledArr[index] := false
     tableItem.PauseArr[index] := false
     tableItem.ActionCount[index] := 0

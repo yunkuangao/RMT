@@ -42,12 +42,18 @@ RefreshGui() {
             isXValid := WinPosArr[1] > 0 && WinPosArr[1] < A_ScreenWidth
             isYValid := WinPosArr[2] > 0 && WinPosArr[2] < A_ScreenHeight
             if (isXValid && isYValid) {
-                MySoftData.MyGui.Show(Format("x{} y{} w{} h{}", WinPosArr[1], WinPosArr[2], 1070, 540))
+                MySoftData.MyGui.Show(Format("x{} y{} w{} h{}", WinPosArr[1], WinPosArr[2], 1070, 590))
                 return
             }
         }
     }
-    MySoftData.MyGui.Show(Format("w{} h{}", 1070, 540))
+    if (MySoftData.LastShowMonth != A_Mon) {
+        MySoftData.TabCtrl.Value := 9
+        MySoftData.LastShowMonth := A_Mon
+        IniWrite(MySoftData.LastShowMonth, IniFile, IniSection, "LastShowMonth")
+    }
+
+    MySoftData.MyGui.Show(Format("w{} h{}", 1070, 590))
 }
 
 RefreshToolUI() {
@@ -79,14 +85,14 @@ AddUI() {
         func(A_Index)
     }
     MySoftData.TabCtrl.UseTab()
-    MySoftData.TabCtrl.Move(MySoftData.TabPosX, MySoftData.TabPosY, 920, 520)
+    MySoftData.TabCtrl.Move(MySoftData.TabPosX, MySoftData.TabPosY, 920, 570)
     MySoftData.TabCtrl.OnEvent("Change", OnTabValueChanged)
     AddSliderUI()
 }
 
 AddSliderUI() {
     MyGui := MySoftData.MyGui
-    areaCon := MyGui.Add("Pic", Format("x{} y{} w{} h{} +Background0x{}", 1045, 37, 15, 491, "d1d1d1"), "")
+    areaCon := MyGui.Add("Pic", Format("x{} y{} w{} h{} +Background0x{}", 1045, 37, 15, 541, "d1d1d1"), "")
     barCon := MyGui.Add("Text", Format("x{} y{} w{} h{} +Background0x{}", 1045, 37, 15, 250, "9f9f9f"), "")
     tableItem := MySoftData.TableInfo[MySoftData.TableIndex]
     MySlider.SetSliderCon(areaCon, barCon)
@@ -107,7 +113,7 @@ AddOperBtnUI() {
     con.OnEvent("Click", (*) => MySettingMgrGui.ShowGui())
 
     posY += 50
-    con := MyGui.Add("GroupBox", Format("x{} y{} w{} h{} center", 10, posY, 110, 415), "全局操作")
+    con := MyGui.Add("GroupBox", Format("x{} y{} w{} h{} center", 10, posY, 110, 465), "全局操作")
 
     posY += 25
     ; 休眠
@@ -143,7 +149,7 @@ AddOperBtnUI() {
     ReloadBtnCtrl.OnEvent("Click", MenuReload)
     posY += 40
 
-    posY := 490
+    posY := 540
     MySoftData.BtnSave := MyGui.Add("Button", Format("x{} y{} w{} h{} center", 15, posY, 100, 30), "应用并保存")
     MySoftData.BtnSave.OnEvent("Click", OnSaveSetting)
 
@@ -666,7 +672,7 @@ AddSettingUI(index) {
     tableItem.AllConArr.Push(conInfo)
     con := MyGui.Add("DropDownList", Format("x{} y{} w100", posX + 410, posY - 5), ["微软截图",
         "RMT截图"])
-    MySoftData.ScreenShotTypeCtrl := con 
+    MySoftData.ScreenShotTypeCtrl := con
     MySoftData.ScreenShotTypeCtrl.Value := MySoftData.ScreenShotType
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
@@ -857,13 +863,14 @@ AddRewardUI(index) {
 
     posY += 40
     posX += 15
-    con := MyGui.Add("Text", Format("x{} y{} w{} h{}", posX, posY, 800, 60),
-    "RMT(若梦兔)完全免费的开源软件，如果你觉得它提升了你的效率，欢迎请我喝杯咖啡~ `n你的打赏会让我更有动力持续更新和维护这个项目！")
+    countStr := FormatIntegerWithCommas(MySoftData.MacroTotalCount)
+    str := Format("若梦兔（RMT）—— 这款完全免费的开源软件，始终陪在你身边。`n至今已为您执行 {:} 次宏指令。`n诚邀本月打赏成为若梦兔的 “守护者”，一起让若梦兔走得更远。", countStr)
+    con := MyGui.Add("Text", Format("x{} y{} w{} h{}", posX, posY, 800, 80), str)
     con.SetFont((Format("S{} W{} Q{}", 12, 600, 0)))
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
 
-    posY += 60
+    posY += 100
     posX := MySoftData.TabPosX + 100
     con := MyGui.Add("Picture", Format("x{} y{} w{} h{} center", posX, posY, 220, 220), "Images\Soft\WeiXin.png")
     conInfo := ItemConInfo(con, tableItem, 1)

@@ -356,6 +356,8 @@ LoadMainSetting() {
     MySoftData.CMDTransparency := IniRead(IniFile, IniSection, "CMDTransparency", 50)
     MySoftData.CMDFontColor := IniRead(IniFile, IniSection, "CMDFontColor", "000000")
     MySoftData.CMDFontSize := IniRead(IniFile, IniSection, "CMDFontSize", 12)
+    MySoftData.MacroTotalCount := IniRead(IniFile, IniSection, "MacroTotalCount", 0)
+    MySoftData.LastShowMonth := IniRead(IniFile, IniSection, "LastShowMonth", A_Mon)
 
     MySoftData.TableInfo := CreateTableItemArr()
     SetFontList()

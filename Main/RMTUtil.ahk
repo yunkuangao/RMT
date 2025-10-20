@@ -48,7 +48,8 @@ OnSaveSetting(*) {
     IniWrite(ToolCheckInfo.OCRTypeCtrl.Value, IniFile, IniSection, "OCRType")
     IniWrite(MySoftData.TabCtrl.Value, IniFile, IniSection, "TableIndex")
     IniWrite(MySoftData.FontTypeCtrl.Text, IniFile, IniSection, "FontType")
-    IniWrite(MySoftData.TabCtrl.Value, IniFile, IniSection, "TableIndex")
+    IniWrite(MySoftData.MacroTotalCount, IniFile, IniSection, "MacroTotalCount")
+    IniWrite(MySoftData.LastShowMonth, IniFile, IniSection, "LastShowMonth")
     IniWrite(true, IniFile, IniSection, "HasSaved")
     IniWrite(true, IniFile, IniSection, "LastSaved")
     SaveCurWinPos()
@@ -62,7 +63,6 @@ OnSaveSetting(*) {
     MySoftData.CMDTransparency := IniWrite(MySoftData.CMDTransparency, IniFile, IniSection, "CMDTransparency")
     MySoftData.CMDFontColor := IniWrite(MySoftData.CMDFontColor, IniFile, IniSection, "CMDFontColor")
     MySoftData.CMDFontSize := IniWrite(MySoftData.CMDFontSize, IniFile, IniSection, "CMDFontSize")
-
     Reload()
 }
 
@@ -772,4 +772,9 @@ SavePixelImage(PosX, PosY, SavePath) {
     ; 清理资源
     Gdip_DeleteGraphics(G)
     Gdip_DisposeImage(pBitmap)
+}
+
+
+FormatIntegerWithCommas(num) {
+    return RegExReplace(num, "(\d)(?=(\d{3})+$)", "$1,")
 }

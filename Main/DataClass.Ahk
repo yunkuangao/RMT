@@ -299,6 +299,9 @@ class SoftData {
         
         this.IsTogStartRecord := false  ;通过开关触发录制
         this.IsTogEndRecord := false    ;通过开关结束录制
+    
+        this.MacroTotalCount := 0   ;宏运行次数
+        this.LastShowMonth := 0     ;
     }
 }
 
