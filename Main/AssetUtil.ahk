@@ -221,7 +221,6 @@ GetMacroStrByCmdArr(cmdArr) {
     return macroStr
 }
 
-
 GetComboKeyArr(ComboKey) {
     KeyArr := []
     ModifyKeyMap := Map("LAlt", "<!", "RAlt", ">!", "Alt", "!", "LWin", "<#", "RWin", ">#", "Win", "#",
@@ -449,6 +448,7 @@ ReadTableItemInfo(index) {
     if (savedFoldInfoStr == "") {
         defaultFoldInfo := ItemFoldInfo()
         defaultFoldInfo.RemarkArr := ["RMT默认初始化配置"]
+        defaultFoldInfo.FrontInfoArr := [""]
         IndexSpanValue := savedModeArrStr == "" ? "无-无" : "1-1"
         defaultFoldInfo.IndexSpanArr := [IndexSpanValue]
         defaultFoldInfo.FoldStateArr := [false]
@@ -468,6 +468,7 @@ ReadTableItemInfo(index) {
     SetArr(savedSerialStr, "π", tableItem.SerialArr)
     SetArr(savedTimingSerialStr, "π", tableItem.TimingSerialArr)
     tableItem.FoldInfo := JSON.parse(savedFoldInfoStr, , false)
+    Compat1_0_8F4FlodInfo(tableItem.FoldInfo)
 
     if (tableItem.ModeArr.Length == 1) {
         if (tableItem.TKArr.Length == 0)
@@ -660,7 +661,7 @@ GetSavedTableItemInfo(index) {
         ModeArrStr .= tableItem.ModeConArr[A_Index].Value
         ForbidArrStr .= tableItem.ForbidConArr[A_Index].Value
         HoldTimeArrStr .= tableItem.HoldTimeArr[A_Index]
-        FrontInfoArrStr .= tableItem.ProcessNameConArr[A_Index].Value
+        FrontInfoArrStr .= tableItem.FrontInfoConArr[A_Index].Value
         RemarkArrStr .= tableItem.RemarkConArr[A_Index].Value
         TriggerTypeArrStr .= tableItem.TriggerTypeConArr[A_Index].Value
         LoopCountArrStr .= GetItemSaveCountValue(tableItem.Index, A_Index)
@@ -1403,4 +1404,22 @@ GetItemFoldForbidState(tableItem, itemIndex) {
         }
     }
     return false
+}
+
+GetItemFrontInfo(tableItem, itemIndex) {
+    frontInfo := tableItem.FrontInfoArr.Length >= itemIndex ? tableItem.FrontInfoArr[itemIndex] : ""
+    if (frontInfo != "")
+        return frontInfo
+
+    FoldInfo := tableItem.FoldInfo
+    for Index, IndexSpanStr in FoldInfo.IndexSpanArr {
+        IndexSpan := StrSplit(IndexSpanStr, "-")
+        if (IsInteger(IndexSpan[1]) && IsInteger(IndexSpan[2])) {
+            if (IndexSpan[1] <= itemIndex && IndexSpan[2] >= itemIndex) {
+                return FoldInfo.FrontInfoArr[Index]
+            }
+        }
+    }
+
+    return ""
 }

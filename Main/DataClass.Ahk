@@ -16,7 +16,7 @@ class TableItem {
         this.DeleteBtnConArr := []
         this.ModeConArr := []
         this.ForbidConArr := []
-        this.ProcessNameConArr := []
+        this.FrontInfoConArr := []
         this.LoopCountConArr := []
         this.RemarkTipConArr := []
         this.RemarkConArr := []
@@ -42,7 +42,7 @@ class TableItem {
         this.AllGroup := []
         this.IsWorkIndexArr := []        ;work正在执行中
 
-        this.FoldInfo := ""  ;折叠筐保存信息
+        this.FoldInfo := ""          ; 折叠筐保存信息
         this.FoldOffsetArr := []    ;和初始状态的高度偏移值
         this.FoldBtnArr := []       ;折叠筐按钮
         this.ConIndexMap := Map()
@@ -52,6 +52,7 @@ class TableItem {
 class ItemFoldInfo {
     __New() {
         this.RemarkArr := []    ;折叠框备注
+        this.FrontInfoArr := []     ;折叠框前台信息
         this.IndexSpanArr := []     ;范围索引
         this.ForbidStateArr := []   ;禁用状态
         this.FoldStateArr := []    ;折叠状态

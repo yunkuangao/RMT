@@ -35,6 +35,7 @@
 #Include Main\TimingUtil.ahk
 #Include Main\BindUtil.ahk
 #Include Main\VariableUtil.ahk
+#Include Main\FixCompatUtil.ahk
 #Include Main\TriggerKeyData.ahk
 SetWorkingDir A_ScriptDir
 DetectHiddenWindows true

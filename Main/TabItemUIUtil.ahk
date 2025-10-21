@@ -61,28 +61,48 @@ LoadItemFoldTitle(tableItem, foldIndex, PosY) {
     tableItem.AllConArr.Push(conInfo)
     tableItem.ConIndexMap[con] := MacroItemInfo(-10000, conInfo)
 
-    con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 230, posY - 3), "新增宏")
+    con := MyGui.Add("Text", Format("x{} y{}", MySoftData.TabPosX + 230, posY + 2), "前台:")
+    conInfo := ItemConInfo(con, tableItem, foldIndex)
+    conInfo.IsTitle := true
+    tableItem.AllConArr.Push(conInfo)
+
+    FrontCon := MyGui.Add("Edit", Format("x{} y{} w150", MySoftData.TabPosX + 270, posY), FoldInfo.FrontInfoArr[
+        foldIndex])
+    FrontCon.OnEvent("Change", OnFoldFrontInfoChange.Bind(tableItem))
+    conInfo := ItemConInfo(FrontCon, tableItem, foldIndex)
+    conInfo.IsTitle := true
+    tableItem.AllConArr.Push(conInfo)
+    tableItem.ConIndexMap[FrontCon] := MacroItemInfo(-10000, conInfo)
+
+    con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 422, posY - 3), "编辑")
+    con.OnEvent("Click", OnFoldFrontInfoEdit.Bind(FrontCon))
+    conInfo := ItemConInfo(con, tableItem, foldIndex)
+    conInfo.IsTitle := true
+    tableItem.AllConArr.Push(conInfo)
+    tableItem.ConIndexMap[con] := MacroItemInfo(-10000, conInfo)
+
+    con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 490, posY - 3), "新增宏")
     con.OnEvent("Click", OnItemAddMacroBtnClick.Bind(tableItem))
     conInfo := ItemConInfo(con, tableItem, foldIndex)
     conInfo.IsTitle := true
     tableItem.AllConArr.Push(conInfo)
     tableItem.ConIndexMap[con] := MacroItemInfo(-10000, conInfo)
 
-    con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 300, posY - 3), "新增模块")
+    con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 560, posY - 3), "新增模块")
     con.OnEvent("Click", OnItemAddFoldBtnClick.Bind(tableItem))
     conInfo := ItemConInfo(con, tableItem, foldIndex)
     conInfo.IsTitle := true
     tableItem.AllConArr.Push(conInfo)
     tableItem.ConIndexMap[con] := MacroItemInfo(-10000, conInfo)
 
-    con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 385, posY - 3), "删除该模块")
+    con := MyGui.Add("Button", Format("x{} y{}", MySoftData.TabPosX + 645, posY - 3), "删除该模块")
     con.OnEvent("Click", OnItemDelFoldBtnClick.Bind(tableItem))
     conInfo := ItemConInfo(con, tableItem, foldIndex)
     conInfo.IsTitle := true
     tableItem.AllConArr.Push(conInfo)
     tableItem.ConIndexMap[con] := MacroItemInfo(-10000, conInfo)
 
-    con := MyGui.Add("CheckBox", Format("x{} y{}", MySoftData.TabPosX + 490, posY + 2), "禁用")
+    con := MyGui.Add("CheckBox", Format("x{} y{}", MySoftData.TabPosX + 750, posY + 2), "禁用")
     con.Value := FoldInfo.ForbidStateArr[foldIndex]
     con.OnEvent("Click", OnFoldForbidChange.Bind(tableItem))
     conInfo := ItemConInfo(con, tableItem, foldIndex)
@@ -91,7 +111,7 @@ LoadItemFoldTitle(tableItem, foldIndex, PosY) {
     tableItem.ConIndexMap[con] := MacroItemInfo(-10000, conInfo)
 
     btnStr := FoldInfo.FoldStateArr[foldIndex] ? "🞃" : "❯"
-    con := MyGui.Add("Button", Format("x{} y{} w{} +BackgroundTrans", MySoftData.TabPosX + 840, posY, 30),
+    con := MyGui.Add("Button", Format("x{} y{} w{} +BackgroundTrans", MySoftData.TabPosX + 840, posY - 2, 30),
     btnStr)
     con.OnEvent("Click", OnFoldBtnClick.Bind(tableItem))
     conInfo := ItemConInfo(con, tableItem, foldIndex)
@@ -274,7 +294,7 @@ LoadTabItemUI(tableItem, itemIndex, foldIndex, PosY) {
     tableItem.DeleteBtnConArr.InsertAt(itemIndex, DelCon)
     tableItem.ModeConArr.InsertAt(itemIndex, ModeCon)
     tableItem.ForbidConArr.InsertAt(itemIndex, ForbidCon)
-    tableItem.ProcessNameConArr.InsertAt(itemIndex, FrontCon)
+    tableItem.FrontInfoConArr.InsertAt(itemIndex, FrontCon)
     tableItem.IndexConArr.InsertAt(itemIndex, IndexCon)
     tableItem.ColorConArr.InsertAt(itemIndex, colorCon)
     tableItem.ColorStateArr.InsertAt(itemIndex, 0)
@@ -378,7 +398,7 @@ OnItemDelMacro(tableItem, itemIndex, foldInfo, foldIndex) {
     tableItem.ForbidConArr.RemoveAt(itemIndex)
     tableItem.TKConArr.RemoveAt(itemIndex)
     tableItem.MacroConArr.RemoveAt(itemIndex)
-    tableItem.ProcessNameConArr.RemoveAt(itemIndex)
+    tableItem.FrontInfoConArr.RemoveAt(itemIndex)
     tableItem.LoopCountConArr.RemoveAt(itemIndex)
     tableItem.RemarkConArr.RemoveAt(itemIndex)
     for index, value in tableItem.IndexConArr {
@@ -391,6 +411,7 @@ OnItemAddFoldBtnClick(tableItem, btn, *) {
     foldInfo := tableItem.FoldInfo
     foldIndex := tableItem.ConIndexMap[btn].itemConInfo.FoldIndex
     foldInfo.RemarkArr.InsertAt(foldIndex + 1, "")
+    foldInfo.FrontInfoArr.InsertAt(foldIndex + 1, "")
     foldInfo.IndexSpanArr.InsertAt(foldIndex + 1, "无-无")
     foldInfo.ForbidStateArr.InsertAt(foldIndex + 1, false)
     foldInfo.FoldStateArr.InsertAt(foldIndex + 1, false)
@@ -432,6 +453,7 @@ OnItemDelFoldBtnClick(tableItem, btn, *) {
 
     UpdateConFoldIndex(tableItem, foldIndex, false)
     foldInfo.RemarkArr.RemoveAt(foldIndex)
+    foldInfo.FrontInfoArr.RemoveAt(foldIndex)
     foldInfo.IndexSpanArr.RemoveAt(foldIndex)
     foldInfo.ForbidStateArr.RemoveAt(foldIndex)
     foldInfo.FoldStateArr.RemoveAt(foldIndex)
@@ -485,7 +507,8 @@ OnItemEditReplaceKey(tableItem, btn, *) {
 
 OnItemEditFrontInfo(tableItem, btn, *) {
     index := tableItem.ConIndexMap[btn].index
-    MyFrontInfoGui.ShowGui(tableItem, index)
+    frontInfoCon := tableItem.FrontInfoConArr[index]
+    MyFrontInfoGui.ShowGui(frontInfoCon)
 }
 
 OnItemMoveUp(tableItem, btn, *) {
@@ -511,6 +534,16 @@ OnFoldRemarkChange(tableItem, con, *) {
     foldInfo := tableItem.FoldInfo
     foldIndex := tableItem.ConIndexMap[con].itemConInfo.FoldIndex
     foldInfo.RemarkArr[foldIndex] := con.text
+}
+
+OnFoldFrontInfoChange(tableItem, con, *) {
+    foldInfo := tableItem.FoldInfo
+    foldIndex := tableItem.ConIndexMap[con].itemConInfo.FoldIndex
+    foldInfo.FrontInfoArr[foldIndex] := con.text
+}
+
+OnFoldFrontInfoEdit(FrontCon, con, *) {
+    MyFrontInfoGui.ShowGui(FrontCon)
 }
 
 OnFoldForbidChange(tableItem, con, *) {

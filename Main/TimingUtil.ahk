@@ -108,9 +108,9 @@ TimingChecker() {
         if (Data.NextTriggerTime == "" || CurTime < Data.NextTriggerTime)
             continue
 
-        ProcessName := tableItem.FrontInfoArr.Length >= index ? tableItem.FrontInfoArr[index] : ""
-        if (ProcessName != "") {
-            if (!MyMouseInfo.CheckIfMatch(ProcessName, true))
+        frontInfo := GetItemFrontInfo(tableItem, index)
+        if (frontInfo != "") {
+            if (!MyMouseInfo.CheckIfMatch(frontInfo, true))
                 return
         }
 

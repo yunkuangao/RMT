@@ -388,14 +388,14 @@ BindTabHotKey() {
             actionArr := GetMacroAction(tableIndex, index)
             isJoyKey := RegExMatch(tableItem.TKArr[index], "Joy")
             isHotstring := SubStr(tableItem.TKArr[index], 1, 1) == ":"
-            curProcessName := tableItem.FrontInfoArr[index]
+            frontInfo := GetItemFrontInfo(tableItem, index)
 
-            if (curProcessName != "") {
-                HotIfWinActive(GetParamsWinInfoStr(curProcessName))
+            if (frontInfo != "") {
+                HotIfWinActive(GetParamsWinInfoStr(frontInfo))
             }
 
             if (isJoyKey) {
-                MyJoyMacro.AddMacro(tableItem.TKArr[index], actionArr[1], curProcessName)
+                MyJoyMacro.AddMacro(tableItem.TKArr[index], actionArr[1], frontInfo)
             }
             else if (isHotstring) {
                 Hotstring(tableItem.TKArr[index], actionArr[1])
@@ -408,7 +408,7 @@ BindTabHotKey() {
                     Hotkey(key " up", actionArr[2])
             }
 
-            if (curProcessName != "") {
+            if (frontInfo != "") {
                 HotIfWinActive
             }
         }

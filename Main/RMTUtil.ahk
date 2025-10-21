@@ -120,7 +120,7 @@ SwapTableContent(tableItem, indexA, indexB) {
     SwapArrValue(tableItem.SerialArr, indexA, indexB)
     SwapArrValue(tableItem.LoopCountConArr, indexA, indexB, 3)
     SwapArrValue(tableItem.RemarkConArr, indexA, indexB, 2)
-    SwapArrValue(tableItem.ProcessNameConArr, indexA, indexB, 2)
+    SwapArrValue(tableItem.FrontInfoConArr, indexA, indexB, 2)
 }
 
 SwapArrValue(Arr, indexA, indexB, valueType := 1) {

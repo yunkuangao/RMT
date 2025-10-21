@@ -4,8 +4,7 @@ class FrontInfoGui {
     __new() {
         this.Gui := ""
         this.InfoAction := () => this.RefreshMouseInfo()
-        this.tableItem := ""
-        this.tableIndex := ""
+        this.frontInfoCon := ""
         this.InfoTogCon := ""
         this.TopTogCon := ""
         this.WinInfoCon := ""
@@ -13,22 +12,21 @@ class FrontInfoGui {
         this.InfoTextArrCon := []
     }
 
-    ShowGui(tableItem, tableIndex) {
+    ShowGui(frontInfoCon) {
         if (this.Gui != "") {
             this.Gui.Show()
         }
         else {
             this.AddGui()
         }
-        this.Init(tableItem, tableIndex)
+        this.Init(frontInfoCon)
         this.ToggleFunc(true)
     }
 
-    Init(tableItem, tableIndex) {
-        this.tableItem := tableItem
-        this.tableIndex := tableIndex
+    Init(frontInfoCon) {
+        this.frontInfoCon := frontInfoCon
         this.InfoTogCon.Value := true
-        infoStr := this.tableItem.ProcessNameConArr[this.tableIndex].Value
+        infoStr := frontInfoCon.Value
         if (infoStr != "")
             infoArr := StrSplit(infoStr, "⎖")
         if (infoStr == "" || infoArr.Length != 3)
@@ -41,6 +39,7 @@ class FrontInfoGui {
 
         this.OnTogClick()
     }
+
 
     AddGui() {
         MyGui := Gui(, "前台信息编辑器")
@@ -201,8 +200,7 @@ class FrontInfoGui {
         if (!isValid)
             return
 
-        con := this.tableItem.ProcessNameConArr[this.tableIndex]
-        con.Value := this.GetInfoStr()
+        this.frontInfoCon.Value := this.GetInfoStr()
         this.ToggleFunc(false)
         this.Gui.Hide()
     }
