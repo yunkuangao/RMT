@@ -31,23 +31,21 @@ class TriggerKeyData {
         }
     }
 
-    AddData(index) {
-        tableItem := MySoftData.TableInfo[1]
-        TriggerType := tableItem.TriggerTypeArr[index]
+    AddData(info) {
+        TriggerType := info.GetTriggerType()
         if (TriggerType == 1)
-            this.OriDownArr.Push(index)
+            this.OriDownArr.Push(info)
         if (TriggerType == 2)
-            this.OriLoosenArr.Push(index)
+            this.OriLoosenArr.Push(info)
         if (TriggerType == 3)
-            this.OriLoosenStopArr.Push(index)
+            this.OriLoosenStopArr.Push(info)
         if (TriggerType == 4)
-            this.OriTogArr.Push(index)
+            this.OriTogArr.Push(info)
         if (TriggerType == 5)
-            this.OriHoldArr.Push(index)
+            this.OriHoldArr.Push(info)
     }
 
     UpdataArr() {
-        tableItem := MySoftData.TableInfo[1]
         this.DownArr := []
         this.LoosenArr := []
         this.LoosenStopArr := []
@@ -65,7 +63,7 @@ class TriggerKeyData {
     UpdateArrByFront(OriArr, ResArr) {
         tableItem := MySoftData.TableInfo[1]
         for index, value in OriArr {
-            infoStr := tableItem.FrontInfoArr[value]
+            infoStr := value.GetFrontStr()
             if (infoStr == "")
                 continue
 
@@ -76,7 +74,7 @@ class TriggerKeyData {
         ; 如果没有找到任何符合条件的窗口
         if (ResArr.Length == 0) {
             for index, value in OriArr {
-                if (tableItem.FrontInfoArr[value] == "")
+                if (value.GetFrontStr() == "")
                     ResArr.Push(value)
             }
         }
@@ -85,25 +83,19 @@ class TriggerKeyData {
     OnTriggerKeyDown() {
         this.UpdataArr()
         this.HandleSoftHotKeyDown()
-        tableItem := MySoftData.TableInfo[1]
         for index, value in this.DownArr {
-            if (index == 1 && SubStr(tableItem.TKArr[value], 1, 1) != "~")
-                LoosenModifyKey(tableItem.TKArr[value])
+            if (index == 1 && SubStr(value.GetTK(), 1, 1) != "~")
+                LoosenModifyKey(value.GetTK())
 
-            TriggerMacroHandler(1, value)
+            value.Action()
         }
 
         for index, value in this.LoosenStopArr {
-            TriggerMacroHandler(1, value)
+            value.Action()
         }
 
         for index, value in this.TogArr {
-            isWork := tableItem.IsWorkIndexArr[value]
-            if (isWork) {       ;关闭开关
-                MySubMacroStopAction(1, value)
-                return
-            }
-            OnToggleTriggerMacro(1, value)
+            value.Action()
         }
 
         this.SetHoldTimeChecker()
@@ -114,17 +106,11 @@ class TriggerKeyData {
         this.HandleSoftHotKeyUp()
         tableItem := MySoftData.TableInfo[1]
         for index, value in this.LoosenArr {
-            TriggerMacroHandler(1, value)
+            value.Action()
         }
 
         for index, value in this.LoosenStopArr {
-            isWork := tableItem.IsWorkIndexArr[value]
-            if (isWork) {
-                workPath := MyWorkPool.GetWorkPath(tableItem.IsWorkIndexArr[value])
-                MyWorkPool.PostMessage(WM_STOP_MACRO, workPath, 0, 0)
-                return
-            }
-            KillTableItemMacro(tableItem, value)
+            value.CancelAction()
         }
 
         this.DelHoldTimeChecker()
@@ -133,14 +119,14 @@ class TriggerKeyData {
     SetHoldTimeChecker() {
         tableItem := MySoftData.TableInfo[1]
         for _, value in this.HoldArr {
-            isWork := tableItem.IsWorkIndexArr[value]
+            isWork := value.GetWorkState()
             if (isWork)
                 continue
             if (this.HoldActionMap.Has(value))
                 continue
-
+            holdTime := value.GetHoldTime()
             action := this.HoldTimeAction.Bind(this, value)
-            SetTimer(action, -tableItem.HoldTimeArr[value])
+            SetTimer(action, -holdTime)
             this.HoldActionMap.Set(value, action)
         }
     }
@@ -152,14 +138,13 @@ class TriggerKeyData {
         this.HoldActionMap := Map()
     }
 
-    HoldTimeAction(index) {
-        tableItem := MySoftData.TableInfo[1]
-        keyCombo := LTrim(tableItem.TKArr[index], "~")
-        if (this.HoldActionMap.Has(index))
-            this.HoldActionMap.Delete(index)
+    HoldTimeAction(info) {
+        keyCombo := LTrim(info.GetTK(), "~")
+        if (this.HoldActionMap.Has(info))
+            this.HoldActionMap.Delete(info)
 
         if (AreKeysPressed(keyCombo))
-            TriggerMacroHandler(1, index)
+            info.Action()
     }
 
     HandleSoftHotKeyDown() {
@@ -210,6 +195,104 @@ class TriggerKeyData {
 
         if (this.Key == "enter") {
             MyTargetGui.OnEnterUp(this.Key)
+        }
+    }
+}
+
+class TriggerKeyInfo {
+    __New() {
+        this.macroType := 1     ; 1:item 2:fold
+        this.tableIndex := 1    ;table索引
+        this.itemIndex := 1     ;item索引
+        this.foldIndex := 1     ;折叠框索引
+    }
+
+    GetFrontStr() {
+        tableItem := MySoftData.TableInfo[this.tableIndex]
+        if (this.macroType == 1)
+            return GetItemFrontInfo(tableItem, this.tableIndex)
+        else if (this.macroType == 2) {
+            return tableItem.FoldInfo.FrontInfoArr[this.foldIndex]
+        }
+        return ""
+    }
+
+    GetTK() {
+        tableItem := MySoftData.TableInfo[this.tableIndex]
+        if (this.macroType == 1)
+            return tableItem.TKArr[this.itemIndex]
+        else if (this.macroType == 2) {
+            return tableItem.FoldInfo.TKArr[this.foldIndex]
+        }
+        return 1
+    }
+
+    GetTriggerType() {      ;触发类型   "按下", "松开", "松止", "开关", "长按"
+        tableItem := MySoftData.TableInfo[this.tableIndex]
+        if (this.macroType == 1)
+            return tableItem.TriggerTypeArr[this.itemIndex]
+        else if (this.macroType == 2) {
+            return tableItem.FoldInfo.TKTypeArr[this.foldIndex]
+        }
+        return 1
+    }
+
+    GetHoldTime() {
+        tableItem := MySoftData.TableInfo[this.tableIndex]
+        if (this.macroType == 1)
+            return tableItem.HoldTimeArr[this.itemIndex]
+        else if (this.macroType == 2) {
+            return tableItem.FoldInfo.HoldTimeArr[this.foldIndex]
+        }
+        return 500
+    }
+
+    GetWorkState() {
+        tableItem := MySoftData.TableInfo[this.tableIndex]
+        if (this.macroType == 1) {
+            return tableItem.IsWorkIndexArr[this.itemIndex]
+        }
+        else {
+            return MySoftData.CurMenuWheelIndex == this.foldIndex
+        }
+    }
+
+    Action() {
+        tableItem := MySoftData.TableInfo[this.tableIndex]
+        triggerType := this.GetTriggerType()
+        if (this.macroType == 1) {
+            if (triggerType == 4) {
+                isWork := tableItem.IsWorkIndexArr[this.itemIndex]
+                if (isWork) {       ;关闭开关
+                    MySubMacroStopAction(this.tableIndex, this.itemIndex)
+                    return
+                }
+                OnToggleTriggerMacro(this.tableIndex, this.itemIndex)
+            }
+            else
+                TriggerMacroHandler(this.tableIndex, this.itemIndex)
+        }
+        else {
+            OpenMenuWheel(this.foldIndex)
+        }
+    }
+
+    CancelAction() {
+        tableItem := MySoftData.TableInfo[this.tableIndex]
+        triggerType := this.GetTriggerType()
+        if (this.macroType == 1) {
+            if (triggerType == 3) {
+                isWork := tableItem.IsWorkIndexArr[this.itemIndex]
+                if (isWork) {
+                    workPath := MyWorkPool.GetWorkPath(tableItem.IsWorkIndexArr[this.itemIndex])
+                    MyWorkPool.PostMessage(WM_STOP_MACRO, workPath, 0, 0)
+                    return
+                }
+                KillTableItemMacro(tableItem, this.itemIndex)
+            }
+        }
+        else {
+            CloseMenuWheel()
         }
     }
 }

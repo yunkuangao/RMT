@@ -527,7 +527,7 @@ TogSelectArea(isEnable, action := "") {
     if (isEnable && action != "") {
         MySoftData.SelectAreaAction := action
         ToolTipContent("请框选截图范围")
-        actionDown := OnSoftKeyDown.Bind("LButton")
+        actionDown := OnBindKeyDown.Bind("LButton")
         Hotkey("LButton", actionDown)
     }
     else {
@@ -539,7 +539,7 @@ TogSelectArea(isEnable, action := "") {
 SelectArea() {
     action := MySoftData.SelectAreaAction
     TogSelectArea(false)
-    actionDown := OnSoftKeyDown.Bind("LButton")
+    actionDown := OnBindKeyDown.Bind("LButton")
     Hotkey("~LButton", actionDown, "On")
     ; 获取起始点坐标
     startX := startY := endX := endY := 0
@@ -801,4 +801,20 @@ SavePixelImage(PosX, PosY, SavePath) {
 
 FormatIntegerWithCommas(num) {
     return RegExReplace(num, "(\d)(?=(\d{3})+$)", "$1,")
+}
+
+OpenMenuWheel(index) {
+    MySoftData.CurMenuWheelIndex := index
+    MyMenuWheel.Show(index)
+}
+
+CloseMenuWheel() {
+    MySoftData.CurMenuWheelIndex := -1
+    if (!IsObject(MyMenuWheel.Gui))
+        return
+    
+    style := WinGetStyle(MyMenuWheel.Gui.Hwnd)
+    isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+    if (isVisible)
+        MyCMDTipGui.Gui.Hide()
 }

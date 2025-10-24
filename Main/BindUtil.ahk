@@ -9,6 +9,7 @@ BindKey() {
     BindShortcut(ToolCheckInfo.ScreenShotHotKey, OnToolScreenShot)
     BindShortcut(ToolCheckInfo.FreePasteHotKey, OnToolFreePaste)
     BindShortcut(ToolCheckInfo.ToolRecordMacroHotKey, OnHotToolRecordMacro)
+    InitTriggerKeyMap()
     BindTabHotKey()
     BindMenuHotKey()
     BindSoftHotKey()
@@ -369,27 +370,23 @@ OnExitSoft(*) {
 }
 
 BindMenuHotKey() {
-    tableItem := MySoftData.TableInfo[3]
-    FoldInfo := tableItem.FoldInfo
+    FoldInfo := MySoftData.TableInfo[3].FoldInfo
     for Index, IndexSpanStr in FoldInfo.IndexSpanArr {
         if (FoldInfo.ForbidStateArr[Index] || FoldInfo.TKArr[index] == "")
             continue
 
-        key := "$*" tableItem.TKArr[index]
-        actionArr := GetMacroAction(tableIndex, index)
-        isJoyKey := RegExMatch(tableItem.TKArr[index], "Joy")
-        isHotstring := SubStr(tableItem.TKArr[index], 1, 1) == ":"
-        frontInfo := GetItemFrontInfo(tableItem, index)
+        oriKey := FoldInfo.TKArr[index]
+        key := "$*" oriKey
+        actionArr := GetBindMacroAction(oriKey)
+        isJoyKey := RegExMatch(oriKey, "Joy")
+        frontInfo := FoldInfo.FrontInfoArr[index]
 
         if (frontInfo != "") {
             HotIfWinActive(GetParamsWinInfoStr(frontInfo))
         }
 
         if (isJoyKey) {
-            MyJoyMacro.AddMacro(tableItem.TKArr[index], actionArr[1], frontInfo)
-        }
-        else if (isHotstring) {
-            Hotstring(tableItem.TKArr[index], actionArr[1])
+            MyJoyMacro.AddMacro(oriKey, actionArr[1], frontInfo)
         }
         else {
             if (actionArr[1] != "")
@@ -403,12 +400,10 @@ BindMenuHotKey() {
             HotIfWinActive
         }
     }
-
 }
 
 BindTabHotKey() {
     tableIndex := 0
-    InitTriggerKeyMap()
     loop MySoftData.TabNameArr.Length {
         tableItem := MySoftData.TableInfo[A_Index]
         tableIndex := A_Index
@@ -474,7 +469,28 @@ InitTriggerKeyMap() {
         if (!MySoftData.TriggerKeyMap.Has(key)) {
             MySoftData.TriggerKeyMap[key] := TriggerKeyData(key)
         }
-        MySoftData.TriggerKeyMap[key].AddData(index)
+        info := TriggerKeyInfo()
+        info.macroType := 1
+        info.itemIndex := tableItem.Index
+        info.itemIndex := index
+        MySoftData.TriggerKeyMap[key].AddData(info)
+    }
+
+    tableItem := MySoftData.TableInfo[3]
+    FoldInfo := tableItem.FoldInfo
+    for index, IndexSpanStr in FoldInfo.IndexSpanArr {
+        if (FoldInfo.ForbidStateArr[index] || FoldInfo.TKArr[index] == "")
+            continue
+        key := LTrim(FoldInfo.TKArr[index], "~")
+        key := StrLower(key)
+        if (!MySoftData.TriggerKeyMap.Has(key)) {
+            MySoftData.TriggerKeyMap[key] := TriggerKeyData(key)
+        }
+        info := TriggerKeyInfo()
+        info.itemIndex := tableItem.Index
+        info.macroType := 2
+        info.foldIndex := index
+        MySoftData.TriggerKeyMap[key].AddData(info)
     }
 
     for index, value in MySoftData.SoftHotKeyArr {
@@ -534,14 +550,20 @@ OnTriggerKeyUp(tableIndex, itemIndex, *) {
 BindSoftHotKey() {
     for index, value in MySoftData.SoftHotKeyArr {
         key := "$*" value
-        actionDown := OnSoftKeyDown.Bind(value)
-        actionUp := OnSoftKeyUp.Bind(value)
+        actionDown := OnBindKeyDown.Bind(value)
+        actionUp := OnBindKeyUp.Bind(value)
         Hotkey(key, actionDown)
         Hotkey(key " up", actionUp)
     }
 }
 
-OnSoftKeyDown(key, *) {
+GetBindMacroAction(key) {
+    actionDown := OnBindKeyDown.Bind(key)
+    actionUp := OnBindKeyUp.Bind(key)
+    return [actionDown, actionUp]
+}
+
+OnBindKeyDown(key, *) {
     key := LTrim(key, "~")
     key := StrLower(key)
     if (!MySoftData.TriggerKeyMap.Has(key))
@@ -551,7 +573,7 @@ OnSoftKeyDown(key, *) {
     Data.OnTriggerKeyDown()
 }
 
-OnSoftKeyUp(key, *) {
+OnBindKeyUp(key, *) {
     key := LTrim(key, "~")
     key := StrLower(key)
     if (!MySoftData.TriggerKeyMap.Has(key))

@@ -308,6 +308,8 @@ class SoftData {
     
         this.MacroTotalCount := 0   ;宏运行次数
         this.LastShowMonth := 0     ;
+    
+        this.CurMenuWheelIndex := -1    ;当先显示的菜单轮盘
     }
 }
 
