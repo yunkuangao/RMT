@@ -641,7 +641,8 @@ OnBGMouse(tableItem, cmd, index) {
     PosX := GetFloatValue(PosX, MySoftData.CoordXFloat)
     PosY := GetFloatValue(PosY, MySoftData.CoordYFloat)
 
-    hwndList := WinGetList(Data.TargetTitle)
+    frontStr := GetParamsWinInfoStr(Data.TargetTitle)
+    hwndList := WinGetList(frontStr)
     loop hwndList.Length {
         hwnd := hwndList[A_Index]
         ; 点击位置（窗口客户区坐标）
