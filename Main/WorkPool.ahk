@@ -129,7 +129,7 @@ class WorkPool {
         isSetVari := StrCompare(paramArr[1], "SetVari", false) == 0
         isDelVari := StrCompare(paramArr[1], "DelVari", false) == 0
         isReport := StrCompare(paramArr[1], "Report", false) == 0
-        isRMT := StrCompare(paramArr[1], "RMT", false) == 0
+        isRMT := StrCompare(paramArr[1], "RMT指令", false) == 0
         isItemState := StrCompare(paramArr[1], "ItemState", false) == 0
         isPauseState := StrCompare(paramArr[1], "PauseState", false) == 0
         isMsgBox := StrCompare(paramArr[1], "MsgBox", false) == 0
@@ -146,7 +146,7 @@ class WorkPool {
             CMDReport(CMDStr)
         }
         else if (isRMT) {
-            MyExcuteRMTCMDAction(paramArr[2])
+            MyExcuteRMTCMDAction(Cmd)
         }
         else if (isItemState) {
             MySetTableItemState(paramArr[2], paramArr[3], paramArr[4])

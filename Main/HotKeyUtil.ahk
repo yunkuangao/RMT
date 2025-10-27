@@ -707,7 +707,7 @@ OnRMTCMD(tableItem, cmd, index) {
         BlockInput true
     }
     else {
-        MyExcuteRMTCMDAction(cmdStr)
+        MyExcuteRMTCMDAction(cmd)
     }
 }
 

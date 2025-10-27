@@ -403,7 +403,9 @@ ToolTipTimer() {
     }
 }
 
-ExcuteRMTCMDAction(cmdStr) {
+ExcuteRMTCMDAction(Cmd) {
+    paramArr := StrSplit(Cmd)
+    cmdStr := paramArr[2]
     if (cmdStr == "截图") {
         OnToolScreenShot()
     }
@@ -434,6 +436,12 @@ ExcuteRMTCMDAction(cmdStr) {
             if (isVisible)
                 MyCMDTipGui.Gui.Hide()
         }
+    }
+    else if (cmdStr == "显示菜单") {
+        OpenMenuWheel(paramArr[3])
+    }
+    else if (cmdStr == "关闭菜单") {
+        CloseMenuWheel()
     }
     else if (cmdStr == "启用键鼠") {
         BlockInput false
@@ -812,7 +820,7 @@ CloseMenuWheel() {
     MySoftData.CurMenuWheelIndex := -1
     if (!IsObject(MyMenuWheel.Gui))
         return
-    
+
     style := WinGetStyle(MyMenuWheel.Gui.Hwnd)
     isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
     if (isVisible)

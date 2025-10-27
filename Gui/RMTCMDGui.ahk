@@ -5,8 +5,11 @@ class RMTCMDGui {
         this.Gui := ""
         this.SureBtnAction := ""
         this.CmdStrArr := ["截图", "截图提取文本", "自由贴",
-            "开启指令显示", "关闭指令显示", "启用键鼠", "禁用键鼠", "休眠", "暂停所有宏", "恢复所有宏", "终止所有宏", "重载", "关闭软件"]
+            "开启指令显示", "关闭指令显示", "显示菜单", "关闭菜单", "启用键鼠", "禁用键鼠", "休眠", "暂停所有宏", "恢复所有宏", "终止所有宏", "重载", "关闭软件"]
         this.OperTypeCon := ""
+
+        this.MenuRelateArrCon := []
+        this.MenuDLCon := ""
     }
 
     ShowGui(cmd) {
@@ -18,17 +21,29 @@ class RMTCMDGui {
         }
 
         this.Init(cmd)
+        this.OnChangeType()
     }
 
     Init(cmd) {
         cmdArr := cmd != "" ? StrSplit(cmd, "_") : []
         cmdStr := cmdArr.Length >= 2 ? cmdArr[2] : "截图"
+        menuDLIndex := cmdStr == "显示菜单" && cmdArr.Length >= 3 ? cmdArr[3] : 1
+
         loop this.CmdStrArr.Length {
             if (this.CmdStrArr[A_Index] == cmdStr) {
                 this.OperTypeCon.Value := A_Index
                 break
             }
         }
+
+        FoldInfo := MySoftData.TableInfo[3].FoldInfo
+        this.MenuDLCon.Delete()
+        DropDownArr := []
+        loop FoldInfo.RemarkArr.Length {
+            DropDownArr.Push(A_Index ". " FoldInfo.RemarkArr[A_Index])
+        }
+        this.MenuDLCon.Add(DropDownArr)
+        this.MenuDLCon.Value := menuDLIndex
     }
 
     AddGui() {
@@ -40,13 +55,23 @@ class RMTCMDGui {
         PosY := 15
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "操作类型：")
         PosX += 80
-        this.OperTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w160", PosX, PosY - 3), this.CmdStrArr)
+        this.OperTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w160 R5", PosX, PosY - 3), this.CmdStrArr)
+        this.OperTypeCon.OnEvent("Change", this.OnChangeType.Bind(this))
+
+        PosX := 15
+        PosY += 40
+        con := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 90), "菜单序号：")
+        this.MenuRelateArrCon.Push(con)
+
+        PosX += 80
+        this.MenuDLCon := MyGui.Add("DropDownList", Format("x{} y{} w{} R5", PosX, PosY - 5, 160), [])
+        this.MenuRelateArrCon.Push(this.MenuDLCon)
 
         PosX := 100
         PosY += 40
         con := MyGui.Add("Button", Format("x{} y{} w100 h40", PosX, PosY), "确定")
         con.OnEvent("Click", (*) => this.OnSureBtnClick())
-        MyGui.Show(Format("w{} h{}", 300, 120))
+        MyGui.Show(Format("w{} h{}", 300, 150))
     }
 
     OnSureBtnClick() {
@@ -54,10 +79,19 @@ class RMTCMDGui {
         if (!isValid)
             return
 
-        CommandStr := "RMT指令_" this.OperTypeCon.Text
+        CommandStr := this.GetCommandStr()
         action := this.SureBtnAction
         action(CommandStr)
         this.Gui.Hide()
+    }
+
+    OnChangeType(*) {
+        IsShowMenuDL := this.OperTypeCon.Text == "显示菜单"
+
+        loop this.MenuRelateArrCon.Length {
+            con := this.MenuRelateArrCon[A_Index]
+            con.Visible := IsShowMenuDL
+        }
     }
 
     CheckIfValid() {
@@ -83,5 +117,15 @@ class RMTCMDGui {
         }
 
         return true
+    }
+
+    GetCommandStr() {
+        if (this.OperTypeCon.Text == "显示菜单") {
+            CommandStr := "RMT指令_" this.OperTypeCon.Text "_" this.MenuDLCon.Value
+        }
+        else {
+            CommandStr := "RMT指令_" this.OperTypeCon.Text
+        }
+        return CommandStr
     }
 }
