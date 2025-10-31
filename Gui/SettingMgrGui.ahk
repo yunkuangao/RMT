@@ -38,9 +38,13 @@ class SettingMgrGui {
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "当前配置：")
 
         PosX += 80
-        this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 180), "")
+        this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 110), "")
 
-        PosX := 270
+        PosX := 205
+        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 3), "重命名")
+        con.OnEvent("Click", this.OnReNameBtnClick.Bind(this))
+
+        PosX := 280
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY - 3), "路径修正")
         con.OnEvent("Click", this.OnRepairBtnClick.Bind(this))
 
@@ -84,13 +88,43 @@ class SettingMgrGui {
 
         PosX := 160
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "导入配置")
-        con.OnEvent("Click", this.OnLoadBtnClick.Bind(this))
+        con.OnEvent("Click", this.OnUnpackBtnClick.Bind(this))
 
         PosX := 280
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "复制配置")
         con.OnEvent("Click", this.OnCopyBtnClick.Bind(this))
 
         MyGui.Show(Format("w{} h{}", 420, 300))
+    }
+
+    OnReNameBtnClick(*) {
+        ; 显示输入框让用户输入新文件名
+        newFileName := InputBox("请输入新的配置名：", "重命名", "w300 h100")
+
+        ; 检查用户是否取消输入
+        if newFileName.Result = "Cancel" || newFileName.Value = ""
+            return
+
+        isVaild := this.CheckIfExistAndValid(newFileName.Value)
+        if (!isVaild) {
+            return false
+        }
+
+        NewSettingArrStr := ""
+        for index, settingName in this.SettingList {
+            value := MySoftData.CurSettingName == settingName ? newFileName.Value : settingName
+            NewSettingArrStr .= value "π"
+        }
+        NewSettingArrStr := RTrim(NewSettingArrStr, "π")
+        IniWrite(NewSettingArrStr, IniFile, IniSection, "SettingArrStr")
+
+        MySoftData.CurSettingName := newFileName.Value
+        IniWrite(MySoftData.CurSettingName, IniFile, IniSection, "CurSettingName")
+
+        RepairPath(MySoftData.CurSettingName, SearchFile, 1)
+        RepairPath(MySoftData.CurSettingName, SearchProFile, 1)
+        MsgBox("重命名成功")
+        Reload()
     }
 
     OnRepairBtnClick(*) {
@@ -121,24 +155,28 @@ class SettingMgrGui {
         if selectedFile == ""  ; 用户取消了选择
             return
 
-        ; 获取文件的绝对路径和文件名（不含扩展名）
         SplitPath selectedFile, &fileName, , &fileExt, &fileNameNoExt
-
         ; 检查文件扩展名
         if fileExt != "rmt" {
             MsgBox("请选择 .rmt 文件！", "错误", 0x10)
             return
         }
-
         ; 设置输出文件夹路径
         outputFolder := A_WorkingDir "\Setting\" fileNameNoExt
+        isVaild := this.CheckIfExistAndValid(fileNameNoExt)
+        if (!isVaild) {
+            return false
+        }
 
         try {
             ; 解包文件
             FolderPackager.UnpackFile(selectedFile, outputFolder)
             RepairPath(fileNameNoExt, SearchFile, 1)
             RepairPath(fileNameNoExt, SearchProFile, 1)
-            MsgBox("解包完成！`n文件: " fileName "`n输出到: " outputFolder, "成功", 0x40)
+            MySoftData.SettingArrStr .= "π" fileNameNoExt
+            IniWrite(MySoftData.SettingArrStr, IniFile, IniSection, "SettingArrStr")
+            MsgBox(fileNameNoExt " 配置导入成功")
+            Reload()
         } catch as e {
             MsgBox("解包失败: " e.Message, "错误", 0x10)
         }
@@ -200,6 +238,22 @@ class SettingMgrGui {
         RepairPath(this.OperNameEditCon.Value, SearchProFile, 1)
         MsgBox(Format("成功复制<{}>配置到<{}>中", MySoftData.CurSettingName, this.OperNameEditCon.Value))
         this.Refresh()
+    }
+
+    CheckIfExistAndValid(FileName) {
+        isVaild := this.IsValidFolderName(FileName)
+        if (!isVaild) {
+            MsgBox("配置名不符合文件目录命名规则，请修改")
+            return false
+        }
+
+        for settingName in this.SettingList {
+            if (FileName == settingName) {
+                MsgBox("配置名已存在")
+                return false
+            }
+        }
+        return true
     }
 
     IsValidName() {
