@@ -247,10 +247,13 @@ class SettingMgrGui {
         if (!isVaild)
             return
 
+        MySoftData.CurSettingName := this.OperNameEditCon.Value
+        IniWrite(MySoftData.CurSettingName, IniFile, IniSection, "CurSettingName")
+
         MySoftData.SettingArrStr .= "π" this.OperNameEditCon.Value
         IniWrite(MySoftData.SettingArrStr, IniFile, IniSection, "SettingArrStr")
         MsgBox("成功新增配置： " this.OperNameEditCon.Value)
-        this.Refresh()
+        Reload()
     }
 
     OnCopyBtnClick(*) {
@@ -265,7 +268,10 @@ class SettingMgrGui {
         RepairPath(this.OperNameEditCon.Value, SearchFile, 1)
         RepairPath(this.OperNameEditCon.Value, SearchProFile, 1)
         MsgBox(Format("成功复制<{}>配置到<{}>中", MySoftData.CurSettingName, this.OperNameEditCon.Value))
-        this.Refresh()
+
+        MySoftData.CurSettingName := this.OperNameEditCon.Value
+        IniWrite(MySoftData.CurSettingName, IniFile, IniSection, "CurSettingName")
+        Reload()
     }
 
     CheckIfExistAndValid(FileName) {
