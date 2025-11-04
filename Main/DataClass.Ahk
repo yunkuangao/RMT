@@ -424,8 +424,6 @@ class OutputData {
         this.SerialStr := ""
         this.Text := "将要输出的文本"
         this.OutputType := 1    ;sendtest  粘贴   粘贴
-        this.ContentType := 1   ;文本   变量    文本+变量
-        this.VariName := "空"
     }
 }
 

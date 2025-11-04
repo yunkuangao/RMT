@@ -76,6 +76,10 @@ AddThankUI(index) {
     con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '一根香蕉')
     tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
 
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '仰望')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
     posX := OriPosX
     posY += 40
     con := MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", posX, posY, 850, 250), "特别鸣谢以下用户的慷慨打赏（按时间顺序）：（打赏用户名）")

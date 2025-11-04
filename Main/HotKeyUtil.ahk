@@ -400,20 +400,7 @@ OnMMProOnce(tableItem, index, Data) {
 OnOutput(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
     Data := GetMacroCMDData(OutputFile, paramArr[2])
-    Content := ""
-    if (Data.ContentType == 1)
-        Content := GetReplaceVarText(tableItem, index, Data.Text)
-    else if (Data.ContentType == 2) {
-        hasValue := TryGetVariableValue(&Content, tableItem, index, Data.VariName)
-        if (!hasValue)
-            return
-    }
-    else if (Data.ContentType == 3) {
-        Content := GetReplaceVarText(tableItem, index, Data.Text)
-        hasValue := TryGetVariableValue(&VariValue, tableItem, index, Data.VariName, false)
-        if (hasValue)
-            Content := Content "" VariValue
-    }
+    Content := GetReplaceVarText(tableItem, index, Data.Text)
 
     if (Data.OutputType == 1) {     ;send
         SendText(Content)

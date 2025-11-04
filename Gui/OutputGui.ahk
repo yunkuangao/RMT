@@ -7,7 +7,6 @@ class OutputGui {
         this.VariableObjArr := []
         this.RemarkCon := ""
         this.OutputTypeCon := ""
-        this.ContentTypeCon := ""
         this.TextTipCon := ""
         this.TextCon := ""
         this.VariTipCon := ""
@@ -24,7 +23,6 @@ class OutputGui {
         }
 
         this.Init(cmd)
-        this.OnChangeType()
         this.ToggleFunc(true)
     }
 
@@ -56,31 +54,26 @@ class OutputGui {
         this.OutputTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), ["发送内容",
             "粘贴", "Win粘贴", "临时提示", "指令窗口", "复制到剪切板", "软件弹窗", "系统语音"])
         this.OutputTypeCon.Value := 1
-        this.OutputTypeCon.OnEvent("Change", this.OnChangeType.Bind(this))
-
-        PosX += 160
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 80, 20), "输出内容:")
-        PosX += 80
-        this.ContentTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), ["文本",
-            "变量", "文本+变量"])
-        this.ContentTypeCon.Value := 1
-        this.ContentTypeCon.OnEvent("Change", this.OnChangeType.Bind(this))
 
         PosX := 10
         PosY += 30
-        this.TextTipCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "文本")
-        PosX += 240
+        this.TextTipCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "输出的文本内容")
+        PosX += 270
         this.VariTipCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "变量")
 
         PosX := 10
         PosY += 20
-        this.TextCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX, PosY, 200, 50))
+        this.TextCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX, PosY, 250, 70))
 
-        PosX += 240
-        this.VariCon := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX, PosY, 130), [])
-    
+        PosX += 270
+        this.VariCon := MyGui.Add("DropDownList", Format("x{} y{} w{} R5", PosX, PosY, 130), [])
+        con := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY + 35, 90, 35), "追加变量名")
+        con.OnEvent("Click", (*) => this.OnClickAddVarNameBtn())
+        con := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX + 100, PosY + 35, 90, 35), "追加变量值")
+        con.OnEvent("Click", (*) => this.OnClickAddVarValueBtn())
+
         PosX := 10
-        PosY += 60
+        PosY += 80
         MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 350, 20), "提示：文本中{变量名}表示变量值、例如：变量1 = {变量1}")
 
         PosY += 30
@@ -89,7 +82,7 @@ class OutputGui {
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
         MyGui.OnEvent("Close", (*) => this.ToggleFunc(false))
-        MyGui.Show(Format("w{} h{}", 500, 240))
+        MyGui.Show(Format("w{} h{}", 500, 260))
     }
 
     Init(cmd) {
@@ -100,10 +93,9 @@ class OutputGui {
 
         this.TextCon.Value := this.Data.Text
         this.OutputTypeCon.Value := this.Data.OutputType
-        this.ContentTypeCon.Value := this.Data.ContentType
         this.VariCon.Delete()
         this.VariCon.Add(this.VariableObjArr)
-        this.VariCon.Text := this.Data.VariName
+        this.VariCon.Value := 1
     }
 
     ToggleFunc(state) {
@@ -116,13 +108,12 @@ class OutputGui {
         }
     }
 
-    OnChangeType(*) {
-        showText := this.ContentTypeCon.Value == 1 || this.ContentTypeCon.Value == 3
-        showVari := this.ContentTypeCon.Value == 2 || this.ContentTypeCon.Value == 3
-        this.TextTipCon.Enabled := showText
-        this.TextCon.Enabled := showText
-        this.VariTipCon.Enabled := showVari
-        this.VariCon.Enabled := showVari
+    OnClickAddVarNameBtn() {
+        this.TextCon.Value .= this.VariCon.Text
+    }
+
+    OnClickAddVarValueBtn() {
+        this.TextCon.Value .= "{" this.VariCon.Text "}"
     }
 
     OnClickSureBtn() {
@@ -178,8 +169,6 @@ class OutputGui {
     SaveOutputData() {
         this.Data.Text := this.TextCon.Value
         this.Data.OutputType := this.OutputTypeCon.Value
-        this.Data.ContentType := this.ContentTypeCon.Value
-        this.Data.VariName := this.VariCon.Text
 
         saveStr := JSON.stringify(this.Data, 0)
         IniWrite(saveStr, OutputFile, IniSection, this.Data.SerialStr)
