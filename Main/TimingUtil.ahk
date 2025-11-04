@@ -138,6 +138,9 @@ UpdateTimingNextTime(Data) {
             Data.NextTriggerTime := newYear newMonth SubStr(Data.StartTime, 7)
         }
     }
+
+    if (Data.EndTime != "" && Data.NextTriggerTime >= Data.EndTime)
+        Data.NextTriggerTime := ""
 }
 
 GetTimingInterval(Data) {
@@ -154,7 +157,7 @@ GetTimingInterval(Data) {
 HandleOnSoftStart(tableItem) {
     if (MySoftData.IsReload)
         return
-    
+
     for index, value in tableItem.ModeArr {
         if ((Integer)(tableItem.ForbidArr[index]))
             continue
