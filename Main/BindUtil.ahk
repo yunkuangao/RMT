@@ -425,7 +425,7 @@ BindTabHotKey() {
             actionArr := GetMacroAction(tableIndex, index)
             isJoyKey := RegExMatch(tableItem.TKArr[index], "Joy")
             isHotstring := SubStr(tableItem.TKArr[index], 1, 1) == ":"
-            frontInfo := GetParamsWinInfoStr(GetItemFrontInfo(tableItem, index))
+            frontInfo := GetItemFrontInfo(tableItem, index)
             realFrontStr := GetParamsWinInfoStr(frontInfo)
 
             if (realFrontStr != "") {

@@ -165,8 +165,6 @@ class SettingMgrGui {
             MsgBox("请选择 .rmt 文件！", "错误", 0x10)
             return
         }
-        ; 设置输出文件夹路径
-        outputFolder := A_WorkingDir "\Setting\" fileNameNoExt
 
         isVaild := this.IsValidFolderName(fileNameNoExt)
         if (!isVaild) {
@@ -187,8 +185,11 @@ class SettingMgrGui {
         }
 
         if (LoadType == 3) {    ;自增导入
-            fileNameNoExt := IncrementTextNumber(fileNameNoExt)
+            fileNameNoExt := IncrementText(this.SettingList, fileNameNoExt)
         }
+
+        ; 设置输出文件夹路径
+        outputFolder := A_WorkingDir "\Setting\" fileNameNoExt
 
         try {
             ; 解包文件

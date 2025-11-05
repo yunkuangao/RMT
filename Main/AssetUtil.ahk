@@ -581,7 +581,8 @@ GetTableItemDefaultInfo(index) {
         savedLoopCountStr := "1π1π1π1π1π1π1π1"
         savedTriggerTypeStr := "1π1π1π1π1π1π1π1"
         savedSerialeArrStr := "000003π000004π000005π000006π000007π00008π0000012π000013"
-        savedTimingSerialStr := "Timing000003πTiming000004πTiming000005πTiming000006πTiming000007πTiming000008πTiming0000012πTiming0000013"
+        savedTimingSerialStr :=
+            "Timing000003πTiming000004πTiming000005πTiming000006πTiming000007πTiming000008πTiming0000012πTiming0000013"
     }
     else if (symbol == "Timing") {
         savedTKArrStr := ""
@@ -1456,55 +1457,64 @@ GetItemFrontInfo(tableItem, itemIndex) {
 
 CustomMsgBox(Text := "", Title := "", Buttons := "") {
     Result := -1
-    
+
     ; 解析按钮字符串
     ButtonArray := StrSplit(Buttons, "|")
     ButtonCount := ButtonArray.Length
-    
+
     ; 创建 GUI
     MyGui := Gui()
     MyGui.Title := Title
     MyGui.OnEvent("Close", GuiClose)
     MyGui.OnEvent("Escape", GuiClose)
-    
+
     ; 添加提示文本
     MyGui.Add("Text", "w300 Center", Text)
-    
+
     ; 动态创建按钮 - 统一 Y 坐标
     ButtonWidth := 80
     ButtonHeight := 30
     ButtonSpacing := 10
     ButtonY := 40  ; 统一的 Y 坐标位置
-    
+
     TotalWidth := (ButtonWidth * ButtonCount) + (ButtonSpacing * (ButtonCount - 1))
     StartX := (300 - TotalWidth) // 2  ; 居中显示
-    
-    Loop ButtonCount {
+
+    loop ButtonCount {
         CurrentX := StartX + (ButtonWidth + ButtonSpacing) * (A_Index - 1)
         Btn := MyGui.Add("Button", "w" ButtonWidth " h" ButtonHeight " x" CurrentX " y" ButtonY, ButtonArray[A_Index])
         Btn.OnEvent("Click", ButtonClicked.Bind(A_Index))
     }
-    
+
     ; 显示 GUI 并等待
     MyGui.Show()
-    
+
     ; 等待用户选择
     while Result == -1
         Sleep(50)
-    
+
     return Result
-    
+
     ; 按钮点击事件
     ButtonClicked(Index, Ctrl, Info) {
         Result := Index
         MyGui.Destroy()
     }
-    
+
     ; 关闭 GUI 事件
     GuiClose(*) {
         Result := 0
         MyGui.Destroy()
     }
+}
+
+IncrementText(strArr, str) {
+    str := IncrementTextNumber(str)
+    for curStr in strArr {
+        if (str == curStr)
+            return IncrementText(strArr, str)
+    }
+    return str
 }
 
 IncrementTextNumber(str) {
@@ -1513,10 +1523,10 @@ IncrementTextNumber(str) {
         ; 如果匹配成功，提取文本部分和数字部分
         textPart := match[1]
         numberPart := match[2]
-        
+
         ; 将数字部分转换为整数并加1
         newNumber := Integer(numberPart) + 1
-        
+
         ; 返回文本+新数字
         return textPart . newNumber
     }
