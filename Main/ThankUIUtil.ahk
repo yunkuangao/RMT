@@ -82,7 +82,7 @@ AddThankUI(index) {
 
     posX := OriPosX
     posY += 40
-    con := MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", posX, posY, 850, 250), "特别鸣谢以下用户的慷慨打赏（按时间顺序）：（打赏用户名）")
+    con := MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", posX, posY, 850, 420), "特别鸣谢以下用户的慷慨打赏（按时间顺序）：（打赏用户名）")
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
     tableItem.AllGroup.Push(con)
@@ -319,6 +319,190 @@ AddThankUI(index) {
 
     posX += 100
     con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '**金')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*线')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX := OriPosX
+    posY += 30
+    posX += 10
+    con := MyGui.Add("Text", Format("x{} y{}", posX, posY), '*哈')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), 'T*n')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*宝')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '银联云闪')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*正')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*丢')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*菰')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX := OriPosX
+    posY += 30
+    posX += 10
+    con := MyGui.Add("Text", Format("x{} y{}", posX, posY), 'S*h')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*橙子')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), 'Q*7')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), 'C*e')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*跃')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), 's*1')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '7*4')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*A')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX := OriPosX
+    posY += 30
+    posX += 10
+    con := MyGui.Add("Text", Format("x{} y{}", posX, posY), '*楠')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*广')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*啊')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '认*n')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*天')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*)')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*源')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*悬')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX := OriPosX
+    posY += 30
+    posX += 10
+    con := MyGui.Add("Text", Format("x{} y{}", posX, posY), '*卦')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*上')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*人')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '重*e')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*刘')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*楹')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*川')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*维')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX := OriPosX
+    posY += 30
+    posX += 10
+    con := MyGui.Add("Text", Format("x{} y{}", posX, posY), '*欣')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*美')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*旭')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*样')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*酒')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*室')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*冘')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*1')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX := OriPosX
+    posY += 30
+    posX += 10
+    con := MyGui.Add("Text", Format("x{} y{}", posX, posY), '*一')
+    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
+
+    posX += 100
+    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '*正')
     tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
 
     posX := OriPosX

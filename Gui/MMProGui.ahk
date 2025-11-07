@@ -140,7 +140,7 @@ class MMProGui {
         this.SpeedCon.Value := this.Data.Speed
         this.CountCon.Value := this.Data.Count
         this.IntervalCon.Value := this.Data.Interval
-    
+
         this.OnTypeChange()
     }
 
@@ -208,11 +208,13 @@ class MMProGui {
             this.IsRelativeCon.Value := 1
             this.ActionTypeCon.Value := 1
             this.SpeedCon.Value := 100
+            this.IsRelativeCon.Enabled := false
             this.ActionTypeCon.Enabled := false
             this.SpeedCon.Enabled := false
 
         }
         else {
+            this.IsRelativeCon.Enabled := true
             this.ActionTypeCon.Enabled := true
             this.SpeedCon.Enabled := true
         }
