@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="Images/Soft/RMT_Logo.png" alt="RMT Logo" width="160" height="160">
-</p>
-
 <h1 align="center">🐇 RMT（若梦兔）</h1>
 
 <p align="center">
@@ -71,10 +67,19 @@
 
 ## 🧠 配置共享仓库
 
-| 平台 | 链接 |
-|------|------|
-| 🐙 [GitHub 配置仓库](https://github.com/zclucas/RMT-Setting) |
-| 🧧 [Gitee 配置仓库](https://gitee.com/fateman/RMT-Setting) |
+RMT 支持用户自由分享与下载宏配置文件，你可以在以下两个平台获取或贡献配置：  
+
+<div align="center">
+
+| 🌍 平台 | 🔗 仓库地址 | 📦 特点 |
+|:--:|:--:|:--|
+| 🐱 **GitHub** | [RMT-Setting (GitHub)](https://github.com/zclucas/RMT-Setting) | 国际访问快 |
+| 🅶 **Gitee** | [RMT-Setting (Gitee)](https://gitee.com/fateman/RMT-Setting) | 国内访问更稳定 |
+
+</div>
+
+> 💡 你可以将自己录制或编辑的宏上传到共享仓库，与社区一起成长。  
+> 欢迎通过 Issue 或 PR 分享你的创意配置！
 
 ---
 
