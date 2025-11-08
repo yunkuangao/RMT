@@ -73,10 +73,6 @@ AddThankUI(index) {
     tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
 
     posX += 100
-    con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '一根香蕉')
-    tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
-
-    posX += 100
     con := MyGui.Add("Link", Format("x{} y{}", posX, posY), '仰望')
     tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
 
