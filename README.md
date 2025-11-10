@@ -62,6 +62,7 @@ RMT（若梦兔）是完全免费的开源项目。
 | RMT 1.0 | 逻辑指令增强，功能跃升 | [BV1oWVRzaEzk](https://www.bilibili.com/video/BV1oWVRzaEzk) |
 | RMT 1.0.7 | 定时宏、自定义贴图、配置管理 | [BV1T2e8zAEaf](https://www.bilibili.com/video/BV1T2e8zAEaf) |
 | RMT 1.0.8 | 直播交流与答疑 | [BV1CYx1zmEx3](https://www.bilibili.com/video/BV1CYx1zmEx3) |
+| RMT 1.0.8 | 菜单宏登场，配置可共享 | [BV1571XBDEdR](https://www.bilibili.com/video/BV1571XBDEdR) |
 
 🎬 更多内容请关注 B 站账号：  
 👉 [浮生若梦的兔子](https://space.bilibili.com/397441876?spm_id_from=333.1007.0.0)
