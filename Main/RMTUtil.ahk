@@ -194,7 +194,7 @@ InitFilePath() {
             "   `n" .
             "协议：CC BY - NC - SA 4.0`n" .
             "原始来源：RMT(若梦兔) 软件导出`n" .
-            "说明：仅限非商业用途，转载请注明来源并保持相同协议 `n", filePath)
+            "说明：仅限非商业用途，转载请注明来源并保持相同协议 `n", filePath, "UTF-8")
     }
 
     if (!DirExist(A_WorkingDir "\Images")) {

@@ -50,7 +50,7 @@ class SettingMgrGui {
 
         PosX := 10
         PosY += 30
-        MyGui.Add("GroupBox", Format("x{} y{} w400 h110", PosX, PosY), "配置操作")
+        MyGui.Add("GroupBox", Format("x{} y{} w400 h150", PosX, PosY), "配置操作")
 
         PosX := 70
         PosY += 30
@@ -58,16 +58,22 @@ class SettingMgrGui {
 
         PosX += 80
         this.OperSettingCon := MyGui.Add("DropDownList", Format("x{} y{} w{} R5", PosX, PosY - 3, 200), [])
-        PosX := 40
+
+        PosX := 80
         PosY += 35
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "加载配置")
         con.OnEvent("Click", this.OnLoadBtnClick.Bind(this))
 
-        PosX := 160
+        PosX := 260
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "操作说明")
+        con.OnEvent("Click", this.OnCourseBtnClick.Bind(this))
+
+        PosX := 80
+        PosY += 40
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "导出配置")
         con.OnEvent("Click", this.OnPackBtnClick.Bind(this))
 
-        PosX := 280
+        PosX := 260
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "删除配置")
         con.OnEvent("Click", this.OnDelBtnClick.Bind(this))
 
@@ -94,7 +100,7 @@ class SettingMgrGui {
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "复制配置")
         con.OnEvent("Click", this.OnCopyBtnClick.Bind(this))
 
-        MyGui.Show(Format("w{} h{}", 420, 300))
+        MyGui.Show(Format("w{} h{}", 420, 340))
     }
 
     OnReNameBtnClick(*) {
@@ -216,6 +222,15 @@ class SettingMgrGui {
         MySoftData.CurSettingName := this.OperSettingCon.Text
         IniWrite(MySoftData.CurSettingName, IniFile, IniSection, "CurSettingName")
         Reload()
+    }
+
+    OnCourseBtnClick(*) {
+        filePath := A_WorkingDir "\Setting\" this.OperSettingCon.Text "\使用说明&署名.txt"
+
+        if (FileExist(filePath))
+            Run filePath
+        else
+            MsgBox(filePath "说明文件不存在")
     }
 
     OnDelBtnClick(*) {
