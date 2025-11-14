@@ -24,6 +24,7 @@ OnSaveSetting(*) {
     IniWrite(MySoftData.KillMacroHotkeyCtrl.Value, IniFile, IniSection, "KillMacroHotkey")
     IniWrite(MySoftData.ShowWinCtrl.Value, IniFile, IniSection, "IsExecuteShow")
     IniWrite(MySoftData.BootStartCtrl.Value, IniFile, IniSection, "IsBootStart")
+    IniWrite(MySoftData.SplitLineCtrl.Value, IniFile, IniSection, "ShowSplitLine")
     IniWrite(MySoftData.FixedMenuWheelCtrl.Value, IniFile, IniSection, "FixedMenuWheel")
     IniWrite(MySoftData.MutiThreadNumCtrl.Value, IniFile, IniSection, "MutiThreadNum")
     IniWrite(MySoftData.SoftBGColorCon.Value, IniFile, IniSection, "SoftBGColor")
@@ -262,26 +263,6 @@ SubMacroStopAction(tableIndex, itemIndex) {
     workPath := MyWorkPool.GetWorkPath(tableItem.IsWorkIndexArr[itemIndex])
     ; tableItem.IsWorkIndexArr[itemIndex] := false
     MyWorkPool.PostMessage(WM_STOP_MACRO, workPath, 0, 0)
-}
-
-TriggerSubMacro(tableIndex, itemIndex) {
-    tableItem := MySoftData.TableInfo[tableIndex]
-    macro := tableItem.MacroArr[itemIndex]
-    hasWork := MyWorkPool.CheckHasFreeWorker()
-
-    if (tableItem.IsWorkIndexArr[itemIndex])     ;正在执行不能再次触发
-        return
-
-    if (hasWork) {
-        workPath := MyWorkPool.Get()
-        workIndex := MyWorkPool.GetWorkIndex(workPath)
-        tableItem.IsWorkIndexArr[itemIndex] := workIndex
-        MyWorkPool.PostMessage(WM_TR_MACRO, workPath, tableIndex, itemIndex)
-    }
-    else {
-        action := OnTriggerMacroKeyAndInit.Bind(tableItem, macro, itemIndex)
-        SetTimer(action, -1)
-    }
 }
 
 SetGlobalVariable(Name, Value, ignoreExist) {

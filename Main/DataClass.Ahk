@@ -204,6 +204,8 @@ class SoftData {
         this.ShowWinCtrl := ""
         this.IsBootStart := false
         this.BootStartCtrl := ""
+        this.ShowSplitLine := false
+        this.SplitLineCtrl := ""
         this.FixedMenuWheel := false
         this.FixedMenuWheelCtrl := ""
         this.NoVariableTip := false

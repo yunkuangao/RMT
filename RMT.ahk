@@ -67,7 +67,7 @@ global MyCMDTipSettingGui := CMDTipSettingGui()
 global MyToolRecordSettingGui := ToolRecordSettingGui()
 global IniFile := A_WorkingDir "\Setting\MainSettings.ini"
 global MySubMacroStopAction := SubMacroStopAction
-global MyTriggerSubMacro := TriggerSubMacro
+global MyTriggerSubMacro := TriggerMacroHandler
 global MySetGlobalVariable := SetGlobalVariable
 global MyDelGlobalVariable := DelGlobalVariable
 global MyCMDReportAciton := CMDReport
@@ -90,18 +90,3 @@ SetGlobalVar()      ;缓存全局变量
 PluginInit()
 TimingCheck()       ;轮询检测触发
 BindKey()           ;绑定快捷键
-
-a:: {
-    loop MySoftData.TableInfo.Length {
-        tableItem := MySoftData.TableInfo[A_Index]
-        curIndex := A_Index
-        len := tableItem.ModeArr.Length
-        str := ""
-        for index, value in tableItem.ModeArr {
-            isWork := tableItem.IsWorkIndexArr[index]
-            str .= isWork "π"
-        }
-        ; Send(str "`n")
-        Sleep(30)
-    }
-}

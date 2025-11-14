@@ -24,15 +24,17 @@ class MacroEditGui {
         this.VariableObjArr := []
         this.isContextEdit := false
         this.RecordToggleCon := ""
+        this.EditModeCon := ""
+        this.SubMacroEditGui := ""
 
         this.SureBtnAction := ""
         this.SaveBtnAction := ""
         this.SaveBtnCtrl := {}
         this.CmdBtnConMap := map()
         this.SubGuiMap := map()
-        this.NeedCommandInterval := false
         this.MacroTreeViewCon := ""
-        this.EditModeType := 1  ;1添加指令 2修改当前指令 3向上插入指令 4 向下插入指令
+        this.MacroEditTextCon := ""
+        this.CmdEditType := 1  ;1添加指令 2修改当前指令 3向上插入指令 4 向下插入指令
         this.CurItemID := ""  ;当前操作itemID
         this.LastItemID := "" ;最后的itemID
         this.ContextMenu := ""
@@ -265,10 +267,17 @@ class MacroEditGui {
 
         PosX := 200
         PosY := 10
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "编辑模式：")
+        PosX += 70
+        this.EditModeCon := MyGui.Add("DropDownList", Format("x{} y{} w80", PosX, PosY - 3), ["逻辑树", "文本"])
+        this.EditModeCon.Value := 1
+        this.EditModeCon.OnEvent("Change", this.OnChangeEditMode.Bind(this))
+
+        PosX := 400
         this.RecordMacroCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "指令录制")
         this.RecordMacroCon.Value := false
         this.RecordMacroCon.OnEvent("Click", this.OnClickRecordTog.Bind(this))
-        PosX += 95
+        PosX += 85
         isHotKey := CheckIsNormalHotKey(ToolCheckInfo.ToolRecordMacroHotKey)
         CtrlType := isHotKey ? "Hotkey" : "Text"
         con := MyGui.Add(CtrlType, Format("x{} y{} w{}", posX, posY - 3, 130), ToolCheckInfo.ToolRecordMacroHotKey
@@ -282,6 +291,9 @@ class MacroEditGui {
         this.MacroTreeViewCon := MyGui.Add("TreeView", Format("x{} y{} w{} h{}", PosX + 5, PosY, 705, 435), "")
         this.MacroTreeViewCon.OnEvent("ContextMenu", this.ShowContextMenu.Bind(this))  ; 右键菜单事件
         this.MacroTreeViewCon.OnEvent("DoubleClick", this.OnDoubleClick.Bind(this))  ; 双击编辑指令
+
+        this.MacroEditTextCon := MyGui.Add("Edit", Format("x{} y{} w{} h{}", PosX + 5, PosY, 705, 435), "")
+        this.MacroEditTextCon.Visible := false
 
         PosX := 190
         PosY := 500
@@ -303,23 +315,52 @@ class MacroEditGui {
         MyGui.Show(Format("w{} h{}", 920, 550))
     }
 
-    Init(CommandStr, ShowSaveBtn) {
+    Init(MacroStr, ShowSaveBtn) {
         this.ShowSaveBtn := ShowSaveBtn
         this.SubMacroLastIndex := 0
         this.SaveBtnCtrl.Visible := this.ShowSaveBtn
-        this.InitTreeView(CommandStr)
+        this.InitTreeView(MacroStr)
+        this.InitMacroText(MacroStr)
     }
 
     Backspace() {
-        if (this.MacroTreeViewCon.GetCount() == 0)
-            return
-        preItemID := this.MacroTreeViewCon.GetPrev(this.LastItemID)
-        this.MacroTreeViewCon.Delete(this.LastItemID)
-        this.LastItemID := preItemID
+        if (this.EditModeCon.Value == 1) {
+            if (this.MacroTreeViewCon.GetCount() == 0)
+                return
+            preItemID := this.MacroTreeViewCon.GetPrev(this.LastItemID)
+            this.MacroTreeViewCon.Delete(this.LastItemID)
+            this.LastItemID := preItemID
+        }
+        else {
+            MacroStr := this.GetMacroStr()
+            cmdArr := SplitMacro(MacroStr)
+            if (cmdArr.Length > 0)
+                cmdArr.Pop()
+            MacroStr := GetMacroStrByCmdArr(cmdArr)
+
+            ; 回到替换前的滑动值
+            firstVisible := SendMessage(0xCE, 0, 0, this.MacroEditTextCon) ; EM_GETFIRSTVISIBLELINE = 0xCE
+            this.InitMacroText(MacroStr)
+            SendMessage(0xB6, 0, firstVisible, this.MacroEditTextCon) ; EM_LINESCROLL = 0xB6
+        }
     }
 
     ClearStr() {
         this.MacroTreeViewCon.Delete()
+        this.MacroEditTextCon.Value := ""
+    }
+
+    OnChangeEditMode(*) {
+        MacroStr := this.GetMacroStr()
+        this.MacroTreeViewCon.Visible := this.EditModeCon.Value == 1
+        this.MacroEditTextCon.Visible := this.EditModeCon.Value == 2
+
+        if (this.EditModeCon.Value == 1) {
+            this.InitTreeView(MacroStr)
+        }
+        else if (this.EditModeCon.Value == 2) {
+            this.InitMacroText(MacroStr)
+        }
     }
 
     OnClickRecordTog(*) {
@@ -329,7 +370,7 @@ class MacroEditGui {
     }
 
     OnSaveBtnClick() {
-        macroStr := this.GetMacroStr(0)
+        macroStr := this.GetMacroStr()
         action := this.SureBtnAction
         action(macroStr)
 
@@ -342,13 +383,31 @@ class MacroEditGui {
     }
 
     OnSureBtnClick() {
-        macroStr := this.GetMacroStr(0)
+        macroStr := this.GetMacroStr()
         action := this.SureBtnAction
         action(macroStr)
 
         this.SureBtnAction := ""
         this.Gui.Hide()
         this.SureFocusCon.Focus()
+    }
+
+    GetMacroStr() {
+        MacroStr := ""
+        if (this.MacroTreeViewCon.Visible) {
+            MacroStr := this.GetTreeMacroStr(0)
+        }
+        else if (this.MacroEditTextCon.Visible) {
+            MacroStr := this.MacroEditTextCon.Value
+        }
+        return MacroStr
+    }
+
+    InitMacroText(MacroStr) {
+        this.MacroEditTextCon.Visible := this.EditModeCon.Value == 2
+
+        content := RegExReplace(MacroStr, "[,，⫶]", "`n")
+        this.MacroEditTextCon.Value := content
     }
 
     ShowContextMenu(ctrl, item, isRightClick, x, y) {
@@ -410,10 +469,18 @@ class MacroEditGui {
             return
 
         itemText := this.MacroTreeViewCon.GetText(info)
-        if (itemText == "真" || itemText == "假")
-            return
-
         this.CurItemID := info
+        if (itemText == "真" || itemText == "假") {
+            if (this.SubMacroEditGui == "")
+                this.SubMacroEditGui := MacroEditGui()
+
+            macroStr := this.GetTreeMacroStr(this.CurItemID)
+            this.SubMacroEditGui.SureBtnAction := this.OnEditTrueOrFalseNode.Bind(this, this.CurItemID)
+            this.SubMacroEditGui.SureFocusCon := this.MacroTreeViewCon
+            this.SubMacroEditGui.ShowGui(macroStr, false)
+            return
+        }
+
         paramsArr := StrSplit(itemText, "_")
         subGui := this.SubGuiMap[paramsArr[1]]
         this.OnOpenSubGui(subGui, 2)
@@ -424,7 +491,7 @@ class MacroEditGui {
         paramsArr := StrSplit(cmdStr, "_")
         if (paramsArr.Length == 2) {
             modeType := paramsArr[1] == "Pre" ? 3 : paramsArr[1] == "Next" ? 4 : 5
-            this.EditModeType := modeType
+            this.CmdEditType := modeType
             subGui := this.SubGuiMap[paramsArr[2]]
             this.OnOpenSubGui(subGui, modeType)
             return
@@ -461,8 +528,9 @@ class MacroEditGui {
         }
     }
 
-    InitTreeView(CommandStr) {
-        cmdArr := SplitMacro(CommandStr)
+    InitTreeView(MacroStr) {
+        this.MacroTreeViewCon.Visible := this.EditModeCon.Value == 1
+        cmdArr := SplitMacro(MacroStr)
         this.MacroTreeViewCon.Delete()
         this.LastItemID := 0
         for cmdStr in cmdArr {
@@ -553,9 +621,9 @@ class MacroEditGui {
 
     ;打开子指令编辑器 modeType 1:默认行尾追加 2:编辑修改 3:上方插入 4:下方插入 5:真假节点添加
     OnOpenSubGui(subGui, modeType := 1) {
-        this.EditModeType := modeType
+        this.CmdEditType := modeType
         if ObjHasOwnProp(subGui, "VariableObjArr") {
-            macroStr := this.GetMacroStr(0)
+            macroStr := this.GetTreeMacroStr(0)
             VariableObjArr := GetGuiVariableObjArr(macroStr, this.VariableObjArr)
             subGui.VariableObjArr := VariableObjArr
         }
@@ -570,19 +638,19 @@ class MacroEditGui {
 
     ;确定子指令编辑器
     OnSubGuiSureBtnClick(CommandStr) {
-        if (this.EditModeType == 1) {
+        if (this.CmdEditType == 1) {
             this.OnAddCmd(CommandStr)
         }
-        else if (this.EditModeType == 2) {
+        else if (this.CmdEditType == 2) {
             this.OnModifyCmd(CommandStr)
         }
-        else if (this.EditModeType == 3) {
+        else if (this.CmdEditType == 3) {
             this.OnPreInsertCmd(CommandStr)
         }
-        else if (this.EditModeType == 4) {
+        else if (this.CmdEditType == 4) {
             this.OnNextInsertCmd(CommandStr)
         }
-        else if (this.EditModeType == 5) {
+        else if (this.CmdEditType == 5) {
             this.OnNodeAddCmd(CommandStr)
         }
         MySoftData.RecordToggleCon := this.RecordMacroCon
@@ -607,7 +675,7 @@ class MacroEditGui {
             return
         }
 
-        macroStr := this.GetMacroStr(ParentID)
+        macroStr := this.GetTreeMacroStr(ParentID)
         isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
         RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
         RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
@@ -636,7 +704,7 @@ class MacroEditGui {
         }
         else {
             this.MacroTreeViewCon.Delete(this.CurItemID)
-            macroStr := this.GetMacroStr(ParentID)
+            macroStr := this.GetTreeMacroStr(ParentID)
             isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
             RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
             RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
@@ -659,7 +727,7 @@ class MacroEditGui {
             return
         }
 
-        macroStr := this.GetMacroStr(ParentID)
+        macroStr := this.GetTreeMacroStr(ParentID)
         isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
         this.CurItemID := this.MacroTreeViewCon.GetParent(ParentID)
         RealCommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
@@ -680,7 +748,7 @@ class MacroEditGui {
             return
         }
 
-        macroStr := this.GetMacroStr(ParentID)
+        macroStr := this.GetTreeMacroStr(ParentID)
         isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
         this.CurItemID := this.MacroTreeViewCon.GetParent(ParentID)
         RealCommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
@@ -691,11 +759,21 @@ class MacroEditGui {
     OnNodeAddCmd(CommandStr) {
         iconStr := this.GetCmdIconStr(CommandStr)
         newItemID := this.MacroTreeViewCon.Add(CommandStr, this.CurItemID, iconStr)
-        macroStr := this.GetMacroStr(this.CurItemID)
+        macroStr := this.GetTreeMacroStr(this.CurItemID)
         isTrueMacro := this.MacroTreeViewCon.GetText(this.CurItemID) == "真"
 
         this.CurItemID := this.MacroTreeViewCon.GetParent(this.CurItemID)
         RealCommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
+        this.RefreshTree(this.CurItemID)
+    }
+
+    OnEditTrueOrFalseNode(nodeId, macroStr) {
+        isTrueMacro := this.MacroTreeViewCon.GetText(nodeId) == "真"
+        RealItemID := this.MacroTreeViewCon.GetParent(nodeId)
+        RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
+        this.CurItemID := RealItemID
+
         this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
         this.RefreshTree(this.CurItemID)
     }
@@ -712,7 +790,7 @@ class MacroEditGui {
         }
     }
 
-    GetMacroStr(ItemID) {
+    GetTreeMacroStr(ItemID) {
         macroStr := ""
         rootItemID := this.MacroTreeViewCon.GetChild(ItemID)
         while (rootItemID) {

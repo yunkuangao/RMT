@@ -657,6 +657,12 @@ AddSettingUI(index) {
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
 
+    con := MyGui.Add("CheckBox", Format("x{} y{}", posX + 635, posY), "分割线")
+    MySoftData.SplitLineCtrl := con
+    MySoftData.SplitLineCtrl.Value := MySoftData.ShowSplitLine
+    conInfo := ItemConInfo(con, tableItem, 1)
+    tableItem.AllConArr.Push(conInfo)
+
     posY += 40
     con := MyGui.Add("GroupBox", Format("x{} y{} w870 h100", posX + 10, posY), "下拉框选项")
     conInfo := ItemConInfo(con, tableItem, 1)

@@ -115,7 +115,7 @@ TimingChecker() {
         }
 
         UpdateTimingNextTime(Data)
-        TriggerSubMacro(tableIndex, index)
+        TriggerMacroHandler(tableIndex, index)
     }
 }
 
@@ -168,6 +168,6 @@ HandleOnSoftStart(tableItem) {
         Data := GetMacroCMDData(TimingFile, tableItem.TimingSerialArr[index])
         if (Data.Type != 6)
             return
-        TriggerSubMacro(tableItem.Index, index)
+        TriggerMacroHandler(tableItem.Index, index)
     }
 }

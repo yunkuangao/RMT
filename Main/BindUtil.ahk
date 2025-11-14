@@ -97,7 +97,6 @@ OnKillAllMacro(*) {
             if (isWork) {
                 workPath := MyWorkPool.GetWorkPath(tableItem.IsWorkIndexArr[index])
                 MyWorkPool.PostMessage(WM_STOP_MACRO, workPath, 0, 0)
-                return
             }
         }
     }

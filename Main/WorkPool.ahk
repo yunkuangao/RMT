@@ -119,7 +119,7 @@ class WorkPool {
     }
 
     OnTriggerMacro(wParam, lParam, msg, hwnd) {
-        TriggerSubMacro(wParam, lParam)
+        TriggerMacroHandler(wParam, lParam)
     }
 
     OnGetCmd(wParam, lParam, msg, hwnd) {

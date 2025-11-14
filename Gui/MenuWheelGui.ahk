@@ -136,7 +136,7 @@ class MenuWheelGui {
         this.ToggleFunc(false)
         this.Gui.Hide()
         macroIndex := (this.MenuIndex - 1) * 8 + index
-        TriggerSubMacro(3, macroIndex)
+        TriggerMacroHandler(3, macroIndex)
     }
 
     ToggleFunc(state) {

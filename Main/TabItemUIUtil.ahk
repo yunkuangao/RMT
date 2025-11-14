@@ -291,10 +291,13 @@ LoadTabItemUI(tableItem, itemIndex, foldIndex, PosY) {
     tableItem.AllConArr.Push(conInfo)
     tableItem.ConIndexMap[DelCon] := MacroItemInfo(ItemIndex, conInfo)
 
-    ; LineCon := MyGui.Add("Text", Format("x{} y{} w870 h1 0x10", TabPosX + 20, PosY + 32), "") ; SS_ETCHEDHORZ
-    ; conInfo := ItemConInfo(LineCon, tableItem, foldIndex)
-    ; tableItem.AllConArr.Push(conInfo)
-    ; tableItem.ConIndexMap[LineCon] := MacroItemInfo(ItemIndex, conInfo)
+    ;分割线
+    if (MySoftData.ShowSplitLine) {
+        LineCon := MyGui.Add("Text", Format("x{} y{} w870 h1 0x10", TabPosX + 20, PosY + 32), "") ; SS_ETCHEDHORZ
+        conInfo := ItemConInfo(LineCon, tableItem, foldIndex)
+        tableItem.AllConArr.Push(conInfo)
+        tableItem.ConIndexMap[LineCon] := MacroItemInfo(ItemIndex, conInfo)
+    }
 
     tableItem.ColorStateArr.InsertAt(itemIndex, 0)
     tableItem.ColorConArr.InsertAt(itemIndex, colorCon)
@@ -584,7 +587,7 @@ OnItemEditMacro(tableItem, btn, *) {
 OnItemEditReplaceKey(tableItem, btn, *) {
     index := tableItem.ConIndexMap[btn].index
     replaceKey := tableItem.MacroArr[index]
-    
+
     SureAction(sureMacro) {
         tableItem.MacroArr[index] := sureMacro
     }
