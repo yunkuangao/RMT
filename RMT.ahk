@@ -6,6 +6,7 @@
 #Include Gui\TriggerKeyGui.ahk
 #Include Gui\TriggerStrGui.ahk
 #Include Gui\TimingGui.ahk
+#Include Gui\MacroSettingGui.ahk
 #Include Gui\VerticalSlider.ahk
 #Include Gui\SettingMgrGui.ahk
 #Include Gui\EditHotkeyGui.ahk

@@ -429,6 +429,8 @@ ReadTableItemInfo(index) {
     savedTriggerTypeArrStr := IniRead(MacroFile, IniSection, symbol "TriggerTypeArr", "")
     savedSerialStr := IniRead(MacroFile, IniSection, symbol "SerialArr", "")
     savedTimingSerialStr := IniRead(MacroFile, IniSection, symbol "TimingSerialArr", "")
+    savedStartTipSoundStr := IniRead(MacroFile, IniSection, symbol "StartTipSoundArr", "")
+    savedEndTipSoundStr := IniRead(MacroFile, IniSection, symbol "EndTipSoundArr", "")
     savedFoldInfoStr := IniRead(MacroFile, IniSection, symbol "FoldInfo", "")
 
     ;不存在折叠筐就初始化，并读取默认配置
@@ -442,6 +444,8 @@ ReadTableItemInfo(index) {
         savedTriggerTypeArrStr := defaultInfo[7]
         savedSerialStr := defaultInfo[8]
         savedTimingSerialStr := defaultInfo[9]
+        savedStartTipSoundStr := defaultFoldInfo[10]
+        savedEndTipSoundStr := defaultFoldInfo[11]
 
         defaultFoldInfo := ItemFoldInfo()
         defaultFoldInfo.RemarkArr := ["RMT默认初始化配置"]
@@ -467,8 +471,11 @@ ReadTableItemInfo(index) {
     SetArr(savedTriggerTypeArrStr, "π", tableItem.TriggerTypeArr)
     SetArr(savedSerialStr, "π", tableItem.SerialArr)
     SetArr(savedTimingSerialStr, "π", tableItem.TimingSerialArr)
+    SetArr(savedStartTipSoundStr, "π", tableItem.StartTipSoundArr)
+    SetArr(savedEndTipSoundStr, "π", tableItem.EndTipSoundArr)
     tableItem.FoldInfo := JSON.parse(savedFoldInfoStr, , false)
     Compat1_0_8F4FlodInfo(tableItem.FoldInfo)
+    Compat1_0_9F1TipSound(tableItem)
 
     if (tableItem.ModeArr.Length == 1) {
         if (tableItem.TKArr.Length == 0)
@@ -540,6 +547,8 @@ GetTableItemDefaultInfo(index) {
     savedTriggerTypeStr := ""
     savedSerialeArrStr := ""
     savedTimingSerialStr := ""
+    savedStartTipSoundStr := ""
+    savedEndTipSoundStr := ""
     symbol := GetTableSymbol(index)
 
     if (symbol == "Normal") {
@@ -626,6 +635,8 @@ SaveTableItemInfo(index) {
     IniWrite(SavedInfo[7], MacroFile, IniSection, symbol "TriggerTypeArr")
     IniWrite(SavedInfo[8], MacroFile, IniSection, symbol "SerialArr")
     IniWrite(SavedInfo[9], MacroFile, IniSection, symbol "TimingSerialArr")
+    IniWrite(SavedInfo[10], MacroFile, IniSection, symbol "StartTipSoundArr")
+    IniWrite(SavedInfo[11], MacroFile, IniSection, symbol "EndTipSoundArr")
 
     FoldInfoStr := JSON.stringify(tableItem.FoldInfo, 0)
     IniWrite(FoldInfoStr, MacroFile, IniSection, symbol "FoldInfo")
@@ -658,6 +669,8 @@ GetSavedTableItemInfo(index) {
     TriggerTypeArrStr := ""
     SerialArrStr := ""
     TimingSerialArrStr := ""
+    StartTipSoundArrStr := ""
+    EndTipSoundArrStr := ""
 
     tableItem := MySoftData.TableInfo[index]
     symbol := GetTableSymbol(index)
@@ -672,6 +685,8 @@ GetSavedTableItemInfo(index) {
         LoopCountArrStr .= GetItemSaveCountValue(tableItem.Index, A_Index)
         SerialArrStr .= tableItem.SerialArr[A_Index]
         TimingSerialArrStr .= tableItem.TimingSerialArr[A_Index]
+        StartTipSoundArrStr .= tableItem.StartTipSoundArr[A_Index]
+        EndTipSoundArrStr := tableItem.EndTipSoundArr[A_Index]
         if (tableItem.ModeArr.Length > A_Index) {
             TKArrStr .= "π"
             ModeArrStr .= "π"
@@ -682,11 +697,13 @@ GetSavedTableItemInfo(index) {
             TriggerTypeArrStr .= "π"
             SerialArrStr .= "π"
             TimingSerialArrStr .= "π"
+            StartTipSoundArrStr .= "π"
+            EndTipSoundArrStr .= "π"
         }
     }
 
     return [TKArrStr, ModeArrStr, HoldTimeArrStr, ForbidArrStr, RemarkArrStr,
-        LoopCountArrStr, TriggerTypeArrStr, SerialArrStr, TimingSerialArrStr]
+        LoopCountArrStr, TriggerTypeArrStr, SerialArrStr, TimingSerialArrStr, StartTipSoundArrStr, EndTipSoundArrStr]
 }
 
 ;Table信息相关

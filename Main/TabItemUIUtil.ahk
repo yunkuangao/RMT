@@ -333,6 +333,8 @@ OnItemAddMacroBtnClick(tableItem, btn, *) {
     tableItem.HoldTimeArr.InsertAt(AddIndex, 500)
     tableItem.SerialArr.InsertAt(AddIndex, FormatTime(, "HHmmss"))
     tableItem.TimingSerialArr.InsertAt(AddIndex, GetSerialStr("Timing"))
+    tableItem.StartTipSoundArr.InsertAt(AddIndex, 0)
+    tableItem.EndTipSoundArr.InsertAt(AddIndex, 0)
     tableItem.IsWorkIndexArr.InsertAt(AddIndex, 0)
 
     PosY := 1000000
@@ -399,6 +401,8 @@ OnItemDelMacro(tableItem, itemIndex, foldInfo, foldIndex) {
     tableItem.HoldTimeArr.RemoveAt(itemIndex)
     tableItem.RemarkArr.RemoveAt(itemIndex)
     tableItem.TimingSerialArr.RemoveAt(itemIndex)
+    tableItem.StartTipSoundArr.RemoveAt(itemIndex)
+    tableItem.EndTipSoundArr.RemoveAt(itemIndex)
 
     tableItem.ColorStateArr.RemoveAt(itemIndex)
     tableItem.ColorConArr.RemoveAt(itemIndex)
@@ -466,6 +470,8 @@ OnItemAddMenuItem(tableItem, foldIndex) {
         tableItem.HoldTimeArr.InsertAt(AddIndex, 500)
         tableItem.SerialArr.InsertAt(AddIndex, FormatTime(, "HHmmss"))
         tableItem.TimingSerialArr.InsertAt(AddIndex, GetSerialStr("Timing"))
+        tableItem.StartTipSoundArr.InsertAt(AddIndex, 0)
+        tableItem.EndTipSoundArr.InsertAt(AddIndex, 0)
         tableItem.IsWorkIndexArr.InsertAt(AddIndex, 0)
 
         PosY := 1000000

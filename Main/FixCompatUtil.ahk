@@ -45,3 +45,21 @@ Compat1_0_8F7MMPro(filePath) {
         IniWrite(saveStr, filePath, IniSection, Data.SerialStr)
     }
 }
+
+;1.0.9F1到新版本兼容 增加配置音选项
+Compat1_0_9F1TipSound(tableItem) {
+    if (tableItem.ModeArr.Length == tableItem.StartTipSoundArr.Length &&
+        tableItem.ModeArr.Length == tableItem.EndTipSoundArr.Length)
+        return
+
+    for index, value in tableItem.ModeArr {
+        if (tableItem.StartTipSoundArr.Length < index) {
+            tableItem.StartTipSoundArr.Push(1)
+        }
+
+        if (tableItem.EndTipSoundArr.Length < index) {
+            tableItem.EndTipSoundArr.Push(1)
+        }
+    }
+
+}
