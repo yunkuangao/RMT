@@ -240,7 +240,12 @@ InitFilePath() {
     FileInstall("Images\Soft\True.png", "Images\Soft\True.png", 1)
     FileInstall("Images\Soft\False.png", "Images\Soft\False.png", 1)
 
+    FileInstall("Audio\End.wav", "Audio\End.wav", 1)
+    FileInstall("Audio\Start.wav", "Audio\Start.wav", 1)
+
     global VBSPath := A_WorkingDir "\VBS\PlayAudio.vbs"
+    global StartTipAudio := A_WorkingDir "\Audio\Start.wav"
+    global EndTipAudio := A_WorkingDir "\Audio\End.wav"
     global MacroFile := A_WorkingDir "\Setting\" MySoftData.CurSettingName "\MacroFile.ini"
     global SearchFile := A_WorkingDir "\Setting\" MySoftData.CurSettingName "\SearchFile.ini"
     global SearchProFile := A_WorkingDir "\Setting\" MySoftData.CurSettingName "\SearchProFile.ini"

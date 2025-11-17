@@ -27,8 +27,8 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
     loop {
         isOver := tableItem.ActionCount[index] >= tableItem.LoopCountArr[index]
         isFirst := tableItem.ActionCount[index] == 0
+        isLast := tableItem.ActionCount[index] == tableItem.LoopCountArr[index] - 1
         isSecond := tableItem.ActionCount[index] == 1
-
         WaitIfPaused(tableItem.index, index)
 
         if (tableItem.KilledArr[index])
@@ -47,7 +47,9 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
             }
         }
 
+        HandTipSound(tableItem, index, 1, isFirst, isLast)
         OnTriggerMacroOnce(tableItem, macro, index)
+        HandTipSound(tableItem, index, 2, isFirst, isLast)
         tableItem.ActionCount[index]++
         tableItem.VariableMapArr[index]["当前循环次数"] += 1
     }

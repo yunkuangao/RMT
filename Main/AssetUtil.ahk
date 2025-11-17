@@ -631,7 +631,8 @@ GetTableItemDefaultInfo(index) {
         savedEndTipSoundStr := "1"
     }
     return [savedTKArrStr, savedHoldTimeArrStr, savedModeArrStr, savedForbidArrStr, savedRemarkArrStr,
-        savedLoopCountStr, savedTriggerTypeStr, savedSerialeArrStr, savedTimingSerialStr, savedStartTipSoundStr, savedEndTipSoundStr]
+        savedLoopCountStr, savedTriggerTypeStr, savedSerialeArrStr, savedTimingSerialStr, savedStartTipSoundStr,
+        savedEndTipSoundStr]
 }
 
 SaveTableItemInfo(index) {
@@ -1543,4 +1544,43 @@ IncrementTextNumber(str) {
         ; 如果没有数字部分，直接在后面添加"1"
         return str . "1"
     }
+}
+
+;macroState 1start 2end
+HandTipSound(tableItem, itmeIndex, macroState, isFirst, isLast) {
+    if (macroState == 1) {
+        if (tableItem.StartTipSoundArr[itmeIndex] == 1)
+            return
+
+        if (tableItem.StartTipSoundArr[itmeIndex] == 2) {
+            PlayTipSound(true)
+            return
+        }
+
+        if (tableItem.StartTipSoundArr[itmeIndex] == 3 && isFirst) {
+            PlayTipSound(true)
+            return
+        }
+    }
+
+    if (macroState == 2) {
+        if (tableItem.EndTipSoundArr[itmeIndex] == 1)
+            return
+
+        if (tableItem.EndTipSoundArr[itmeIndex] == 2) {
+            PlayTipSound(false)
+            return
+        }
+
+        if (tableItem.EndTipSoundArr[itmeIndex] == 3 && isLast) {
+            PlayTipSound(false)
+            return
+        }
+    }
+}
+
+PlayTipSound(isStart) {
+    audioPath := isStart ? StartTipAudio : EndTipAudio
+    playAudioCmd := Format('wscript.exe "{}" "{}"', VBSPath, audioPath)
+    Run(playAudioCmd)
 }
