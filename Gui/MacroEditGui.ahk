@@ -217,7 +217,7 @@ class MacroEditGui {
         btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.RunGui))
         this.CmdBtnConMap.Set("运行", btnCon)
-    
+
         PosX := 15
         PosY += 40
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), "循环")
@@ -475,7 +475,9 @@ class MacroEditGui {
         this.CurItemID := item
         this.MacroTreeViewCon.Modify(this.CurItemID, "Select")
         itemText := this.MacroTreeViewCon.GetText(this.CurItemID)
-        if (itemText == "真" || itemText == "假") {
+        if (itemText == "" || SubStr(itemText, 1, 1) == "⎖")
+            return
+        else if (itemText == "真" || itemText == "假" || itemText == "循环体") {
             this.BranchContextMenu.Show(x, y)
         }
         else {
@@ -488,13 +490,16 @@ class MacroEditGui {
             return
 
         itemText := this.MacroTreeViewCon.GetText(info)
+        if (itemText == "" || SubStr(itemText, 1, 1) == "⎖")
+            return
+
         this.CurItemID := info
-        if (itemText == "真" || itemText == "假") {
+        if (itemText == "真" || itemText == "假" || itemText == "循环体") {
             if (this.SubMacroEditGui == "")
                 this.SubMacroEditGui := MacroEditGui()
 
             macroStr := this.GetTreeMacroStr(this.CurItemID)
-            this.SubMacroEditGui.SureBtnAction := this.OnEditTrueOrFalseNode.Bind(this, this.CurItemID)
+            this.SubMacroEditGui.SureBtnAction := this.OnSubNodeEdit.Bind(this, this.CurItemID)
             this.SubMacroEditGui.SureFocusCon := this.MacroTreeViewCon
             this.SubMacroEditGui.ShowGui(macroStr, false)
             return
@@ -580,7 +585,8 @@ class MacroEditGui {
         IsSearch := StrCompare(paramArr[1], "搜索", false) == 0
         IsSearchPro := StrCompare(paramArr[1], "搜索Pro", false) == 0
         IsIf := StrCompare(paramArr[1], "如果", false) == 0
-        if (!IsSearch && !IsSearchPro && !IsIf)
+        IsLoop := StrCompare(paramArr[1], "循环", false) == 0
+        if (!IsSearch && !IsSearchPro && !IsIf && !IsLoop)
             return
 
         ParentID := this.MacroTreeViewCon.GetParent(root)
@@ -619,13 +625,35 @@ class MacroEditGui {
             FalseMacro := Data.FalseMacro
         }
 
-        iconStr := this.GetCmdIconStr("真")
-        trueRoot := this.MacroTreeViewCon.Add("真", root, iconStr)
-        this.TreeAddSubTree(trueRoot, TrueMacro)
+        if (IsIf || IsSearch || IsSearchPro) {
+            iconStr := this.GetCmdIconStr("真")
+            trueRoot := this.MacroTreeViewCon.Add("真", root, iconStr)
+            this.TreeAddSubTree(trueRoot, TrueMacro)
 
-        iconStr := this.GetCmdIconStr("假")
-        falseRoot := this.MacroTreeViewCon.Add("假", root, iconStr)
-        this.TreeAddSubTree(falseRoot, FalseMacro)
+            iconStr := this.GetCmdIconStr("假")
+            falseRoot := this.MacroTreeViewCon.Add("假", root, iconStr)
+            this.TreeAddSubTree(falseRoot, FalseMacro)
+        }
+        else if (IsLoop) {
+            saveStr := IniRead(LoopFile, IniSection, paramArr[2], "")
+            Data := JSON.parse(saveStr, , false)
+
+            iconStr := this.GetCmdIconStr("循环次数")
+            CountRoot := this.MacroTreeViewCon.Add(Format("⎖循环次数:{}", Data.LoopCount), root, iconStr)
+
+            if (Data.CondiType != 1) {
+                iconStr := this.GetCmdIconStr("循环条件")
+                CondiStr := Data.CondiType == 2 ? "继续条件：" : "退出条件："
+                LogicStr := Data.LogicType == 1 ? "且" : "或"
+                ItemStr := "⎖" . CondiStr . LogicStr
+                CondiRoot := this.MacroTreeViewCon.Add(ItemStr, root, iconStr)
+                this.TreeAddSubTree(CondiRoot, LoopData.GetCondiStr(Data))
+            }
+
+            iconStr := this.GetCmdIconStr("⎖循环体")
+            BodyRoot := this.MacroTreeViewCon.Add("循环体", root, iconStr)
+            this.TreeAddSubTree(BodyRoot, Data.LoopBody)
+        }
     }
 
     TreeAddSubTree(root, CommandStr) {
@@ -672,7 +700,7 @@ class MacroEditGui {
             this.OnNextInsertCmd(CommandStr)
         }
         else if (this.CmdEditType == 5) {
-            this.OnNodeAddCmd(CommandStr)
+            this.OnSubNodeAddCmd(CommandStr)
         }
         MySoftData.RecordToggleCon := this.RecordMacroCon
         MySoftData.MacroEditGui := this
@@ -715,7 +743,7 @@ class MacroEditGui {
 
         itemText := this.MacroTreeViewCon.GetText(this.CurItemID)
         isClear := false
-        if (itemText == "真" || itemText == "假") {
+        if (itemText == "真" || itemText == "假" || itemText == "循环体") {
             isTrueMacro := itemText == "真"
             isClear := true
             RealItemID := ParentID
@@ -777,7 +805,7 @@ class MacroEditGui {
         this.RefreshTree(this.CurItemID)
     }
 
-    OnNodeAddCmd(CommandStr) {
+    OnSubNodeAddCmd(CommandStr) {
         iconStr := this.GetCmdIconStr(CommandStr)
         newItemID := this.MacroTreeViewCon.Add(CommandStr, this.CurItemID, iconStr)
         macroStr := this.GetTreeMacroStr(this.CurItemID)
@@ -789,7 +817,7 @@ class MacroEditGui {
         this.RefreshTree(this.CurItemID)
     }
 
-    OnEditTrueOrFalseNode(nodeId, macroStr) {
+    OnSubNodeEdit(nodeId, macroStr) {
         isTrueMacro := this.MacroTreeViewCon.GetText(nodeId) == "真"
         RealItemID := this.MacroTreeViewCon.GetParent(nodeId)
         RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
@@ -836,6 +864,7 @@ class MacroEditGui {
         IsSearch := StrCompare(paramArr[1], "搜索", false) == 0
         IsSearchPro := StrCompare(paramArr[1], "搜索Pro", false) == 0
         IsIf := StrCompare(paramArr[1], "如果", false) == 0
+        IsLoop := StrCompare(paramArr[1], "循环", false) == 0
         FileName := ""
         if (IsIf) {
             FileName := CompareFile
@@ -844,11 +873,20 @@ class MacroEditGui {
         } else if (IsSearchPro) {
             FileName := SearchProFile
         }
+        else if (IsLoop) {
+            FileName := LoopFile
+        }
         if (FileName == "")
             return
         saveStr := IniRead(FileName, IniSection, paramArr[2], "")
         Data := JSON.parse(saveStr, , false)
-        if (isTrue && isClear)
+        if (IsLoop) {
+            if (isClear)
+                Data.LoopBody := ""
+            else
+                Data.LoopBody := macroStr
+        }
+        else if (isTrue && isClear)
             Data.TrueMacro := ""
         else if (isTrue && !isClear)
             Data.TrueMacro := macroStr

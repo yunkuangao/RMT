@@ -454,6 +454,25 @@ class LoopData {
         this.VariableArr := ["Num1", "Num2", "Num3", "Num4"]
         this.LoopBody := ""     ;循环体
     }
+
+    ;用于逻辑树展示
+    static GetCondiStr(Data) {
+        CommandStr := ""
+        CompareTypeStrArr := ["大于", "大于等于", "等于", "小于等于",
+            "小于", "字符包含", "变量存在"]
+    
+        loop 4 {
+            if (!Data.ToggleArr[A_Index])
+                continue
+
+            CommandStr .= "⎖" . Data.NameArr[A_Index] " " CompareTypeStrArr[Data.CompareTypeArr[A_Index]] " " Data.VariableArr[
+                A_Index]
+            CommandStr .= ","
+        }
+
+        CommandStr := Trim(CommandStr, ",")
+        return CommandStr
+    }
 }
 
 class VariableData {
