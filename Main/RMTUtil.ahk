@@ -275,6 +275,7 @@ SetGlobalVariable(Name, Value, ignoreExist) {
     if (ignoreExist && MySoftData.VariableMap.Has(Name))
         return
     MySoftData.VariableMap[Name] := Value
+    MyVarListenGui.Refresh()
     IsMuti := MyWorkPool.CheckEnableMutiThread()
     if (IsMuti) {
         loop MyWorkPool.maxSize {
@@ -287,8 +288,11 @@ SetGlobalVariable(Name, Value, ignoreExist) {
 
 DelGlobalVariable(Name) {
     global MySoftData
-    if (MySoftData.VariableMap.Has(Name))
-        MySoftData.VariableMap.Delete(Name)
+    if (!MySoftData.VariableMap.Has(Name))
+        return
+
+    MySoftData.VariableMap.Delete(Name)
+    MyVarListenGui.Refresh()
     IsMuti := MyWorkPool.CheckEnableMutiThread()
     if (IsMuti) {
         loop MyWorkPool.maxSize {

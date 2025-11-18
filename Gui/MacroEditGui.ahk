@@ -288,7 +288,8 @@ class MacroEditGui {
         PosY += 25
         MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 720, 460), "当前宏指令")
         PosY += 20
-        this.MacroTreeViewCon := MyGui.Add("TreeView", Format("x{} y{} w{} h{}", PosX + 5, PosY, 705, 435), "")
+        this.MacroTreeViewCon := MyGui.Add("TreeView", Format("x{} y{} w{} h{}", PosX + 5, PosY, 705, 435),
+        "")
         this.MacroTreeViewCon.OnEvent("ContextMenu", this.ShowContextMenu.Bind(this))  ; 右键菜单事件
         this.MacroTreeViewCon.OnEvent("DoubleClick", this.OnDoubleClick.Bind(this))  ; 双击编辑指令
 
@@ -531,6 +532,7 @@ class MacroEditGui {
     InitTreeView(MacroStr) {
         this.MacroTreeViewCon.Visible := this.EditModeCon.Value == 1
         cmdArr := SplitMacro(MacroStr)
+        this.MacroTreeViewCon.Opt("-Redraw")
         this.MacroTreeViewCon.Delete()
         this.LastItemID := 0
         for cmdStr in cmdArr {
@@ -539,6 +541,7 @@ class MacroEditGui {
             this.LastItemID := root
             this.TreeAddBranch(root, cmdStr)
         }
+        this.MacroTreeViewCon.Opt("+Redraw")
     }
 
     RefreshTree(itemID) {

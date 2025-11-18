@@ -281,7 +281,7 @@ class SoftData {
         this.TestCount := 0
 
         this.GlobalVariMap := Map() ;UI下拉显示变量
-        this.VariableMap := Map()
+        this.VariableMap := Map()   ;真正的全局变量
 
         ;显示指令提示配置
         this.CMDTip := false

@@ -16,6 +16,7 @@
 #Include Gui\ReplaceKeyGui.ahk
 #Include Gui\TargetGui.ahk
 #Include Gui\ToolRecordSettingGui.ahk
+#Include Gui\VariableListenGui.ahk
 #Include Gui\CMDTipGui.ahk
 #Include Gui\FrontInfoGui.ahk
 #Include Gui\CMDTipSettingGui.ahk
@@ -54,6 +55,7 @@ global MyTriggerKeyGui := TriggerKeyGui()
 global MyTriggerStrGui := TriggerStrGui()
 global MyEditHotkeyGui := EditHotkeyGui()
 global MyMacroSettingGui := MacroSettingGui()
+global MyVarListenGui := VariableListenGui()
 global MyMacroGui := MacroEditGui()
 global MyMenuWheel := MenuWheelGui()
 global MyReplaceKeyGui := ReplaceKeyGui()

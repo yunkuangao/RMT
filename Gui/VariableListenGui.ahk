@@ -1,0 +1,82 @@
+#Requires AutoHotkey v2.0
+
+class VariableListenGui {
+    __new() {
+        this.Gui := ""
+        this.TopCon := ""
+        this.LVCon := ""
+    }
+
+    ShowGui() {
+        if (this.Gui != "") {
+            this.Gui.Show()
+        }
+        else {
+            this.AddGui()
+        }
+        this.Refresh()
+    }
+
+    Refresh() {
+        if (!IsObject(this.Gui))
+            return
+
+        style := WinGetStyle(this.Gui)
+        isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+        if (!isVisible)
+            return
+
+        this.LVCon.Opt("-Redraw")
+        count := this.LVCon.GetCount()
+        LVKeys := Map()
+        loop count {
+            row := count - A_Index + 1
+            key := this.LVCon.GetText(row, 1)
+            value := this.LVCon.GetText(row, 2)
+            if !MySoftData.VariableMap.Has(key)
+                this.LVCon.Delete(row)
+            else if (String(MySoftData.VariableMap[key]) != value)
+                this.LVCon.Delete(row)
+            else
+                LVKeys[key] := True
+        }
+
+        ; 3) 添加 Map 中有但 LV 没有的项
+        for key, value in MySoftData.VariableMap {
+            if !LVKeys.Has(key) {
+                this.LVCon.Add(, key, value)
+            }
+        }
+        this.LVCon.Opt("+Redraw")
+    }
+
+    AddGui() {
+        MyGui := Gui(, "变量监视器")
+        this.Gui := MyGui
+        MyGui.SetFont("S11 W550 Q2", MySoftData.FontType)
+
+        PosX := 10
+        PosY := 10
+        this.TopCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "窗口置顶")
+        this.TopCon.OnEvent("Click", this.OnTogTop.Bind(this))
+
+        PosX := 10
+        PosY += 30
+        this.LVCon := MyGui.Add("ListView", Format("x{} y{} w350 h250 Sort", PosX, PosY), ["变量名", "变量值"])
+        ; 设置列宽（单位：px）
+        this.LVCon.ModifyCol(1, 120) ; 第一列宽度
+        this.LVCon.ModifyCol(2, 205) ; 自动填充剩余宽度
+
+        MyGui.Show(Format("w{} h{}", 370, 300))
+    }
+
+    OnTogTop(*) {
+        state := this.topCon.Value
+        if (state) {
+            this.Gui.Opt("+AlwaysOnTop")
+        }
+        else {
+            this.Gui.Opt("-AlwaysOnTop")
+        }
+    }
+}

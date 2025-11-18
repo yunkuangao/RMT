@@ -175,6 +175,16 @@ AddToolUI(index) {
     posX := MySoftData.TabPosX
     ; 配置规则说明
     posY += 35
+    con := MyGui.Add("Text", Format("x{} y{}", posX + 20, posY), "变量监视器：")
+    conInfo := ItemConInfo(con, tableItem, 1)
+    tableItem.AllConArr.Push(conInfo)
+
+    con := MyGui.Add("Button", Format("x{} y{} w{}", posX + 120, posY - 3, 130), "打开监视器")
+    con.OnEvent("Click", (*)=> MyVarListenGui.ShowGui())
+    conInfo := ItemConInfo(con, tableItem, 1)
+    tableItem.AllConArr.Push(conInfo)
+
+    posY += 35
     con := MyGui.Add("Text", Format("x{} y{}", posX + 20, posY), "鼠标信息：")
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
@@ -316,11 +326,6 @@ AddToolUI(index) {
     ToolCheckInfo.ToolCheckRecordMacroCtrl := con
     ToolCheckInfo.ToolCheckRecordMacroCtrl.Value := ToolCheckInfo.IsToolRecord
     ToolCheckInfo.ToolCheckRecordMacroCtrl.OnEvent("Click", OnHotToolRecordMacro.Bind(false))
-    conInfo := ItemConInfo(con, tableItem, 1)
-    tableItem.AllConArr.Push(conInfo)
-
-    con := MyGui.Add("Button", Format("x{} y{} w{}", posX + 400, posY - 5, 100), "录制选项")
-    con.OnEvent("Click", OnClickToolRecordSettingBtn)
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
 
@@ -614,7 +619,7 @@ AddSettingUI(index) {
     tableItem.AllConArr.Push(conInfo)
 
     posY += 40
-    con := MyGui.Add("GroupBox", Format("x{} y{} w870 h100", posX + 10, posY), "开关选项")
+    con := MyGui.Add("GroupBox", Format("x{} y{} w870 h140", posX + 10, posY), "开关选项")
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
     tableItem.AllGroup.Push(con)
@@ -657,7 +662,13 @@ AddSettingUI(index) {
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
 
-    con := MyGui.Add("CheckBox", Format("x{} y{}", posX + 635, posY), "分割线")
+    con := MyGui.Add("Button", Format("x{} y{} w{}", posX + 635, posY - 5, 100), "录制选项")
+    con.OnEvent("Click", OnClickToolRecordSettingBtn)
+    conInfo := ItemConInfo(con, tableItem, 1)
+    tableItem.AllConArr.Push(conInfo)
+
+    posY += 40
+    con := MyGui.Add("CheckBox", Format("x{} y{}", posX + 25, posY), "分割线")
     MySoftData.SplitLineCtrl := con
     MySoftData.SplitLineCtrl.Value := MySoftData.ShowSplitLine
     conInfo := ItemConInfo(con, tableItem, 1)
