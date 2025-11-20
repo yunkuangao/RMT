@@ -239,6 +239,11 @@ InitFilePath() {
     FileInstall("Images\Soft\Mouse.png", "Images\Soft\Mouse.png", 1)
     FileInstall("Images\Soft\True.png", "Images\Soft\True.png", 1)
     FileInstall("Images\Soft\False.png", "Images\Soft\False.png", 1)
+    FileInstall("Images\Soft\Loop.png", "Images\Soft\Loop.png", 1)
+    FileInstall("Images\Soft\LoopBody.png", "Images\Soft\LoopBody.png", 1)
+    FileInstall("Images\Soft\LoopCount.png", "Images\Soft\LoopCount.png", 1)
+    FileInstall("Images\Soft\Condition.png", "Images\Soft\Condition.png", 1)
+    FileInstall("Images\Soft\IfPro.png", "Images\Soft\IfPro.png", 1)
 
     FileInstall("Audio\End.wav", "Audio\End.wav", 1)
     FileInstall("Audio\Start.wav", "Audio\Start.wav", 1)

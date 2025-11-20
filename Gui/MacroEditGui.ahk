@@ -45,12 +45,16 @@ class MacroEditGui {
         this.DefaultFocusCon := ""
         this.SubMacroLastIndex := 0
 
-        this.CMDStrArr := ["间隔", "按键", "搜索", "搜索Pro", "移动", "移动Pro", "输出", "运行", "变量", "变量提取", "运算", "如果", "宏操作",
-            "RMT指令", "后台鼠标", "后台按键"]
+        this.CMDStrArr := ["间隔", "按键", "搜索", "搜索Pro", "移动", "移动Pro", "输出", "运行", "循环", "宏操作", "变量", "变量提取", "如果",
+            "如果Pro",
+            "运算", "RMT指令", "后台鼠标", "后台按键"]
+
         this.IconMap := Map("间隔", "Icon1", "按键", "Icon2", "搜索", "Icon3", "搜索Pro", "Icon4", "移动", "Icon5", "移动Pro",
-            "Icon6", "输出", "Icon7",
-            "运行", "Icon8", "变量", "Icon9", "变量提取", "Icon10", "运算", "Icon11", "如果", "Icon12", "RMT指令", "Icon13", "宏操作",
-            "Icon14", "后台鼠标", "Icon15", "真", "Icon16", "假", "Icon17", "后台按键", "Icon2")
+            "Icon6", "输出", "Icon7", "运行", "Icon8", "循环", "Icon9", "宏操作", "Icon10", "变量", "Icon11", "变量提取", "Icon12",
+            "如果", "Icon13", "如果Pro",
+            "Icon14", "运算", "Icon15", "RMT指令", "Icon16", "后台鼠标", "Icon17", "后台按键", "Icon2", "真", "Icon18", "假",
+            "Icon19", "循环次数", "Icon20",
+            "条件", "Icon21", "循环体", "Icon22")
 
         this.InitSubGui()
     }
@@ -146,15 +150,20 @@ class MacroEditGui {
             IL_Add(ImageListID, "Images\Soft\MovePro.png")
             IL_Add(ImageListID, "Images\Soft\Output.png")
             IL_Add(ImageListID, "Images\Soft\Run.png")
+            IL_Add(ImageListID, "Images\Soft\Loop.png")
+            IL_Add(ImageListID, "Images\Soft\Sub.png")
             IL_Add(ImageListID, "Images\Soft\Var.png")
             IL_Add(ImageListID, "Images\Soft\Extract.png")
-            IL_Add(ImageListID, "Images\Soft\Operation.png")
             IL_Add(ImageListID, "Images\Soft\If.png")
+            IL_Add(ImageListID, "Images\Soft\IfPro.png")
+            IL_Add(ImageListID, "Images\Soft\Operation.png")
             IL_Add(ImageListID, "Images\Soft\rabit.png")
-            IL_Add(ImageListID, "Images\Soft\Sub.png")
             IL_Add(ImageListID, "Images\Soft\Mouse.png")
             IL_Add(ImageListID, "Images\Soft\True.png")
             IL_Add(ImageListID, "Images\Soft\False.png")
+            IL_Add(ImageListID, "Images\Soft\LoopCount.png")
+            IL_Add(ImageListID, "Images\Soft\Condition.png")
+            IL_Add(ImageListID, "Images\Soft\LoopBody.png")
         }
 
         MySoftData.RecordToggleCon := this.RecordMacroCon
@@ -648,7 +657,7 @@ class MacroEditGui {
             CountRoot := this.MacroTreeViewCon.Add(Format("⎖循环次数:{}", Data.LoopCount), root, iconStr)
 
             if (Data.CondiType != 1) {
-                iconStr := this.GetCmdIconStr("循环条件")
+                iconStr := this.GetCmdIconStr("条件")
                 CondiStr := Data.CondiType == 2 ? "⎖继续条件：" : "⎖退出条件："
                 ItemStr := CondiStr . LoopData.GetCondiStr(Data)
                 CondiRoot := this.MacroTreeViewCon.Add(ItemStr, root, iconStr)
