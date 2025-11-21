@@ -366,7 +366,7 @@ OnCompare(tableItem, cmd, index) {
 }
 
 OnComparePro(tableItem, cmd, index) {
-    
+
 }
 
 OnMMPro(tableItem, cmd, index) {
@@ -591,14 +591,10 @@ OnSubMacro(tableItem, cmd, index) {
     if (Data.CallType == 1) {   ;插入
         macro := macroItem.MacroArr[macroIndex]
         resultMacro := macro
-        LoopCount := macroItem.LoopCountArr[macroIndex]
-        IsLoop := macroItem.LoopCountArr[macroIndex] == -1
-        if (!IsLoop) {
-            loop LoopCount {
-                if (A_Index == 1)
-                    continue
-                resultMacro .= "," macro
-            }
+        loop Data.InsertCount {
+            if (A_Index == 1)
+                continue
+            resultMacro .= "," macro
         }
         return SplitMacro(resultMacro)
     }

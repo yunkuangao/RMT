@@ -471,6 +471,7 @@ class SubMacroData {
         this.SerialStr := ""
         this.MacroType := 1
         this.CallType := 1
+        this.InsertCount := 1
         this.Index := 1
         this.MacroSerial := "009973"
     }

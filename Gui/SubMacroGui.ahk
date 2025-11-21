@@ -4,11 +4,13 @@ class SubMacroGui {
     __new() {
         this.Gui := ""
         this.SureBtnAction := ""
+        this.VariableObjArr := []
         this.RemarkCon := ""
 
         this.TypeCon := ""
         this.DropDownIndexCon := ""
         this.CallTypeCon := ""
+        this.InsertCountCon := ""
         this.Data := ""
     }
 
@@ -70,10 +72,17 @@ class SubMacroGui {
         this.CallTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), ["插入到当前宏", "触发", "暂停",
             "取消暂停", "终止"])
         this.CallTypeCon.Value := 1
+        this.CallTypeCon.OnEvent("Change", (*) => this.OnRefresh())
+
+        PosX += 140
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 70, 20), "插入次数：")
+
+        PosX += 65
+        this.InsertCountCon := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX, PosY - 5, 130), [])
 
         PosX := 10
         PosY += 25
-        MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "插入到当前宏: 指定宏按循环次数插入（无限循环仅插入一次）")
+        MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "插入到当前宏: 指定宏 按插入次数 插入到当前宏")
 
         PosX := 10
         PosY += 25
@@ -96,6 +105,10 @@ class SubMacroGui {
 
         this.TypeCon.Value := this.Data.MacroType
         this.CallTypeCon.Value := this.Data.CallType
+        this.InsertCountCon.Delete()
+        this.InsertCountCon.Add(this.VariableObjArr)
+        this.InsertCountCon.Text := this.Data.InsertCount
+
         tableIndex := this.Data.MacroType - 1
 
         if (this.Data.MacroType != 1) {
@@ -171,6 +184,8 @@ class SubMacroGui {
             this.DropDownIndexCon.Delete()
         }
 
+        EnableInsert := this.CallTypeCon.Value == 1
+        this.InsertCountCon.Enabled := EnableInsert
     }
 
     OnClickSureBtn() {
@@ -250,6 +265,7 @@ class SubMacroGui {
         this.Data.MacroType := this.TypeCon.Value
         this.Data.Index := this.DropDownIndexCon.value
         this.Data.CallType := this.CallTypeCon.Value
+        this.Data.InsertCount := this.InsertCountCon.Text
 
         tableIndex := this.TypeCon.Value - 1
         SerialArr := this.TypeCon.Value == 1 ? "" : MySoftData.TableInfo[tableIndex].SerialArr

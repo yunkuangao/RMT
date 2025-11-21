@@ -203,6 +203,7 @@ class SettingMgrGui {
             RepairPath(fileNameNoExt, SearchFile, 1)
             RepairPath(fileNameNoExt, SearchProFile, 1)
             Compat1_0_8F7MMPro(outputFolder "\MMProFile.ini")
+            Compat1_0_9F1MacroInsert(outputFolder "\SubMacroFile.ini")
 
             if (LoadType != 2) {
                 MySoftData.SettingArrStr .= "π" fileNameNoExt

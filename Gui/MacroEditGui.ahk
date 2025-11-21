@@ -17,6 +17,7 @@
 #Include BGKeyGui.ahk
 #Include LoopGui.ahk
 #Include CompareProGui.ahk
+#Include CompareProEditItemGui.ahk
 
 class MacroEditGui {
     __new() {
@@ -28,6 +29,7 @@ class MacroEditGui {
         this.RecordToggleCon := ""
         this.EditModeCon := ""
         this.SubMacroEditGui := ""
+        this.CompareProEditItemGui := ""
 
         this.SureBtnAction := ""
         this.SaveBtnAction := ""
@@ -491,7 +493,7 @@ class MacroEditGui {
         itemText := this.MacroTreeViewCon.GetText(this.CurItemID)
         if (itemText == "" || SubStr(itemText, 1, 1) == "⎖")
             return
-        else if (itemText == "真" || itemText == "假" || itemText == "循环体") {
+        else if (itemText == "真" || itemText == "假" || itemText == "循环体" || SubStr(itemText, 1, 2) == "条件") {
             this.BranchContextMenu.Show(x, y)
         }
         else {
@@ -516,6 +518,18 @@ class MacroEditGui {
             this.SubMacroEditGui.SureBtnAction := this.OnSubNodeEdit.Bind(this, this.CurItemID)
             this.SubMacroEditGui.SureFocusCon := this.MacroTreeViewCon
             this.SubMacroEditGui.ShowGui(macroStr, false)
+            return
+        }
+        else if (SubStr(itemText, 1, 2) == "条件") {
+            if (this.CompareProEditItemGui == "")
+                this.CompareProEditItemGui := CompareProEditItemGui()
+            this.CompareProEditItemGui.IsSubMacroEdit := true
+            this.CompareProEditItemGui.SureBtnAction := this.OnSubNodeEdit.Bind(this, this.CurItemID)
+
+            ParentID := this.MacroTreeViewCon.GetParent(this.CurItemID)
+            CommndStr := this.MacroTreeViewCon.GetText(ParentID)
+            ItemNumber := this.GetItemNumber(this.CurItemID)
+            this.CompareProEditItemGui.MacroEditShowGui(CommndStr, ItemNumber)
             return
         }
 
@@ -771,13 +785,14 @@ class MacroEditGui {
         NodeItemID := this.CurItemID
         RealItemID := ParentID
         macroStr := ""
-        if (itemText != "真" && itemText != "假" && itemText != "循环体") {
+        if (itemText != "真" && itemText != "假" && itemText != "循环体" && SubStr(itemText, 1, 2) != "条件") {
             this.MacroTreeViewCon.Delete(this.CurItemID)
             macroStr := this.GetTreeMacroStr(ParentID)
+            NodeItemID := ParentID
             RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
         }
         RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
-        this.SaveCommandData(RealCommandStr, macroStr, ParentID)
+        this.SaveCommandData(RealCommandStr, macroStr, NodeItemID)
         this.RefreshTree(RealItemID)
     }
 
@@ -896,7 +911,22 @@ class MacroEditGui {
             Data.LoopBody := macroStr
         }
         else if (cmd == "如果Pro") {
-
+            if (ItemNumber > Data.VariNameArr.Length) {
+                if (macroStr == "")
+                    MsgBox("最后的分支不能删除，已清空分支指令")
+                Data.DefaultMacro := macroStr
+            }
+            else {
+                if (macroStr == "") {
+                    Data.VariNameArr.RemoveAt(ItemNumber)
+                    Data.CompareTypeArr.RemoveAt(ItemNumber)
+                    Data.VariableArr.RemoveAt(ItemNumber)
+                    Data.LogicTypeArr.RemoveAt(ItemNumber)
+                    Data.MacroArr.RemoveAt(ItemNumber)
+                }
+                else
+                    Data.MacroArr[ItemNumber] := macroStr
+            }
         }
         else {
             if (ItemNumber == 1)    ;真
@@ -917,7 +947,7 @@ class MacroEditGui {
         PreItemID := this.MacroTreeViewCon.GetPrev(nodeItemID)
         while (PreItemID != 0) {
             ItemNumber += 1
-            PreItemID := this.MacroTreeViewCon.GetPrev(nodeItemID)
+            PreItemID := this.MacroTreeViewCon.GetPrev(PreItemID)
         }
         return ItemNumber
     }

@@ -10,6 +10,10 @@ class CompareProEditItemGui {
         this.FocusCon := ""
         this.MacroGui := ""
 
+        this.IsSubMacroEdit := false
+        this.Data := ""
+        this.CondiNumber := 1
+
         this.EditType := 1  ;1正常分支 2兜底分支
         this.ToggleConArr := []
         this.NameConArr := []
@@ -17,6 +21,26 @@ class CompareProEditItemGui {
         this.VariableConArr := []
         this.LogicalTypeCon := ""
         this.MacroCon := ""
+    }
+
+    MacroEditShowGui(CommandStr, CondiNumber) {
+        paramArr := StrSplit(CommandStr, "_")
+        Data := GetMacroCMDData(CompareProFile, paramArr[2])
+        this.Data := Data
+        this.CondiNumber := CondiNumber
+        EditType := CondiNumber <= Data.VariNameArr.Length ? 1 : 2
+        if (EditType == 2) {
+            this.ShowGui(EditType, [[], [], []], "且", Data.DefaultMacro)
+            return
+        }
+
+        DataArr := []
+        DataArr.Push(Data.VariNameArr[CondiNumber])
+        DataArr.Push(Data.CompareTypeArr[CondiNumber])
+        DataArr.Push(Data.VariableArr[CondiNumber])
+        logicStr := Data.LogicTypeArr[CondiNumber] == 1 ? "且" : "或"
+        macro := Data.MacroArr[CondiNumber]
+        this.ShowGui(EditType, DataArr, logicStr, macro)
     }
 
     ShowGui(EditType, DataArr, logicStr, macro) {
@@ -180,7 +204,34 @@ class CompareProEditItemGui {
 
     OnClickSureBtn() {
         action := this.SureBtnAction
-        if (this.EditType == 1) {
+        if (this.IsSubMacroEdit) {
+            if (this.EditType == 2)
+                this.Data.DefaultMacro := this.MacroCon.Value
+            else {
+                VariNameArr := []
+                CompareTypeArr := []
+                VariableArr := []
+                loop 4 {
+                    if (this.ToggleConArr[A_Index].Value) {
+                        VariNameArr.Push(this.NameConArr[A_Index].Text)
+                        CompareTypeArr.Push(this.CompareTypeConArr[A_Index].Value)
+                        VariableArr.Push(this.VariableConArr[A_Index].Text)
+                    }
+                }
+                this.Data.VariNameArr[this.CondiNumber] := VariNameArr
+                this.Data.CompareTypeArr[this.CondiNumber] := CompareTypeArr
+                this.Data.VariableArr[this.CondiNumber] := VariableArr
+                this.Data.LogicTypeArr[this.CondiNumber] := this.LogicalTypeCon.Value
+                this.Data.MacroArr[this.CondiNumber] := this.MacroCon.Value
+            }
+            saveStr := JSON.stringify(this.Data, 0)
+            IniWrite(saveStr, CompareProFile, IniSection, this.Data.SerialStr)
+            if (MySoftData.DataCacheMap.Has(this.Data.SerialStr)) {
+                MySoftData.DataCacheMap.Delete(this.Data.SerialStr)
+            }
+            action(this.MacroCon.Value)
+        }
+        else if (this.EditType == 1) {
             condiStr := ""
             loop 4 {
                 if (this.ToggleConArr[A_Index].Value) {
