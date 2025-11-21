@@ -585,13 +585,13 @@ class MacroEditGui {
         CommandStr := this.MacroTreeViewCon.GetText(itemID)
         paramsArr := StrSplit(CommandStr, "_")
 
-        subItem := this.MacroTreeViewCon.GetChild(this.CurItemID)
+        subItem := this.MacroTreeViewCon.GetChild(itemID)
         while (subItem) {
             this.MacroTreeViewCon.Delete(subItem)
-            subItem := this.MacroTreeViewCon.GetChild(this.CurItemID)
+            subItem := this.MacroTreeViewCon.GetChild(itemID)
         }
-        this.TreeAddBranch(this.CurItemID, CommandStr)
-        this.TreeExpand(this.CurItemID, 2)
+        this.TreeAddBranch(itemID, CommandStr)
+        this.TreeExpand(itemID, 2)
     }
 
     TreeAddBranch(root, cmdStr) {
@@ -753,13 +753,11 @@ class MacroEditGui {
         }
 
         macroStr := this.GetTreeMacroStr(ParentID)
-        isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
         RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
         RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
-        this.CurItemID := RealItemID
 
-        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
-        this.RefreshTree(this.CurItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, ParentID)
+        this.RefreshTree(RealItemID)
     }
 
     OnDeleteCmd() {
@@ -770,26 +768,17 @@ class MacroEditGui {
         }
 
         itemText := this.MacroTreeViewCon.GetText(this.CurItemID)
-        isClear := false
-        if (itemText == "真" || itemText == "假" || itemText == "循环体") {
-            isTrueMacro := itemText == "真"
-            isClear := true
-            RealItemID := ParentID
-            RealCommandStr := this.MacroTreeViewCon.GetText(ParentID)
-            this.CurItemID := ParentID
-            macroStr := ""
-        }
-        else {
+        NodeItemID := this.CurItemID
+        RealItemID := ParentID
+        macroStr := ""
+        if (itemText != "真" && itemText != "假" && itemText != "循环体") {
             this.MacroTreeViewCon.Delete(this.CurItemID)
             macroStr := this.GetTreeMacroStr(ParentID)
-            isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
             RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
-            RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
-            this.CurItemID := RealItemID
         }
-
-        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, isClear)
-        this.RefreshTree(this.CurItemID)
+        RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, ParentID)
+        this.RefreshTree(RealItemID)
     }
 
     ;插入指令
@@ -805,11 +794,10 @@ class MacroEditGui {
         }
 
         macroStr := this.GetTreeMacroStr(ParentID)
-        isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
-        this.CurItemID := this.MacroTreeViewCon.GetParent(ParentID)
-        RealCommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
-        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
-        this.RefreshTree(this.CurItemID)
+        RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
+        RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, ParentID)
+        this.RefreshTree(RealItemID)
     }
 
     ;插入指令
@@ -826,33 +814,29 @@ class MacroEditGui {
         }
 
         macroStr := this.GetTreeMacroStr(ParentID)
-        isTrueMacro := this.MacroTreeViewCon.GetText(ParentID) == "真"
-        this.CurItemID := this.MacroTreeViewCon.GetParent(ParentID)
-        RealCommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
-        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
-        this.RefreshTree(this.CurItemID)
+        RealItemID := this.MacroTreeViewCon.GetParent(ParentID)
+        RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, ParentID)
+        this.RefreshTree(RealItemID)
     }
 
     OnSubNodeAddCmd(CommandStr) {
         iconStr := this.GetCmdIconStr(CommandStr)
         newItemID := this.MacroTreeViewCon.Add(CommandStr, this.CurItemID, iconStr)
         macroStr := this.GetTreeMacroStr(this.CurItemID)
-        isTrueMacro := this.MacroTreeViewCon.GetText(this.CurItemID) == "真"
 
-        this.CurItemID := this.MacroTreeViewCon.GetParent(this.CurItemID)
-        RealCommandStr := this.MacroTreeViewCon.GetText(this.CurItemID)
-        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
-        this.RefreshTree(this.CurItemID)
+        RealItemID := this.MacroTreeViewCon.GetParent(this.CurItemID)
+        RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, this.CurItemID)
+        this.RefreshTree(RealItemID)
     }
 
-    OnSubNodeEdit(nodeId, macroStr) {
-        isTrueMacro := this.MacroTreeViewCon.GetText(nodeId) == "真"
-        RealItemID := this.MacroTreeViewCon.GetParent(nodeId)
+    OnSubNodeEdit(nodeItemID, macroStr) {
+        RealItemID := this.MacroTreeViewCon.GetParent(nodeItemID)
         RealCommandStr := this.MacroTreeViewCon.GetText(RealItemID)
-        this.CurItemID := RealItemID
 
-        this.SaveCommandData(RealCommandStr, macroStr, isTrueMacro, false)
-        this.RefreshTree(this.CurItemID)
+        this.SaveCommandData(RealCommandStr, macroStr, nodeItemID)
+        this.RefreshTree(RealItemID)
     }
 
     TreeExpand(ItemID, Num) {
@@ -887,56 +871,54 @@ class MacroEditGui {
         return ""
     }
 
-    ;todo 减少参数
-    SaveCommandData(RealCommandStr, macroStr, isTrue, isClear) {
+    SaveCommandData(RealCommandStr, macroStr, nodeItemID) {
         paramArr := StrSplit(RealCommandStr, "_")
-        IsSearch := StrCompare(paramArr[1], "搜索", false) == 0
-        IsSearchPro := StrCompare(paramArr[1], "搜索Pro", false) == 0
-        IsIf := StrCompare(paramArr[1], "如果", false) == 0
-        IsLoop := StrCompare(paramArr[1], "循环", false) == 0
-        IsIfPro := StrCompare(paramArr[1], "如果Pro", false) == 0
-        FileName := ""
-        if (IsIf) {
-            FileName := CompareFile
-        }
-        else if (IsIfPro) {
-            FileName := CompareProFile
-        }
-        else if (IsSearch) {
-            FileName := SearchFile
-        }
-        else if (IsSearchPro) {
-            FileName := SearchProFile
-        }
-        else if (IsLoop) {
-            FileName := LoopFile
-        }
-        if (FileName == "")
+        cmd := paramArr[1]
+
+        ; 映射表：命令 → 文件名
+        fileMap := Map(
+            "搜索", SearchFile,
+            "搜索Pro", SearchProFile,
+            "如果", CompareFile,
+            "如果Pro", CompareProFile,
+            "循环", LoopFile
+        )
+
+        ; 获取文件名（没有找到就为空）
+        FileName := fileMap.Has(cmd) ? fileMap[cmd] : ""
+        if (FileName = "")
             return
+
+        ItemNumber := this.GetItemNumber(nodeItemID)
         saveStr := IniRead(FileName, IniSection, paramArr[2], "")
         Data := JSON.parse(saveStr, , false)
-        if (IsLoop) {
-            if (isClear)
-                Data.LoopBody := ""
-            else
-                Data.LoopBody := macroStr
+        if (cmd == "循环") {
+            Data.LoopBody := macroStr
         }
-        else if (IsIfPro) {
+        else if (cmd == "如果Pro") {
 
         }
-        else if (isTrue && isClear)
-            Data.TrueMacro := ""
-        else if (isTrue && !isClear)
-            Data.TrueMacro := macroStr
-        else if (!isTrue && isClear)
-            Data.FalseMacro := ""
         else {
-            Data.FalseMacro := macroStr
+            if (ItemNumber == 1)    ;真
+                Data.TrueMacro := macroStr
+            else
+                Data.FalseMacro := macroStr
         }
+
         saveStr := JSON.stringify(Data, 0)
         IniWrite(saveStr, FileName, IniSection, Data.SerialStr)
         if (MySoftData.DataCacheMap.Has(Data.SerialStr)) {
             MySoftData.DataCacheMap.Delete(Data.SerialStr)
         }
+    }
+
+    GetItemNumber(nodeItemID) {
+        ItemNumber := 1
+        PreItemID := this.MacroTreeViewCon.GetPrev(nodeItemID)
+        while (PreItemID != 0) {
+            ItemNumber += 1
+            PreItemID := this.MacroTreeViewCon.GetPrev(nodeItemID)
+        }
+        return ItemNumber
     }
 }
