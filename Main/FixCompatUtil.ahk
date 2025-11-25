@@ -19,8 +19,9 @@ Compat1_0_8F4FlodInfo(FoldInfo) {
 
 ;1.0.8F7到新版本兼容, 新增鼠标类型
 Compat1_0_8F7MMPro(filePath) {
+    hasFix := false
     if (!FileExist(FilePath))
-        return
+        return hasFix
 
     Symbol := "MMPro"
     loop read, filePath {
@@ -40,9 +41,11 @@ Compat1_0_8F7MMPro(filePath) {
             continue
 
         Data.ActionType := 1
+        hasFix := true
         saveStr := JSON.stringify(Data, 0)
         IniWrite(saveStr, filePath, IniSection, Data.SerialStr)
     }
+    return hasFix
 }
 
 ;1.0.9F1到新版本兼容 增加配置音选项
@@ -64,8 +67,9 @@ Compat1_0_9F1TipSound(tableItem) {
 
 ;宏插入可以指定次数
 Compat1_0_9F1MacroInsert(FilePath) {
+    hasFix := false
     if (!FileExist(FilePath))
-        return
+        return hasFix
 
     Symbol := "SubMacro"
     loop read, FilePath {
@@ -84,8 +88,10 @@ Compat1_0_9F1MacroInsert(FilePath) {
         if (ObjHasOwnProp(Data, "InsertCount"))
             continue
 
+        hasFix := true
         Data.InsertCount := 1
         saveStr := JSON.stringify(Data, 0)
         IniWrite(saveStr, FilePath, IniSection, Data.SerialStr)
     }
+    return hasFix
 }

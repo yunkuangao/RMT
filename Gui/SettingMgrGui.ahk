@@ -33,23 +33,31 @@ class SettingMgrGui {
         this.Gui := MyGui
         MyGui.SetFont("S11 W550 Q2", MySoftData.FontType)
 
-        PosX := 10
+        PosX := 20
         PosY := 10
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "全局配置：")
+    
+        PosX := 310
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY - 3), "配置迁移")
+        con.OnEvent("Click", this.OnReplaceBtnClick.Bind(this))
+
+        PosX := 20
+        PosY += 35
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "当前配置：")
 
-        PosX += 80
-        this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 110), "")
+        PosX += 90
+        this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 130), "")
 
-        PosX := 205
+        PosX := 240
         con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 3), "重命名")
         con.OnEvent("Click", this.OnReNameBtnClick.Bind(this))
 
-        PosX := 280
-        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY - 3), "路径修正")
+        PosX := 310
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY - 3), "配置校准")
         con.OnEvent("Click", this.OnRepairBtnClick.Bind(this))
 
         PosX := 10
-        PosY += 30
+        PosY += 35
         MyGui.Add("GroupBox", Format("x{} y{} w400 h150", PosX, PosY), "配置操作")
 
         PosX := 70
@@ -78,17 +86,17 @@ class SettingMgrGui {
         con.OnEvent("Click", this.OnDelBtnClick.Bind(this))
 
         PosX := 10
-        PosY += 60
-        MyGui.Add("GroupBox", Format("x{} y{} w400 h110", PosX, PosY), "新增配置操作")
+        PosY += 55
+        MyGui.Add("GroupBox", Format("x{} y{} w400 h100", PosX, PosY), "新增配置操作")
 
         PosX := 70
-        PosY += 30
+        PosY += 25
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "新配置名：")
 
         PosX += 80
         this.OperNameEditCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 3, 200), "")
         PosX := 40
-        PosY += 35
+        PosY += 30
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "新增配置")
         con.OnEvent("Click", this.OnAddBtnClick.Bind(this))
 
@@ -100,7 +108,7 @@ class SettingMgrGui {
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "复制配置")
         con.OnEvent("Click", this.OnCopyBtnClick.Bind(this))
 
-        MyGui.Show(Format("w{} h{}", 420, 340))
+        MyGui.Show(Format("w{} h{}", 420, 360))
     }
 
     OnReNameBtnClick(*) {
@@ -137,17 +145,43 @@ class SettingMgrGui {
         Reload()
     }
 
+    OnReplaceBtnClick(*) {
+        SelectedFolder := DirSelect(, 0,)
+        if SelectedFolder == ""  ; 用户取消了选择
+            return
+        SplitPath SelectedFolder, &name, &dir, &ext, &name_no_ext, &drive
+        if (name != "Setting" || name_no_ext != "Setting") {
+            MsgBox("需要选择若梦兔软件下的Setting文件")
+            return
+        }
+        CurSettingDir := A_WorkingDir "\Setting"
+        DirCopy(SelectedFolder, CurSettingDir, 1)
+        try {
+            loop files, CurSettingDir "\*", "D"  ; 递归子文件夹.
+            {
+                this.OnRepairSetting(A_LoopFilePath)
+            }
+        } catch as e {
+            MsgBox("迁移失败: " e.Message, "错误", 0x10)
+        }
+
+        IniWrite(true, IniFile, IniSection, "IsReload")
+        MsgBox("配置迁移成功")
+        Reload()
+    }
+
     OnRepairBtnClick(*) {
-        hasRepair := RepairPath(MySoftData.CurSettingName, SearchFile, 1)
-        hasRepair := hasRepair || RepairPath(MySoftData.CurSettingName, SearchProFile, 1)
-        if (hasRepair) {
-            MsgBox("路径已修复")
+        SettingDir := A_WorkingDir "\Setting\" MySoftData.CurSettingName
+        hasWork := this.OnRepairSetting(SettingDir)
+        if (hasWork) {
+            MsgBox("已校对")
         }
         else {
             tipStr := (
-                "未发现异常路径配置`n"
+                "未发现需要修复的内容`n"
                 "重要须知：`n"
-                "- 此操作是针对覆盖配置文件后，调整当前配置的路径`n"
+                "- 针对覆盖配置文件后，搜索图片的配置路径矫正`n"
+                "- 低版本配置到高版本时，进行兼容适配升级`n"
             )
             MsgBox(tipStr)
         }
@@ -200,11 +234,7 @@ class SettingMgrGui {
         try {
             ; 解包文件
             FolderPackager.UnpackFile(selectedFile, outputFolder)
-            RepairPath(fileNameNoExt, SearchFile, 1)
-            RepairPath(fileNameNoExt, SearchProFile, 1)
-            Compat1_0_8F7MMPro(outputFolder "\MMProFile.ini")
-            Compat1_0_9F1MacroInsert(outputFolder "\SubMacroFile.ini")
-
+            this.OnRepairSetting(outputFolder)
             if (LoadType != 2) {
                 MySoftData.SettingArrStr .= "π" fileNameNoExt
                 IniWrite(MySoftData.SettingArrStr, IniFile, IniSection, "SettingArrStr")
@@ -292,6 +322,16 @@ class SettingMgrGui {
         MySoftData.CurSettingName := this.OperNameEditCon.Value
         IniWrite(MySoftData.CurSettingName, IniFile, IniSection, "CurSettingName")
         Reload()
+    }
+
+    OnRepairSetting(SettringDir) {
+        SplitPath SettringDir, &fileName, , &fileExt, &fileNameNoExt
+        hasWork := false
+        hasWork := hasWork || RepairPath(fileNameNoExt, SearchFile, 1)
+        hasWork := hasWork || RepairPath(fileNameNoExt, SearchProFile, 1)
+        hasWork := hasWork || Compat1_0_8F7MMPro(SettringDir "\MMProFile.ini")
+        hasWork := hasWork || Compat1_0_9F1MacroInsert(SettringDir "\SubMacroFile.ini")
+        return hasWork
     }
 
     CheckIfExistAndValid(FileName) {
