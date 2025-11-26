@@ -590,6 +590,7 @@ OnToggleTriggerMacro(tableIndex, itemIndex) {
     hasWork := MyWorkPool.CheckHasFreeWorker()
 
     if (hasWork) {
+        SetTableItemState(tableItem.index, itemIndex, 1)
         workPath := MyWorkPool.Get()
         workIndex := MyWorkPool.GetWorkIndex(workPath)
         tableItem.IsWorkIndexArr[itemIndex] := workIndex
@@ -600,6 +601,7 @@ OnToggleTriggerMacro(tableIndex, itemIndex) {
     isTrigger := tableItem.ToggleStateArr[itemIndex]
     if (!isTrigger) {
         tableItem.ToggleStateArr[itemIndex] := true
+        SetTableItemState(tableItem.index, itemIndex, 1)
         action := OnTriggerMacroKeyAndInit.Bind(tableItem, macro, itemIndex)
         tableItem.ToggleActionArr[itemIndex] := action
         SetTimer(action, -1)
@@ -622,6 +624,7 @@ TriggerMacroHandler(tableIndex, itemIndex, *) {
     if (isWork)
         return
 
+    SetTableItemState(tableItem.index, itemIndex, 1)
     if (hasWork) {
         workPath := MyWorkPool.Get()
         workIndex := MyWorkPool.GetWorkIndex(workPath)

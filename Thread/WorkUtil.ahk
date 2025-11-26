@@ -1,6 +1,8 @@
 #Requires AutoHotkey v2.0
 
 OnWorkTriggerMacro(wParam, lParam, msg, hwnd) {
+    global ReceiveTiming
+    ReceiveTiming := A_TickCount
     TriggerMacro(wParam, lParam)
     MsgPostHandler(WM_RELEASE_WORK, wParam, lParam)
 }
@@ -10,6 +12,8 @@ OnExit(wParam, lParam, msg, hwnd) {
 }
 
 OnWorkStopMacro(wParam, lParam, msg, hwnd) {
+    global ReceiveTiming
+    ReceiveTiming := A_TickCount
     loop MySoftData.TableInfo.Length {
         tableItem := MySoftData.TableInfo[A_Index]
         KillSingleTableMacro(tableItem)
@@ -28,6 +32,8 @@ OnWorkDelGlobalVariable(Name) {
 }
 
 OnWorkGetCmdStr(wParam, lParam, msg, hwnd) {
+    global ReceiveTiming
+    ReceiveTiming := A_TickCount
     StringAddress := NumGet(lParam, 2 * A_PtrSize, "Ptr")  ; 检索 CopyDataStruct 的 lpData 成员.
     Cmd := StrGet(StringAddress)  ; 从结构中复制字符串.
     paramArr := StrSplit(cmd, "_")
@@ -57,10 +63,14 @@ TriggerMacro(tableIndex, itemIndex) {
 }
 
 MsgPostHandler(type, wParam, lParam) {
+    if (ReceiveTiming + 30 > A_TickCount)
+        Sleep(ReceiveTiming + 30 - A_TickCount)
     PostMessage(type, wParam, lParam, , "ahk_id " parentHwnd)
 }
 
 MsgSendHandler(str) {
+    if (ReceiveTiming + 30 > A_TickCount)
+        Sleep(ReceiveTiming + 30 - A_TickCount)
     CopyDataStruct := Buffer(3 * A_PtrSize)  ; 分配结构的内存区域.
     ; 首先设置结构的 cbData 成员为字符串的大小, 包括它的零终止符:
     SizeInBytes := (StrLen(str) + 1) * 2
@@ -137,7 +147,6 @@ WorkCMDReport(cmdStr) {
 }
 
 WorkExcuteRMTCMDAction(cmdStr) {
-    ; str := Format("RMT_{}", cmdStr)
     MsgSendHandler(cmdStr)
 }
 

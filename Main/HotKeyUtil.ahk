@@ -23,7 +23,6 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
     isContinue := tableItem.TKArr.Has(index) && MySoftData.ContinueKeyMap.Has(tableItem.TKArr[index]) && tableItem.LoopCountArr[
         index] == 1
     isLoop := tableItem.LoopCountArr[index] == -1
-    MySetTableItemState(tableItem.index, index, 1)
     loop {
         isOver := tableItem.ActionCount[index] >= tableItem.LoopCountArr[index]
         isFirst := tableItem.ActionCount[index] == 0

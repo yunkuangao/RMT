@@ -23,6 +23,7 @@ global MyMouseInfo := MouseWinData()
 global MyvJoy := SuperCvJoyInterface().GetMyvJoy()
 global MyJoyMacro := JoyMacro()
 global IniFile := A_WorkingDir "\..\Setting\MainSettings.ini"
+global ReceiveTiming := 0     ;通讯收发间隔，防止在收到信息时立刻回复，信息丢失问题
 LoadMainSetting()   ;加载配置
 InitWorkFilePath()  ;初始化文件路径
 LoadCurMacroSetting()   ;加载当前配置宏

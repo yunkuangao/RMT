@@ -8,16 +8,16 @@ class TriggerStrGui {
         this.SureFocusCon := ""
 
         this.ConMap := Map()
-        this.IsNoEndChar := true
+        this.IsEndChar := true
         this.IsSubStr := true
-        this.IsNoDelete := true
+        this.IsDelete := true
         this.Str := ""
         this.SaveBtnCtrl := {}
         this.showSaveBtn := false
         this.SettingTipCon := ""
-        this.IsNoEndCharCon := {}
+        this.IsEndCharCon := {}
         this.IsSubStrCon := {}
-        this.IsNoDeleteCon := {}
+        this.IsDeleteCon := {}
     }
 
     ;字串相关
@@ -34,9 +34,9 @@ class TriggerStrGui {
         tipStr := "当前配置的触发字串为："
         tipStr .= this.GetTriggerStr()
         this.SettingTipCon.Value := tipStr
-        this.IsNoEndCharCon.Value := this.IsNoEndChar
+        this.IsEndCharCon.Value := this.IsEndChar
         this.IsSubStrCon.Value := this.IsSubStr
-        this.IsNoDeleteCon.Value := this.IsNoDelete
+        this.IsDeleteCon.Value := this.IsDelete
         this.SaveBtnCtrl.Visible := this.showSaveBtn
     }
 
@@ -47,10 +47,10 @@ class TriggerStrGui {
         if (this.IsSubStr) {
             triggerStr .= "?"
         }
-        if (this.IsNoEndChar) {
+        if (!this.IsEndChar) {
             triggerStr .= "*"
         }
-        if (this.IsNoDelete) {
+        if (!this.IsDelete) {
             triggerStr .= "B0"
         }
 
@@ -422,9 +422,9 @@ class TriggerStrGui {
 
         PosY += 50
         PosX := 20
-        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 120), "不需要终止符")
+        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 120), "终止符")
         con.OnEvent("Click", (*) => this.OnClickNoEndCharCon())
-        this.IsNoEndCharCon := con
+        this.IsEndCharCon := con
 
         PosX += 200
         con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 100), "允许子字串")
@@ -432,9 +432,9 @@ class TriggerStrGui {
         this.IsSubStrCon := con
 
         PosX += 200
-        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 150), "不删除触发字串")
+        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 150), "删除触发字串")
         con.OnEvent("Click", (*) => this.OnClickNoDeleteCon())
-        this.IsNoDeleteCon := con
+        this.IsDeleteCon := con
 
         PosY += 40
         PosX := 20
@@ -508,7 +508,7 @@ class TriggerStrGui {
     }
 
     OnClickNoEndCharCon() {
-        this.IsNoEndChar := !this.IsNoEndChar
+        this.IsEndChar := !this.IsEndChar
         this.Refresh()
     }
 
@@ -518,7 +518,7 @@ class TriggerStrGui {
     }
 
     OnClickNoDeleteCon() {
-        this.IsNoDelete := !this.IsNoDelete
+        this.IsDelete := !this.IsDelete
         this.Refresh()
     }
 
@@ -550,9 +550,9 @@ class TriggerStrGui {
         }
 
         this.Str := Str
-        this.IsNoEndChar := IsNoEndChar
+        this.IsEndChar := !IsNoEndChar
         this.IsSubStr := IsSubStr
-        this.IsNoDelete := IsNoDelete
+        this.IsDelete := !IsNoDelete
         this.showSaveBtn := showSaveBtn
         return
     }

@@ -35,7 +35,7 @@ class SettingMgrGui {
 
         PosX := 20
         PosY := 10
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "全局配置：")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "所有配置：")
     
         PosX := 310
         con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY - 3), "配置迁移")
@@ -45,7 +45,7 @@ class SettingMgrGui {
         PosY += 35
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "当前配置：")
 
-        PosX += 90
+        PosX += 75
         this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 130), "")
 
         PosX := 240
@@ -146,7 +146,7 @@ class SettingMgrGui {
     }
 
     OnReplaceBtnClick(*) {
-        SelectedFolder := DirSelect(, 0,)
+        SelectedFolder := DirSelect(, 0,"请选择若梦兔软件下Setting配置文件。`n将清空当前软件的所有配置，并把所选文件中的配置迁移导入本软件。`n为了避免数据丢失，请务必提前备份现有配置。")
         if SelectedFolder == ""  ; 用户取消了选择
             return
         SplitPath SelectedFolder, &name, &dir, &ext, &name_no_ext, &drive
