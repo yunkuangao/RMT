@@ -365,7 +365,65 @@ OnCompare(tableItem, cmd, index) {
 }
 
 OnComparePro(tableItem, cmd, index) {
+    paramArr := StrSplit(cmd, "_")
+    Data := GetMacroCMDData(CompareProFile, paramArr[2])
 
+    loop Data.VariNameArr.Length {
+        NameArr := Data.VariNameArr[A_Index]
+        CompareTypeArr := Data.CompareTypeArr[A_Index]
+        VariableArr := Data.VariableArr[A_Index]
+        LogicType := Data.LogicTypeArr[A_Index]
+        Macro := Data.MacroArr[A_Index]
+        result := LogicType == 1 ? true : false
+        loop NameArr.Length {
+            if (CompareTypeArr[A_Index] == 7) {
+                hasValue := TryGetVariableValue(&Value, tableItem, index, NameArr[A_Index], false)
+                currentComparison := hasValue
+            }
+            else {
+                hasValue := TryGetVariableValue(&Value, tableItem, index, NameArr[A_Index])
+                if (CompareTypeArr[A_Index] == 6) {  ;字符包含的时候可以直接使用字符
+                    hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, VariableArr[A_Index],
+                        false)
+                    OtherValue := hasOtherValue ? OtherValue : VariableArr[A_Index]
+                    hasOtherValue := true
+                }
+                else {
+                    hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, VariableArr[A_Index])
+                }
+
+                if (!hasValue || !hasOtherValue) {
+                    return
+                }
+
+                switch CompareTypeArr[A_Index] {
+                    case 1: currentComparison := Value > OtherValue
+                    case 2: currentComparison := Value >= OtherValue
+                    case 3: currentComparison := Value == OtherValue
+                    case 4: currentComparison := Value <= OtherValue
+                    case 5: currentComparison := Value < OtherValue
+                    case 6: currentComparison := CheckContainText(Value, OtherValue)
+                }
+            }
+
+            if (LogicType == 1) {
+                result := result && currentComparison
+                if (!result)
+                    break
+            } else {
+                result := result || currentComparison
+                if (result)
+                    break
+            }
+        }
+
+        if (result) {
+            if (Macro != "")
+                OnTriggerMacroOnce(tableItem, Macro, index)
+            return
+        }
+    }
+    OnTriggerMacroOnce(tableItem, Data.DefaultMacro, index)
 }
 
 OnMMPro(tableItem, cmd, index) {
