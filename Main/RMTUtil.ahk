@@ -282,6 +282,8 @@ SetGlobalVariable(Name, Value, ignoreExist) {
     global MySoftData
     if (ignoreExist && MySoftData.VariableMap.Has(Name))
         return
+    if (Type(Value) == "String")
+        Value := Trim(Value, "`n")
     MySoftData.VariableMap[Name] := Value
     MyVarListenGui.Refresh()
     IsMuti := MyWorkPool.CheckEnableMutiThread()
