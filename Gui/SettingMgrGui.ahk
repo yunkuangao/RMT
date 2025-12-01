@@ -176,6 +176,7 @@ class SettingMgrGui {
             }
         } catch as e {
             MsgBox("迁移失败: " e.Message, "错误", 0x10)
+            return
         }
 
         IniWrite(true, IniFile, IniSection, "IsReload")
@@ -380,10 +381,10 @@ class SettingMgrGui {
     OnRepairSetting(SettringDir) {
         SplitPath SettringDir, &fileName, , &fileExt, &fileNameNoExt
         hasWork := false
-        hasWork := hasWork || RepairPath(fileNameNoExt, SearchFile, 1)
-        hasWork := hasWork || RepairPath(fileNameNoExt, SearchProFile, 1)
-        hasWork := hasWork || Compat1_0_8F7MMPro(SettringDir "\MMProFile.ini")
-        hasWork := hasWork || Compat1_0_9F1MacroInsert(SettringDir "\SubMacroFile.ini")
+        hasWork := RepairPath(fileNameNoExt, SearchFile, 1) || hasWork
+        hasWork := RepairPath(fileNameNoExt, SearchProFile, 1) || hasWork
+        hasWork := Compat1_0_8F7MMPro(SettringDir "\MMProFile.ini") || hasWork
+        hasWork := Compat1_0_9F1MacroInsert(SettringDir "\SubMacroFile.ini") || hasWork
         return hasWork
     }
 

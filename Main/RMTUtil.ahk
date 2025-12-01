@@ -627,7 +627,9 @@ RepairPath(SettingName, FilePath, DataType) {
         if (Data == "")
             continue
 
-        if (DataType == 1 && Data.SearchImagePath != "") {
+        if (DataType == 1) {
+            if (!ObjHasOwnProp(Data, "SearchImagePath") || Data.SearchImagePath == "")
+                continue
             StartPos := InStr(Data.SearchImagePath, "Setting", 1)
             SubPath := SubStr(Data.SearchImagePath, StartPos)
             NewPath1 := A_WorkingDir "\" SubPath
