@@ -601,7 +601,7 @@ AddSettingUI(index) {
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
 
-    con := MyGui.Add("Text", Format("x{} y{}", posX + 635, posY), "多线程数(0~5):")
+    con := MyGui.Add("Text", Format("x{} y{}", posX + 635, posY), "多线程数(0~10):")
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
     con := MyGui.Add("Edit", Format("x{} y{} w100 center", posX + 760, posY - 4), MySoftData.MutiThreadNum)

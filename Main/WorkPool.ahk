@@ -7,6 +7,9 @@ class WorkPool {
         this.pidMap := Map()
         loop this.maxSize {
             workPath := A_ScriptDir "\Thread\Work" A_Index ".exe"
+            if (!FileExist(workPath) && this.maxSize <= 10) {
+                FileCopy(A_ScriptDir "\Thread\Work1.exe", workPath)
+            }
             Run (Format("{} {} {}", workPath, MySoftData.MyGui.Hwnd, A_Index))
         }
 
