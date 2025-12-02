@@ -43,7 +43,7 @@ class FolderPackager {
 
         ; 保存到文件
         FileOpen(outputFile, "w").RawWrite(mainBuffer)
-        MsgBox("打包完成: " outputFile)
+        MsgBox("打包完成:" outputFile)
 
         return true
     }
@@ -51,10 +51,10 @@ class FolderPackager {
     ; 解包二进制文件为文件夹
     static UnpackFile(packedFile, outputFolder, callback := "") {
         if !FileExist(packedFile)
-            throw Error("打包文件不存在: " packedFile)
+            throw Error("打包文件不存在:" packedFile)
 
         if callback
-            callback("开始解包文件: " packedFile)
+            callback("开始解包文件:" packedFile)
 
         ; 读取二进制数据 - 修正这里
         file := FileOpen(packedFile, "r")
@@ -124,7 +124,7 @@ class FolderPackager {
                 return false
             }
         }
-        DirDelete(tempPath)
+        DirDelete(tempPath, true)
         return true
     }
 

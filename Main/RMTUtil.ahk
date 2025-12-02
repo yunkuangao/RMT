@@ -193,17 +193,7 @@ InitFilePath() {
 
     filePath := A_WorkingDir "\Setting\" MySoftData.CurSettingName "\使用说明&署名.txt"
     if (!FileExist(filePath)) {
-        FileAppend("(请在导出配置前，务必完善操作说明，该文件目录可下增加图片解释说明)[上传导出前请删除此行，否则判定没有完善使用说明]`n" .
-            "资源名称：`n`n" .
-            "原作者：`n" .
-            "联系方式：(QQ或电话，仅用于告知您需要调整的地方)`n" .
-            "功能：`n" .
-            "   `n" .
-            "操作说明：`n" .
-            "   `n" .
-            "协议：CC BY - NC - SA 4.0`n" .
-            "原始来源：RMT(若梦兔) 软件导出`n" .
-            "说明：仅限非商业用途，转载请注明来源并保持相同协议 `n", filePath, "UTF-8")
+        FileAppend("(请在导出配置前，务必完善操作说明，该文件目录可下增加图片解释说明)[上传导出前请删除此行，否则判定没有完善使用说明]`n资源名称：`n`n原作者：`n联系方式：(QQ或电话，仅用于告知您需要调整的地方)`n功能：`n   `n操作说明：`n   `n协议：CC BY - NC - SA 4.0`n原始来源：RMT(若梦兔) 软件导出`n说明：仅限非商业用途，转载请注明来源并保持相同协议 `n", filePath, "UTF-8")
     }
 
     if (!DirExist(A_WorkingDir "\Images")) {
@@ -459,7 +449,7 @@ ExcuteRMTCMDAction(Cmd) {
         }
     }
     else if (cmdStr == "显示菜单") {
-        OpenMenuWheel(paramArr[3])
+        OpenMenuWheel(paramArr[3], false)
     }
     else if (cmdStr == "关闭菜单") {
         CloseMenuWheel()
@@ -842,9 +832,12 @@ FormatIntegerWithCommas(num) {
     return RegExReplace(num, "(\d)(?=(\d{3})+$)", "$1,")
 }
 
-OpenMenuWheel(MenuIndex) {
-    if (MySoftData.CurMenuWheelIndex == MenuIndex)
+OpenMenuWheel(MenuIndex, isTog) {
+    if (MySoftData.CurMenuWheelIndex == MenuIndex) {
+        if (isTog)
+            CloseMenuWheel()
         return
+    }
 
     MySoftData.CurMenuWheelIndex := MenuIndex
     MyMenuWheel.ShowGui(MenuIndex)

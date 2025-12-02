@@ -70,7 +70,7 @@ class SearchProGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile "搜索Pro编辑器")
+        MyGui := Gui(, this.ParentTile "搜索Pro编辑器")
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
@@ -319,8 +319,10 @@ class SearchProGui {
         cmdArr := cmd != "" ? StrSplit(cmd, "_") : []
         this.SerialStr := cmdArr.Length >= 2 ? cmdArr[2] : GetSerialStr("Search")
         this.RemarkCon.Value := cmdArr.Length >= 3 ? cmdArr[3] : ""
-
         this.Data := this.GetSearchData(this.SerialStr)
+        if (!this.CheckIfDataValid())
+            return
+
         this.SearchTypeCon.Value := this.Data.SearchType
         this.SimilarCon.Value := this.Data.Similar
         this.OCRTypeCon.Value := this.Data.OCRType
@@ -380,6 +382,19 @@ class SearchProGui {
 
         data := JSON.parse(saveStr, , false)
         return data
+    }
+
+    CheckIfDataValid() {
+        if (!ObjHasOwnProp(this.Data, "SearchImagePath")) {
+            MsgBox("这条指令不完整，请删除")
+            return false
+        }
+
+        if (this.Data.SearchImagePath != "" && !FileExist(this.Data.SearchImagePath)) {
+            MsgBox(Format("{} 图片不存在`n如果是软件位置发生改变，请点击若梦兔-配置管理-配置校准", this.Data.SearchImagePath))
+            return false
+        }
+        return true
     }
 
     CheckIfValid() {
@@ -574,7 +589,7 @@ class SearchProGui {
             this.MacroGui := MacroEditGui()
             this.MacroGui.VariableObjArr := this.VariableObjArr
             this.MacroGui.SureFocusCon := this.MousePosCon
-    
+
             ParentTile := StrReplace(this.Gui.Title, "编辑器", "")
             this.MacroGui.ParentTile := ParentTile "-"
         }
@@ -588,7 +603,7 @@ class SearchProGui {
             this.MacroGui := MacroEditGui()
             this.MacroGui.VariableObjArr := this.VariableObjArr
             this.MacroGui.SureFocusCon := this.MousePosCon
-    
+
             ParentTile := StrReplace(this.Gui.Title, "编辑器", "")
             this.MacroGui.ParentTile := ParentTile "-"
         }

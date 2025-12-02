@@ -63,7 +63,7 @@ class MacroSettingGui {
     }
 
     OnClickModeHelpBtn(*) {
-        MsgBox("AHK Send：调用 AHK Send模拟按键，适用办公软件及大部分游戏`nkeybd_event：调用 Win 系统接口模拟按键，适用比较旧的软件或游戏（需管理员权限）。`n罗技：调用 罗技驱动 模拟按键。`n**keybd_event 和 罗技 的按键可以作为宏的触发按键，切记自己触发自己导致死循环**")
+        MsgBox("AHK Send：调用 AHK Send模拟按键，适用办公软件及大部分游戏`nkeybd_event：调用 Win 系统接口模拟按键，适用比较旧的软件或游戏（需管理员权限）。`n罗技：调用 罗技驱动 模拟按键（需管理员权限）。`n**keybd_event 和 罗技 的按键可以作为宏的触发按键，切记自己触发自己导致死循环**")
     }
 
     OnSureBtnClick() {

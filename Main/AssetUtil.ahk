@@ -966,17 +966,6 @@ CheckIfInstallVjoy() {
     return true
 }
 
-CheckAutoStart() {
-    regPath := "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run"
-    try {
-        ; 尝试读取注册表项
-        RegRead(regPath, "ButtonAssist")
-        return true
-    } catch {
-        return false
-    }
-}
-
 CheckContainText(source, text) {
     ; 返回布尔值：true 表示包含，false 表示不包含
     return RegExMatch(source, text)

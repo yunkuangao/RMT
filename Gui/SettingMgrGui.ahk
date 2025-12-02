@@ -192,10 +192,7 @@ class SettingMgrGui {
         }
         else {
             tipStr := (
-                "未发现需要修复的内容`n"
-                "重要须知：`n"
-                "- 针对覆盖配置文件后，搜索图片的配置路径矫正`n"
-                "- 低版本配置到高版本时，进行兼容适配升级`n"
+                "未发现需要修复的内容`n重要须知：`n- 针对覆盖配置文件后，搜索图片的配置路径矫正`n- 低版本配置到高版本时，进行兼容适配升级`n"
             )
             MsgBox(tipStr)
         }
@@ -356,7 +353,7 @@ class SettingMgrGui {
 
         MySoftData.SettingArrStr .= "π" this.OperNameEditCon.Value
         IniWrite(MySoftData.SettingArrStr, IniFile, IniSection, "SettingArrStr")
-        MsgBox("成功新增配置： " this.OperNameEditCon.Value)
+        MsgBox("成功新增配置：" this.OperNameEditCon.Value)
         Reload()
     }
 

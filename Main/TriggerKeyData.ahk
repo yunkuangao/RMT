@@ -294,7 +294,7 @@ class TriggerKeyInfo {
         else {
             if (triggerType == 3)
                 this.forbidTrigger := true
-            OpenMenuWheel(this.foldIndex)
+            OpenMenuWheel(this.foldIndex, triggerType == 4)
         }
     }
 
