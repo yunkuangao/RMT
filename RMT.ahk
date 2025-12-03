@@ -42,6 +42,7 @@
 #Include Main\BindUtil.ahk
 #Include Main\VariableUtil.ahk
 #Include Main\FixCompatUtil.ahk
+#Include Main\LangUtil.ahk
 #Include Main\TriggerKeyData.ahk
 #Include Main\FolderPackager.ahk
 SetWorkingDir A_ScriptDir
@@ -73,6 +74,7 @@ global MyMsgboxGui := CustomMsgBoxGui()
 global MyCMDTipSettingGui := CMDTipSettingGui()
 global MyToolRecordSettingGui := ToolRecordSettingGui()
 global IniFile := A_WorkingDir "\Setting\MainSettings.ini"
+global LangDir := A_WorkingDir "\Lang"
 global MySubMacroStopAction := SubMacroStopAction
 global MyTriggerSubMacro := TriggerMacroHandler
 global MySetGlobalVariable := SetGlobalVariable

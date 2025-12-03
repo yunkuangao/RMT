@@ -354,6 +354,7 @@ LoadMainSetting() {
     MySoftData.WinPosX := IniRead(IniFile, IniSection, "WinPosX", 0)
     MySoftData.WinPosY := IniRead(IniFile, IniSection, "WinPosY", 0)
     MySoftData.TableIndex := IniRead(IniFile, IniSection, "TableIndex", 1)
+    MySoftData.Lang := IniRead(IniFile, IniSection, "Lang", "无语言")
     MySoftData.FontType := IniRead(IniFile, IniSection, "FontType", "微软雅黑")
     MySoftData.CMDPosX := IniRead(IniFile, IniSection, "CMDPosX", A_ScreenWidth - 225)
     MySoftData.CMDPosY := IniRead(IniFile, IniSection, "CMDPosY", 0)
@@ -369,6 +370,8 @@ LoadMainSetting() {
 
     MySoftData.TableInfo := CreateTableItemArr()
     SetFontList()
+    LangInitSetting()
+    LangKeysInit()
 }
 
 SetFontList() {

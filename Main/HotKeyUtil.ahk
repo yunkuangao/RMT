@@ -24,10 +24,9 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
         index] == 1
     isLoop := tableItem.LoopCountArr[index] == -1
     loop {
-        isOver := tableItem.ActionCount[index] >= tableItem.LoopCountArr[index]
         isFirst := tableItem.ActionCount[index] == 0
         isLast := tableItem.ActionCount[index] == tableItem.LoopCountArr[index] - 1
-        isSecond := tableItem.ActionCount[index] == 1
+        isOver := tableItem.ActionCount[index] >= tableItem.LoopCountArr[index]
         WaitIfPaused(tableItem.index, index)
 
         if (tableItem.KilledArr[index])
@@ -36,10 +35,9 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
         if (!isLoop && !isContinue && isOver)
             break
 
-        if (!isFirst && isContinue) {
+        if (!isFirst && isContinue && isOver) {
             key := MySoftData.ContinueKeyMap[tableItem.TKArr[index]]
-            interval := isSecond ? MySoftData.ContinueSecondIntervale : MySoftData.ContinueIntervale
-            Sleep(interval)
+            Sleep(MySoftData.ContinueIntervale)
 
             if (!GetKeyState(key, "P")) {
                 break
@@ -1310,7 +1308,6 @@ SendLogicKey(Key, state, tableItem, index) {
         }
     }
 }
-
 
 SendJoyBtnClick(KeyArrStr, holdTime, tableItem, index, keyType) {
     if (!CheckIfInstallVjoy()) {

@@ -199,88 +199,68 @@ class ToolCheck {
 class SoftData {
     __New() {
         this.isWork := false
-        this.ToolTipText := ""
-        this.ToolTipEndTime := ""
-        this.AgreeAgreement := false
-        this.ShowWinCtrl := ""
-        this.IsBootStart := false
-        this.BootStartCtrl := ""
-        this.ShowSplitLine := false
-        this.SplitLineCtrl := ""
-        this.FixedMenuWheel := false
-        this.FixedMenuWheelCtrl := ""
-        this.NoVariableTip := false
-        this.NoVariableTipCtrl := ""
-        this.ScreenShotType := 1
-        this.ScreenShotTypeCtrl := ""
-        this.MutiThreadNum := 3
-        this.MutiThreadNumCtrl := ""
-        this.IsSuspend := false
-        this.SuspendToggleCtrl := ""
-        this.SuspendHotkey := ""
-        this.SuspendHotkeyCtrl := ""
-        this.IsPause := false
-        this.PauseToggleCtrl := ""
-        this.PauseHotkey := ""
-        this.PauseHotkeyCtrl := ""
-        this.KillMacroHotkey := ""
-        this.KillMacroHotkeyCtrl := ""
-        this.HoldFloat := 0
-        this.HoldFloatCtrl := ""
-        this.PreIntervalFloat := 0
-        this.PreIntervalFloatCtrl := ""
-        this.IntervalFloat := 0
-        this.IntervalFloatCtrl := ""
-        this.CoordXFloatCon := ""
-        this.CoordYFloatCon := ""
-        this.CoordXFloat := 0
-        this.CoordYFloat := 0
-        this.SoftBGColorCon := ""
-        this.SoftBGColor := ""
-        this.IsReload := false  ;重载
-        this.TableIndex := 1
-        this.HasSaved := false
-        this.MacroEditGui := ""
-        this.RecordToggleCon := ""
-        this.FontType := "微软雅黑"
-        this.FontList := []
+        this.ToolTipText := ""          ;临时提示文本
+        this.ToolTipEndTime := ""       ;临时提示结束时间
+        this.AgreeAgreement := false    ;同意协议
+        this.IsBootStart := false       ;开机自启
+        this.ShowSplitLine := false     ;显示分割线
+        this.FixedMenuWheel := false    ;固定菜单轮
+        this.NoVariableTip := false     ;无变量提醒
+        this.ScreenShotType := 1        ;截图类型
+        this.MutiThreadNum := 3         ;多线程数
+        this.IsSuspend := false         ;休眠
+        this.SuspendHotkey := ""        ;休眠快捷键
+        this.IsPause := false           ;暂停
+        this.PauseHotkey := ""          ;暂停快捷键
+        this.KillMacroHotkey := ""      ;终止所有宏快捷键
+        this.HoldFloat := 0             ;按住时间浮动数值
+        this.PreIntervalFloat := 0      ;每次间隔浮动数值
+        this.IntervalFloat := 0         ;间隔指令浮动数值
+        this.CoordXFloat := 0           ;坐标X浮动数值
+        this.CoordYFloat := 0           ;坐标Y浮动数值
+        this.SoftBGColor := ""          ;软件背景颜色
+        this.IsReload := false          ;软件是否重载
+        this.TableIndex := 1            ;当前显示的table索引
+        this.HasSaved := false          ;是否保存
+        this.MacroEditGui := ""         ;当前宏编辑器
+        this.FontType := "微软雅黑"     ;当前字体
+        this.FontList := []             ;所有字体类型
+        this.Lang := "中文"             ;当前语言
+        this.LangArr := []              ;所有语言
 
-        this.MyGui := {}
-        this.CurSettingName := ""
-        this.SettingArrStr := ""
-        this.TabPosX := 0
-        this.TabPosY := 0
-        this.BtnAdd := ""
-        this.BtnSave := ""
+        this.MyGui := {}                ;软件主界面GUI
+        this.CurSettingName := ""       ;当前配置名称
+        this.SettingArrStr := ""        ;所有配置字串
+        this.CurMenuWheelIndex := -1    ;当先显示的菜单轮盘
 
-        this.EditHotKeyCtrl := ""
-        this.EditHotStrCtrl := ""
+        this.TabCtrl := {}              ;Tab组件
+        this.TabPosX := 0               ;Tab位置X
+        this.TabPosY := 0               ;Tab位置Y
+        this.TableInfo := []            ;TableItem所有信息，每个宏的所有信息
 
+        ;Tab所有页签
         this.TabNameArr := ["按键宏", "字串宏", "菜单宏", "定时宏", "宏", "按键替换", "工具", "设置", "帮助", "打赏作者", "特别感谢"]
+        ;Tab页签对应的英文
         this.TabSymbolArr := ["Normal", "String", "Menu", "Timing", "SubMacro", "Replace", "Tool", "Setting", "Help",
             "Reward", "Thank"]
-        this.TabCtrl := {}
-        this.TableInfo := []
 
-        this.TimerActionMap := Map()
-
+        ;特殊的按键，因为含有下划线，所有要特殊处理
         this.SpecialKeyMap := Map("Browser_Back", 0, "Browser_Forward", 0, "Browser_Refresh", 0, "Browser_Stop", 0,
             "Browser_Search", 0, "Browser_Favorites", 0, "Browser_Home", 0, "Volume_Mute", 0, "Volume_Down", 0,
             "Volume_Up", 0, "Media_Next", 0, "Media_Prev", 0, "Media_Stop", 0, "Media_Play_Pause", 0, "Launch_Mail", 0,
             "Launch_Media", 0, "Launch_App1", 0, "Launch_App2", 0)
-        this.SpecialTableItem := TableItem()
+        this.SpecialTableItem := TableItem()    ;特别的TableItem，用于编辑器模式测试指令
 
+        ;这些按键不会重复触发按下的按键宏，特别标记特殊处理
         this.ContinueKeyMap := Map("LButton", "LButton", "~LButton", "LButton", "RButton", "RButton", "~RButton",
             "RButton", "MButton", "MButton", "~MButton", "MButton", "XButton1", "XButton1", "~XButton1", "XButton1",
             "XButton2", "XButton2", "~XButton2", "XButton2")
-        this.SpecialNumKeyMap := Map("WheelDown", 0, "WheelUp", 0)
-        this.ContinueSecondIntervale := 200
-        this.ContinueIntervale := 50
-        this.DataCacheMap := Map()
-        this.TestCount := 0
+        this.ContinueIntervale := 50    ;连续触发间隔
 
-        this.GlobalVariMap := Map() ;UI下拉显示变量
-        this.VariableMap := Map()   ;真正的全局变量
+        this.DataCacheMap := Map()      ;指令缓存，减少读取文件的次数
+
+        this.GlobalVariMap := Map()     ;UI下拉显示变量
+        this.VariableMap := Map()       ;真正的全局变量
 
         ;显示指令提示配置
         this.CMDTip := false
@@ -295,21 +275,22 @@ class SoftData {
         this.CMDFontSize := "12"
         this.CMDFontColor := "000000"
 
-        this.TriggerKeyMap := Map()
+        this.TriggerKeyMap := Map()     ;所有的按键宏，包括软件自身的快捷键
         this.SoftHotKeyArr := ["~WheelUp", "~WheelDown", "~LButton", "~Left", "~Right", "~Up", "~Down", "~Enter", "~1",
             "~2", "~3", "~4", "~5", "~6", "~7", "~8"]
-        this.SelectAreaAction := "" ;左键框选范围回调   显示框选范围
-        this.GetAreaAction := ""    ;左键框选范围回调   不显示框选范围
-        this.StartAreaPosX := ""
-        this.StartAreaPosY := ""
 
-        this.IsTogStartRecord := false  ;通过开关触发录制
+        this.SelectAreaAction := "" ;左键框选范围回调   显示框选范围       正常
+        this.GetAreaAction := ""    ;左键框选范围回调   不显示框选范围      系统截图获取截图范围
+        this.StartAreaPosX := ""    ;开始框选范围X坐标  记录点位，这样结束时就能直接获取点位信息
+        this.StartAreaPosY := ""    ;开始框选范围Y坐标
+
+        this.IsTogStartRecord := false  ;通过开关触发录制   区分触发形式，删除宏里面的快捷键触发的按键
         this.IsTogEndRecord := false    ;通过开关结束录制
+        ;这些按键不会松开，特别处理
+        this.SpecialNumKeyMap := Map("WheelDown", 0, "WheelUp", 0)
 
         this.MacroTotalCount := 0   ;宏运行次数
-        this.LastShowMonth := 0     ;
-
-        this.CurMenuWheelIndex := -1    ;当先显示的菜单轮盘
+        this.LastShowMonth := 0     ;上次显示月数
     }
 }
 

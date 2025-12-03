@@ -676,10 +676,21 @@ AddSettingUI(index) {
     tableItem.AllConArr.Push(conInfo)
     tableItem.AllGroup.Push(con)
     posY += 30
-    con := MyGui.Add("Text", Format("x{} y{}", posX + 25, posY), "软件字体：")
+    con := MyGui.Add("Text", Format("x{} y{}", posX + 25, posY), "语言/Lang:")
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
-    con := MyGui.Add("DropDownList", Format("x{} y{} w180", posX + 100, posY - 5), [])
+    con := MyGui.Add("DropDownList", Format("x{} y{} w100", posX + 100, posY - 5), [])
+    MySoftData.LangCtrl := con
+    MySoftData.LangCtrl.Delete()
+    MySoftData.LangCtrl.Add(MySoftData.LangArr)
+    MySoftData.LangCtrl.Text := MySoftData.Lang
+    conInfo := ItemConInfo(con, tableItem, 1)
+    tableItem.AllConArr.Push(conInfo)
+
+    con := MyGui.Add("Text", Format("x{} y{}", posX + 315, posY), "软件字体：")
+    conInfo := ItemConInfo(con, tableItem, 1)
+    tableItem.AllConArr.Push(conInfo)
+    con := MyGui.Add("DropDownList", Format("x{} y{} w180", posX + 390, posY - 5), [])
     MySoftData.FontTypeCtrl := con
     MySoftData.FontTypeCtrl.Delete()
     MySoftData.FontTypeCtrl.Add(MySoftData.FontList)
@@ -687,10 +698,10 @@ AddSettingUI(index) {
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
 
-    con := MyGui.Add("Text", Format("x{} y{}", posX + 315, posY), "软件截图方式：")
+    con := MyGui.Add("Text", Format("x{} y{}", posX + 635, posY), "截图方式：")
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
-    con := MyGui.Add("DropDownList", Format("x{} y{} w100", posX + 410, posY - 5), ["微软截图",
+    con := MyGui.Add("DropDownList", Format("x{} y{} w100", posX + 710, posY - 5), ["微软截图",
         "RMT截图"])
     MySoftData.ScreenShotTypeCtrl := con
     MySoftData.ScreenShotTypeCtrl.Value := MySoftData.ScreenShotType

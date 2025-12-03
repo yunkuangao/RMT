@@ -39,85 +39,87 @@ class BGMouseGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile "后台鼠标编辑器")
+        MyGui := Gui(, this.ParentTile GetLang("后台鼠标编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
         PosX := 10
         PosY := 10
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 80), "快捷方式:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 80), GetLang("快捷方式:"))
         PosX += 80
         con := MyGui.Add("Hotkey", Format("x{} y{} w{}", PosX, PosY - 3, 70), "!l")
         con.Enabled := false
 
         PosX += 90
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 80), "执行指令")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 80), GetLang("执行指令"))
         btnCon.OnEvent("Click", (*) => this.TriggerMacro())
 
         PosX += 90
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), "备注:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), GetLang("备注:"))
         PosX += 50
         this.RemarkCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 5, 150), "")
 
         PosY += 25
         PosX := 10
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 500), "F1:选取当前窗口信息   F2:选取当前窗口位置   F3:选取信息和位置")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 500), GetLang("F1:选取当前窗口信息   F2:选取当前窗口位置   F3:选取信息和位置"))
 
         PosX := 10
         PosY += 20
-        this.CurTitleCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 450, 40), "当前窗口信息:RMT")
+        this.CurTitleCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 450, 40), GetLang("当前窗口信息:RMT"))
         PosX := 10
         PosY += 40
-        this.CurPosCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 380, 20), "当前窗口坐标:0,0")
+        this.CurPosCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 380, 20), GetLang("当前窗口坐标:0,0"))
 
         PosX := 10
         PosY += 30
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "窗口信息:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("窗口信息:"))
         PosX += 80
         this.TargetTitleCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 3, 190), "")
 
         PosX += 200
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 100), "编辑")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 100), GetLang("编辑"))
         btnCon.OnEvent("Click", this.OnClickEditBtn.Bind(this))
 
         PosX := 10
         PosY += 40
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "鼠标按键:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("鼠标按键:"))
         PosX += 80
-        this.MouseTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 3, 70), ["左键", "中键", "右键",
-            "滚轮"])
+        this.MouseTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 3, 70), GetLangArr(["左键",
+            "中键", "右键",
+            "滚轮"]))
         this.MouseTypeCon.OnEvent("Change", (*) => this.OnRefresh())
 
         PosX += 120
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "操作类型:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("操作类型:"))
         PosX += 80
-        this.OperateTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 3, 100), ["点击", "双击", "按下",
-            "松开"])
+        this.OperateTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 3, 100), GetLangArr(["点击",
+            "双击", "按下",
+            "松开"]))
 
         PosX := 10
         PosY += 40
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "窗口坐标X:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("窗口坐标X:"))
         PosX += 80
         this.PosVarXCon := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX, PosY - 3, 100), [])
 
         PosX += 120
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "窗口坐标Y:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("窗口坐标Y:"))
         PosX += 80
         this.PosVarYCon := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX, PosY - 3, 100), [])
 
         PosX := 10
         PosY += 40
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "垂直滚动:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("垂直滚动:"))
         PosX += 80
         this.ScrollVCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 3, 70), "")
         PosX += 120
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "水平滚动")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("水平滚动"))
         PosX += 80
         this.ScrollHCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 3, 100), "")
 
         PosX := 10
         PosY += 40
-        con := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "点击时间:")
+        con := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("点击时间:"))
         con.Visible := false
         PosX += 80
         this.ClickTimeCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 3, 70), "")
@@ -125,7 +127,7 @@ class BGMouseGui {
 
         ; PosY += 100
         PosX := 200
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY, 100, 40), "确定")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY, 100, 40), GetLang("确定"))
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
         MyGui.OnEvent("Close", (*) => this.ToggleFunc(false))
@@ -204,12 +206,14 @@ class BGMouseGui {
         MouseGetPos &mouseX, &mouseY, &oriId
         PosArr := GetWinPos()
         try {
-            this.CurPosCon.Value := "当前窗口坐标: " PosArr[1] "," PosArr[2]
+            this.CurPosCon.Value := GetLang("当前窗口坐标: ") PosArr[1] "," PosArr[2]
+            this.CurPosCon.Value := Format("{}{},{}", GetLang("当前窗口坐标: "), PosArr[1], PosArr[2])
 
             title := WinGetTitle(oriId)
             className := WinGetClass(oriId)
             process := WinGetProcessName(oriId)
-            this.CurTitleCon.Value := "当前窗口信息: " title "⎖" className "⎖" process
+
+            this.CurTitleCon.Value := Format("{}{}⎖{}⎖{}", GetLang("当前窗口信息: "), title, className, process)
         }
     }
 
@@ -231,7 +235,7 @@ class BGMouseGui {
 
     CheckIfValid() {
         if (this.TargetTitleCon.Value == "") {
-            MsgBox("目标窗口信息不能为空")
+            MsgBox(GetLang("目标窗口信息不能为空"))
             return false
         }
         return true
@@ -239,7 +243,7 @@ class BGMouseGui {
 
     TriggerMacro() {
         if (!IsNumber(this.PosVarXCon.Text) || !IsNumber(this.PosVarYCon.Text)) {
-            MsgBox("坐标中存在变量，无法在编辑器模式下执行指令")
+            MsgBox(GetLang("坐标中存在变量，无法在编辑器模式下执行指令"))
             return false
         }
 

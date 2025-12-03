@@ -39,33 +39,33 @@ class CompareGui {
     }
 
     AddGui() {
-        MyGui := Gui(, this.ParentTile "如果编辑器")
+        MyGui := Gui(, this.ParentTile GetLang("如果编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
         PosX := 10
         PosY := 10
-        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 80), "快捷方式:")
+        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 80), GetLang("快捷方式:"))
         PosX += 80
         con := MyGui.Add("Hotkey", Format("x{} y{} w{}", PosX, PosY - 3, 70), "!l")
         con.Enabled := false
 
         PosX += 90
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 80), "执行指令")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 80), GetLang("执行指令"))
         btnCon.OnEvent("Click", (*) => this.TriggerMacro())
 
         PosX += 90
-        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), "备注:")
+        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), GetLang("备注:"))
         PosX += 50
         this.RemarkCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 5, 150), "")
 
         PosY += 30
         PosX := 10
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "开关")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("开关"))
         PosX += 50
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "选择/输入")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("选择/输入"))
         PosX += 230
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "选择/输入")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("选择/输入"))
 
         PosY += 25
         PosX := 15
@@ -76,8 +76,8 @@ class CompareGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX + 35, PosY - 3, 120), [])
         this.NameConArr.Push(con)
 
-        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), ["大于", "大于等于", "等于", "小于等于",
-            "小于", "字符包含", "变量存在"])
+        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于", "等于", "小于等于",
+            "小于", "字符包含", "变量存在"]))
         con.Value := 1
         con.OnEvent("Change", (*) => this.OnRefresh())
         this.CompareTypeConArr.Push(con)
@@ -86,8 +86,8 @@ class CompareGui {
         this.VariableConArr.Push(con)
 
         PosX += 400
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 80, 30), "逻辑关系：")
-        this.LogicalTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 85, PosY - 3, 60), ["且", "或"])
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 80, 30), GetLang("逻辑关系："))
+        this.LogicalTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 85, PosY - 3, 60), GetLangArr(["且", "或"]))
 
         PosY += 35
         PosX := 15
@@ -98,8 +98,8 @@ class CompareGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX + 35, PosY - 3, 120), [])
         this.NameConArr.Push(con)
 
-        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), ["大于", "大于等于", "等于", "小于等于",
-            "小于", "字符包含", "变量存在"])
+        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于", "等于", "小于等于",
+            "小于", "字符包含", "变量存在"]))
         con.Value := 1
         con.OnEvent("Change", (*) => this.OnRefresh())
         this.CompareTypeConArr.Push(con)
@@ -116,8 +116,8 @@ class CompareGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX + 35, PosY - 3, 120), [])
         this.NameConArr.Push(con)
 
-        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), ["大于", "大于等于", "等于", "小于等于",
-            "小于", "字符包含", "变量存在"])
+        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(GetLangArr(["大于", "大于等于", "等于", "小于等于",
+            "小于", "字符包含", "变量存在"])))
         con.Value := 1
         con.OnEvent("Change", (*) => this.OnRefresh())
         this.CompareTypeConArr.Push(con)
@@ -134,8 +134,8 @@ class CompareGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX + 35, PosY - 3, 120), [])
         this.NameConArr.Push(con)
 
-        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), ["大于", "大于等于", "等于", "小于等于",
-            "小于", "字符包含", "变量存在"])
+        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于", "等于", "小于等于",
+            "小于", "字符包含", "变量存在"]))
         con.Value := 1
         con.OnEvent("Change", (*) => this.OnRefresh())
         this.CompareTypeConArr.Push(con)
@@ -146,10 +146,10 @@ class CompareGui {
         PosY += 35
         PosX := 10
         SplitPosY := PosY
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 160, 20), "结果真的指令:（可选）")
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 160, 20), GetLang("结果真的指令:（可选）"))
 
         PosX += 160
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 5, 80, 20), "编辑指令")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 5, 80, 20), GetLang("编辑指令"))
         btnCon.OnEvent("Click", (*) => this.OnEditFoundMacroBtnClick())
 
         PosY += 20
@@ -158,10 +158,10 @@ class CompareGui {
 
         PosY := SplitPosY
         PosX := 310
-        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 160, 20), "结果假的指令:（可选）")
+        MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 160, 20), GetLang("结果假的指令:（可选）"))
 
         PosX += 160
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 5, 80, 20), "编辑指令")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 5, 80, 20), GetLang("编辑指令"))
         btnCon.OnEvent("Click", (*) => this.OnEditUnFoundMacroBtnClick())
 
         PosY += 20
@@ -170,24 +170,24 @@ class CompareGui {
 
         PosY += 60
         PosX := 10
-        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 320, 110), "结果保存到变量中")
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 320, 110), GetLang("结果保存到变量中"))
 
         PosX := 20
         PosY += 25
-        this.IsIgnoreExistCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY, 150), "变量存在忽略操作")
+        this.IsIgnoreExistCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY, 150), GetLang("变量存在忽略操作"))
 
         PosX := 15
         PosY += 25
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "开关")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("开关"))
 
         PosX += 50
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "选择/输入")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("选择/输入"))
 
         PosX += 110
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "真值")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("真值"))
 
         PosX += 100
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "假值")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("假值"))
 
         PosY += 25
         PosX := 20
@@ -198,7 +198,7 @@ class CompareGui {
 
         PosY -= 30
         PosX := 410
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY, 100, 40), "确定")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY, 100, 40), GetLang("确定"))
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
         MyGui.Show(Format("w{} h{}", 600, 410))
     }
@@ -243,12 +243,12 @@ class CompareGui {
     CheckIfValid() {
         if (this.SaveToggleCon.Value) {
             if (IsNumber(this.SaveNameCon.Text)) {
-                MsgBox("结果变量名不规范：变量名不能是纯数字")
+                MsgBox(GetLang("结果变量名不规范：变量名不能是纯数字"))
                 return false
             }
 
             if (this.SaveNameCon.Text == "") {
-                MsgBox("结果变量名不规范：变量名不能为空")
+                MsgBox(GetLang("结果变量名不规范：变量名不能为空"))
                 return false
             }
         }
@@ -300,7 +300,7 @@ class CompareGui {
             this.MacroGui.VariableObjArr := this.VariableObjArr
             this.MacroGui.SureFocusCon := this.FocusCon
     
-            ParentTile := StrReplace(this.Gui.Title, "编辑器", "")
+            ParentTile := StrReplace(this.Gui.Title, GetLang("编辑器"), "")
             this.MacroGui.ParentTile := ParentTile "-"
         }
 
@@ -314,7 +314,7 @@ class CompareGui {
             this.MacroGui.VariableObjArr := this.VariableObjArr
             this.MacroGui.SureFocusCon := this.FocusCon
     
-            ParentTile := StrReplace(this.Gui.Title, "编辑器", "")
+            ParentTile := StrReplace(this.Gui.Title, GetLang("编辑器"), "")
             this.MacroGui.ParentTile := ParentTile "-"
         }
         this.MacroGui.SureBtnAction := (command) => this.OnFalseMacroBtnClick(command)

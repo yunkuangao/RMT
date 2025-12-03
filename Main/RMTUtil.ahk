@@ -48,6 +48,7 @@ OnSaveSetting(*) {
     IniWrite(ToolCheckInfo.RecordJoyInterval, IniFile, IniSection, "RecordJoyInterval")
     IniWrite(ToolCheckInfo.OCRTypeCtrl.Value, IniFile, IniSection, "OCRType")
     IniWrite(MySoftData.TabCtrl.Value, IniFile, IniSection, "TableIndex")
+    IniWrite(MySoftData.LangCtrl.Text, IniFile, IniSection, "Lang")
     IniWrite(MySoftData.FontTypeCtrl.Text, IniFile, IniSection, "FontType")
     IniWrite(MySoftData.MacroTotalCount, IniFile, IniSection, "MacroTotalCount")
     IniWrite(MySoftData.LastShowMonth, IniFile, IniSection, "LastShowMonth")

@@ -123,6 +123,7 @@ class FolderPackager {
                 MsgBox("请在完善使用说明&署名文件后，导出上传配置")
                 return false
             }
+            break
         }
         DirDelete(tempPath, true)
         return true

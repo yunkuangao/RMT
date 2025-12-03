@@ -36,7 +36,7 @@ class BGKeyGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile "后台按键编辑器")
+        MyGui := Gui(,this.ParentTile GetLang("后台按键编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
@@ -46,41 +46,41 @@ class BGKeyGui {
         con.Enabled := false
 
         PosX += 30
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 80), "模拟指令")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{}", PosX, PosY - 5, 80), GetLang("模拟指令"))
         btnCon.OnEvent("Click", (*) => this.TriggerMacro())
 
         PosX += 200
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "键盘按键检测：")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("键盘按键检测："))
 
         PosX += 120
         this.HotkeyCon := MyGui.Add("Hotkey", Format("x{} y{} w140", PosX, PosY - 3))
 
         PosX += 150
-        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), "确定")
+        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), GetLang("确定"))
         con.OnEvent("Click", (*) => this.OnSureHotkey())
 
         PosX += 90
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), "窗口信息:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75),  GetLang("窗口信息:"))
         PosX += 75
         this.FrontCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 3, 190), "")
 
         PosX += 200
-        btnCon := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), "编辑")
+        btnCon := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), GetLang("编辑"))
         btnCon.OnEvent("Click", this.OnClickEditBtn.Bind(this))
 
         PosX += 100
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), "备注:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), GetLang("备注:"))
         PosX += 50
         this.RemarkCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 5, 150), "")
 
         PosY += 30
         PosX := 10
-        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 1250, 300), "请从下面按钮中选择按键：")
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 1250, 300), GetLang("请从下面按钮中选择按键："))
         PosX := 20
         PosY += 20
         {
 
-            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "键盘")
+            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("请从下面按钮中选择按键："))
 
             PosX := 20
             PosY += 20
@@ -631,123 +631,123 @@ class BGKeyGui {
 
             PosY += 30
             PosX := 20
-            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "多媒体键")
+            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("多媒体键"))
 
             PosY += 20
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "后退")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("后退"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Browser_Back"))
             this.ConMap.Set("Browser_Back", con)
 
             PosX += 60
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "前进")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("前进"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Browser_Forward"))
             this.ConMap.Set("Browser_Forward", con)
 
             PosX += 60
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "刷新")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("刷新"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Browser_Refresh"))
             this.ConMap.Set("Browser_Refresh", con)
 
             PosX += 60
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "停止")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("停止"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Browser_Stop"))
             this.ConMap.Set("Browser_Stop", con)
 
             PosX += 60
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "搜索")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("搜索"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Browser_Search"))
             this.ConMap.Set("Browser_Search", con)
 
             PosX += 60
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "收藏夹")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("收藏夹"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Browser_Favorites"))
             this.ConMap.Set("Browser_Favorites", con)
 
             PosX += 75
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "主页")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("主页"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Browser_Home"))
             this.ConMap.Set("Browser_Home", con)
 
             PosX += 60
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "静音")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("静音"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Volume_Mute"))
             this.ConMap.Set("Volume_Mute", con)
 
             PosX += 60
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "调低音量")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("调低音量"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Volume_Down"))
             this.ConMap.Set("Volume_Down", con)
 
             PosX += 90
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "增加音量")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("增加音量"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Volume_Up"))
             this.ConMap.Set("Volume_Up", con)
 
             PosX += 90
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "下一首")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("下一首"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Media_Next"))
             this.ConMap.Set("Media_Next", con)
 
             PosX += 75
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "上一首")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("上一首"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Media_Prev"))
             this.ConMap.Set("Media_Prev", con)
 
             PosX += 75
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "停止")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("上一首"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Media_Stop"))
             this.ConMap.Set("Media_Stop", con)
 
             PosX += 60
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "播放/暂停")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("播放/暂停"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Media_Play_Pause"))
             this.ConMap.Set("Media_Play_Pause", con)
 
             PosX += 90
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "此电脑")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("此电脑"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Launch_App1"))
             this.ConMap.Set("Launch_App1", con)
 
             PosX += 75
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "计算器")
+            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("计算器"))
             con.OnEvent("Click", (*) => this.OnCheckedKey("Launch_App2"))
             this.ConMap.Set("Launch_App2", con)
         }
 
         PosY += 40
         PosX := 100
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), "类型:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), GetLang("类型:"))
         PosX += 50
-        this.KeyTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{} h{}", PosX, PosY - 3, 80, 100), ["按下",
-            "松开", "点击"])
+        this.KeyTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{} h{}", PosX, PosY - 3, 80, 100), GetLangArr(["按下",
+            "松开", "点击"]))
         this.KeyTypeCon.OnEvent("Change", (*) => this.OnChangeEditValue())
         this.KeyTypeCon.Value := 1
 
         PosX += 130
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 90), "点击时长:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 90), GetLang("点击时长:"))
         PosX += 70
         this.HoldTimeCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 50), 50)
         this.HoldTimeCon.OnEvent("Change", (*) => this.OnChangeEditValue())
 
         PosX += 130
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 90), "点击次数:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 90), GetLang("点击次数:"))
         PosX += 70
         this.KeyCountCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 50), 1)
         this.KeyCountCon.OnEvent("Change", (*) => this.OnChangeEditValue())
 
         PosX += 130
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 90), "每次间隔:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 90), GetLang("每次间隔:"))
         PosX += 70
         this.PerIntervalCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 50), 100)
         this.PerIntervalCon.OnEvent("Change", (*) => this.OnChangeEditValue())
 
         PosY += 40
         PosX := 300
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "清空")
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("清空"))
         btnCon.OnEvent("Click", (*) => this.ClearCheckedBox())
 
         PosX += 450
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "确定")
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("确定"))
         btnCon.OnEvent("Click", (*) => this.OnSureBtnClick())
 
         MyGui.Show(Format("w{} h{}", 1280, 440))
@@ -799,17 +799,17 @@ class BGKeyGui {
 
     CheckIfValid() {
         if (this.FrontCon.Value == "" || this.FrontCon.Value == "⎖⎖⎖") {
-            MsgBox("请编辑窗口信息")
+            MsgBox(GetLang("请编辑窗口信息"))
             return false
         }
 
         if (this.CheckedBox == "" || this.CheckedBox.Length == 0) {
-            MsgBox("请选择按键！")
+            MsgBox(GetLang("请选择按键！"))
             return false
         }
 
         if (!IsInteger(this.KeyCountCon.Value) || Integer(this.KeyCountCon.Value) <= 0) {
-            MsgBox("按键次数必须为大于零的整数！")
+            MsgBox(GetLang("按键次数必须为大于零的整数！"))
             return false
         }
 
