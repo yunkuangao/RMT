@@ -52,18 +52,18 @@ class VariableListenGui {
     }
 
     AddGui() {
-        MyGui := Gui(, "变量监视器")
+        MyGui := Gui(, GetLang("变量监视器"))
         this.Gui := MyGui
         MyGui.SetFont("S11 W550 Q2", MySoftData.FontType)
 
         PosX := 10
         PosY := 10
-        this.TopCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "窗口置顶")
+        this.TopCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("窗口置顶"))
         this.TopCon.OnEvent("Click", this.OnTogTop.Bind(this))
 
         PosX := 10
         PosY += 30
-        this.LVCon := MyGui.Add("ListView", Format("x{} y{} w350 h250 -LV0x10 NoSort Sort", PosX, PosY), ["变量名", "变量值"])
+        this.LVCon := MyGui.Add("ListView", Format("x{} y{} w350 h250 -LV0x10 NoSort Sort", PosX, PosY), GetLangArr(["变量名", "变量值"]))
         ; 设置列宽（单位：px）
         this.LVCon.ModifyCol(1, 120) ; 第一列宽度
         this.LVCon.ModifyCol(2, 205) ; 自动填充剩余宽度
@@ -83,7 +83,7 @@ class VariableListenGui {
     }
 
     OnDoubleClick(LV, RowNumber, *) {
-        newValue := InputBox("请输入新的变量值：", "修改", "w300 h100")
+        newValue := InputBox(GetLang("请输入新的变量值："), "修改", "w300 h100")
 
         ; 检查用户是否取消输入
         if newValue.Result = "Cancel"

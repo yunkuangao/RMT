@@ -31,43 +31,43 @@ class VariableGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile "变量编辑器")
+        MyGui := Gui(,this.ParentTile GetLang("变量编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
         PosX := 10
         PosY := 10
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), "备注:")
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), GetLang("备注:"))
         PosX += 50
         this.RemarkCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 5, 150), "")
 
         PosX := 20
         PosY += 30
-        this.IsIgnoreExistCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY, 150), "变量存在忽略操作")
+        this.IsIgnoreExistCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY, 150), GetLang("变量存在忽略操作"))
 
         {
             PosX := 10
             PosY += 25
-            MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 660, 180), "变量：")
+            MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 660, 180), GetLang("变量："))
 
             PosX := 11
             PosY += 20
-            MyGui.Add("Text", Format("x{} y{} w{} h{} Center", PosX, PosY, 50, 20), "开关")
+            MyGui.Add("Text", Format("x{} y{} w{} h{} Center", PosX, PosY, 50, 20), GetLang("开关"))
 
             PosX += 50
-            MyGui.Add("Text", Format("x{} y{} w{} h{} Center", PosX, PosY, 80, 20), "变量名")
+            MyGui.Add("Text", Format("x{} y{} w{} h{} Center", PosX, PosY, 80, 20), GetLang("变量名"))
 
             PosX += 125
-            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "操作类型")
+            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("操作类型"))
 
             PosX += 110
-            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "选择/输入")
+            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("选择/输入"))
 
             PosX += 110
-            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "最小值选择/输入")
+            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("最小值选择/输入"))
 
             PosX += 130
-            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), "最大值选择/输入")
+            MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("最大值选择/输入"))
 
             PosX := 10
             PosY += 20
@@ -80,8 +80,8 @@ class VariableGui {
             this.VariableConArr.Push(con)
 
             PosX += 125
-            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), ["数值", "随机数值", "字符",
-                "删除"])
+            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), GetLangArr(["数值", "随机数值", "字符",
+                "删除"]))
             con.OnEvent("Change", (*) => this.OnRefresh())
             this.OperaTypeConArr.Push(con)
 
@@ -108,8 +108,8 @@ class VariableGui {
             this.VariableConArr.Push(con)
 
             PosX += 125
-            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), ["数值", "随机数值", "字符",
-                "删除"])
+            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), GetLangArr(["数值", "随机数值", "字符",
+                "删除"]))
             con.OnEvent("Change", (*) => this.OnRefresh())
             this.OperaTypeConArr.Push(con)
 
@@ -136,8 +136,8 @@ class VariableGui {
             this.VariableConArr.Push(con)
 
             PosX += 125
-            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), ["数值", "随机数值", "字符",
-                "删除"])
+            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), GetLangArr(GetLangArr(["数值", "随机数值", "字符",
+                "删除"])))
             con.OnEvent("Change", (*) => this.OnRefresh())
             this.OperaTypeConArr.Push(con)
 
@@ -164,8 +164,8 @@ class VariableGui {
             this.VariableConArr.Push(con)
 
             PosX += 125
-            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), ["数值", "随机数值", "字符",
-                "删除"])
+            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), GetLangArr(["数值", "随机数值", "字符",
+                "删除"]))
             con.OnEvent("Change", (*) => this.OnRefresh())
             this.OperaTypeConArr.Push(con)
 
@@ -184,7 +184,7 @@ class VariableGui {
 
         PosY += 50
         PosX := 290
-        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{} Center", PosX, PosY, 100, 40), "确定")
+        btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{} Center", PosX, PosY, 100, 40), GetLang("确定"))
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
         MyGui.Show(Format("w{} h{}", 680, 320))
@@ -241,7 +241,7 @@ class VariableGui {
         loop 4 {
             if (this.ToggleConArr[A_Index].Value) {
                 if (IsNumber(this.VariableConArr[A_Index].Text)) {
-                    MsgBox(Format("{}. 变量名不规范：变量名不能是纯数字", A_Index))
+                    MsgBox(Format(GetLang("{}. 变量名不规范：变量名不能是纯数字"), A_Index))
                     return false
                 }
             }

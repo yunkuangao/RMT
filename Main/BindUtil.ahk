@@ -47,7 +47,7 @@ OnSuspendHotkey(*) {
         TraySetIcon("Images\Soft\rabit.ico")
     }
 
-    tipStr := MySoftData.IsSuspend ? "软件休眠" : "取消软件休眠"
+    tipStr := MySoftData.IsSuspend ? GetLang("软件休眠") : GetLang("取消软件休眠")
     if (MySoftData.CMDTip)
         MyCMDReportAciton(tipStr)
 
@@ -65,7 +65,7 @@ OnPauseHotKey(*) {
         }
     }
 
-    tipStr := MySoftData.IsPause ? "暂停所有宏" : "回复所有暂停"
+    tipStr := MySoftData.IsPause ? GetLang("暂停所有宏") : GetLang("取消所有暂停")
     if (MySoftData.CMDTip)
         MyCMDReportAciton(tipStr)
 
@@ -103,7 +103,7 @@ OnKillAllMacro(*) {
 
     KillSingleTableMacro(MySoftData.SpecialTableItem)
 
-    tipStr := "终止所有宏"
+    tipStr := GetLang("终止所有宏")
     if (MySoftData.CMDTip)
         MyCMDReportAciton(tipStr)
 }

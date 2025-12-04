@@ -18,7 +18,7 @@ ExcelCellToWrite(wbPath, sheetIdentifier, row, col, value) {
         return true
     }
     catch as e {
-        MsgBox "写入失败：" e.Message
+        MsgBox GetLang("写入失败：") e.Message
         return false
     }
     finally {
@@ -57,7 +57,7 @@ ExcelRowToWrite(wbPath, sheetIdentifier, col, value) {
         return true
     }
     catch as e {
-        MsgBox "写入失败：" e.Message
+        MsgBox GetLang("写入失败：") e.Message
         return false
     }
     finally {
@@ -96,7 +96,7 @@ ExcelColToWrite(wbPath, sheetIdentifier, row, value) {
         return true
     }
     catch as e {
-        MsgBox "写入失败：" e.Message
+        MsgBox GetLang("写入失败：") e.Message
         return false
     }
     finally {

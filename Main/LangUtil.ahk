@@ -48,7 +48,7 @@ LangKeysInit() {
 
         file.Close()
     } catch as e {
-        MsgBox "读取文件失败: " e.Message
+        MsgBox GetLang("读取文件失败:") e.Message
     }
 }
 

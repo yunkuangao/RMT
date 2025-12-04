@@ -179,7 +179,7 @@ class LoopGui {
         this.Data := this.GetLoopData(this.SerialStr)
 
         CountVariableArr := this.VariableObjArr.Clone()
-        CountVariableArr.Push(GetLang("无限"))
+        CountVariableArr.Push("无限")
         this.CountCon.Delete()
         this.CountCon.Add(CountVariableArr)
         this.CountCon.Text := this.Data.LoopCount

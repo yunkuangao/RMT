@@ -51,10 +51,14 @@ Persistent
 A_MaxHotkeysPerInterval := 400
 
 global MyvJoy := SuperCvJoyInterface().GetMyvJoy()
-global MySoftData := SoftData()
-global ToolCheckInfo := ToolCheck()
 global MyJoyMacro := JoyMacro()
 global MyMouseInfo := MouseWinData()
+global MySoftData := SoftData()
+global ToolCheckInfo := ToolCheck()
+global IniFile := A_WorkingDir "\Setting\MainSettings.ini"
+global LangDir := A_WorkingDir "\Lang"
+LoadMainSetting()       ;加载配置
+
 global MyTriggerKeyGui := TriggerKeyGui()
 global MyTriggerStrGui := TriggerStrGui()
 global MyEditHotkeyGui := EditHotkeyGui()
@@ -73,8 +77,6 @@ global MyTargetGui := TargetGui()
 global MyMsgboxGui := CustomMsgBoxGui()
 global MyCMDTipSettingGui := CMDTipSettingGui()
 global MyToolRecordSettingGui := ToolRecordSettingGui()
-global IniFile := A_WorkingDir "\Setting\MainSettings.ini"
-global LangDir := A_WorkingDir "\Lang"
 global MySubMacroStopAction := SubMacroStopAction
 global MyTriggerSubMacro := TriggerMacroHandler
 global MySetGlobalVariable := SetGlobalVariable
@@ -87,7 +89,6 @@ global MyMsgBoxContent := MsgBoxContent
 global MyToolTipContent := ToolTipContent
 global MyMacroCount := MacroCount
 
-LoadMainSetting()       ;加载配置
 InitFilePath()          ;初始化文件路径
 LoadCurMacroSetting()   ;加载当前配置宏
 EditListen()        ;右键编辑数据监听

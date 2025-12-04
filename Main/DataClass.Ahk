@@ -333,7 +333,7 @@ class SearchData {
         this.SerialStr := ""
         this.SearchType := 1       ;1 图片  2 颜色  3 文本
         this.SearchColor := "FFFFFF"
-        this.SearchText := "检索文本"
+        this.SearchText := GetLang("检索文本")
         this.SearchImagePath := ""
         this.Similar := 90 ; 图片搜索模糊匹配度100  - 50
         this.OCRType := 1   ;1中文  2英文
@@ -350,12 +350,12 @@ class SearchData {
         this.TrueMacro := ""
         this.FalseMacro := ""
         this.ResultToggle := 0
-        this.ResultSaveName := "搜索结果"
+        this.ResultSaveName := GetLang("搜索结果")
         this.TrueValue := 1
         this.FalseValue := 0
         this.CoordToogle := 0
-        this.CoordXName := "坐标X"
-        this.CoordYName := "坐标Y"
+        this.CoordXName := GetLang("坐标X")
+        this.CoordYName := GetLang("坐标Y")
     }
 
 }
@@ -391,8 +391,8 @@ class CompareProData {
     static GetCondiStr(Data, itemIndex) {
         CommandStr := ""
         symbolStr := Data.LogicTypeArr[itemIndex] == 1 ? "且" : "或"
-        CompareTypeStrArr := ["大于", "大于等于", "等于", "小于等于",
-            "小于", "字符包含", "变量存在"]
+        CompareTypeStrArr := GetLangArr(["大于", "大于等于", "等于", "小于等于",
+            "小于", "字符包含", "变量存在"])
 
         loop Data.VariNameArr[itemIndex].Length {
             VariName := Data.VariNameArr[itemIndex][A_Index]
@@ -436,7 +436,7 @@ class FileData {
 class OutputData {
     __New() {
         this.SerialStr := ""
-        this.Text := "将要输出的文本"
+        this.Text := GetLang("将要输出的文本")
         this.OutputType := 1    ;sendtest  粘贴   粘贴
         this.FilePath := ""
         this.ExcelType := 1     ;1指定单元格    2 行号自增    3 列号自增

@@ -96,19 +96,19 @@ SaveClipToBitmap(filePath) {
     ; 保存位图到文件; 检查剪切板中是否有位图
     if !DllCall("IsClipboardFormatAvailable", "uint", 2)  ; 2 是 CF_BITMAP
     {
-        MsgBox("剪切板中没有位图")
+        MsgBox(GetLang("剪切板中没有位图"))
     }
 
     ; 打开剪切板
     if !DllCall("OpenClipboard", "ptr", 0) {
-        MsgBox("无法打开剪切板")
+        MsgBox(GetLang("无法打开剪切板"))
         return
     }
 
     ; 获取剪切板中的位图句柄
     hBitmap := DllCall("GetClipboardData", "uint", 2, "ptr")  ; 2 是 CF_BITMAP
     if !hBitmap {
-        MsgBox("无法获取位图句柄")
+        MsgBox(GetLang("无法获取位图句柄"))
         DllCall("CloseClipboard")
         return
     }
@@ -119,7 +119,7 @@ SaveClipToBitmap(filePath) {
     ; 创建 GDI+ 位图对象
     pBitmap := Gdip_CreateBitmapFromHBITMAP(hBitmap)
     if !pBitmap {
-        MsgBox("无法创建 GDI+ 位图对象")
+        MsgBox(GetLang("无法创建 GDI+ 位图对象"))
         return
     }
 
@@ -450,7 +450,7 @@ ReadTableItemInfo(index) {
         savedEndTipSoundStr := defaultInfo[11]
 
         defaultFoldInfo := ItemFoldInfo()
-        defaultFoldInfo.RemarkArr := ["RMT默认初始化配置"]
+        defaultFoldInfo.RemarkArr := [GetLang("RMT默认初始化配置")]
         defaultFoldInfo.FrontInfoArr := [""]
         IndexSpanValue := savedModeArrStr == "" ? "无-无" : savedModeArrStr == "1" ? "1-1" : "1-8"
         defaultFoldInfo.IndexSpanArr := [IndexSpanValue]
@@ -558,7 +558,7 @@ GetTableItemDefaultInfo(index) {
         savedHoldTimeArrStr := "500"
         savedModeArrStr := "1"
         savedForbidArrStr := "1"
-        savedRemarkArrStr := "取消禁用配置才能生效"
+        savedRemarkArrStr := GetLang("取消禁用配置才能生效")
         savedLoopCountStr := "1"
         savedTriggerTypeStr := "1"
         savedSerialeArrStr := "000001"
@@ -571,7 +571,7 @@ GetTableItemDefaultInfo(index) {
         savedHoldTimeArrStr := "0"
         savedModeArrStr := "1"
         savedForbidArrStr := "1"
-        savedRemarkArrStr := "按两次a触发"
+        savedRemarkArrStr := GetLang("按两次a触发")
         savedLoopCountStr := "1"
         savedTriggerTypeStr := "1"
         savedSerialeArrStr := "000002"
@@ -598,7 +598,7 @@ GetTableItemDefaultInfo(index) {
         savedHoldTimeArrStr := "500"
         savedModeArrStr := "1"
         savedForbidArrStr := "1"
-        savedRemarkArrStr := "通过定时或宏操作调用"
+        savedRemarkArrStr := GetLang("通过定时或宏操作调用")
         savedLoopCountStr := "1"
         savedTriggerTypeStr := "1"
         savedSerialeArrStr := "000009"
@@ -611,7 +611,7 @@ GetTableItemDefaultInfo(index) {
         savedHoldTimeArrStr := "500"
         savedModeArrStr := "1"
         savedForbidArrStr := "1"
-        savedRemarkArrStr := "只能通过宏操作调用"
+        savedRemarkArrStr := GetLang("只能通过宏操作调用")
         savedLoopCountStr := "1"
         savedTriggerTypeStr := "1"
         savedSerialeArrStr := "0000010"
@@ -624,7 +624,7 @@ GetTableItemDefaultInfo(index) {
         savedHoldTimeArrStr := "500"
         savedModeArrStr := "1"
         savedForbidArrStr := "1"
-        savedRemarkArrStr := "将l按键替换成其他按键"
+        savedRemarkArrStr := GetLang("将l按键替换成其他按键")
         savedTriggerTypeStr := "1"
         savedLoopCountStr := "1"
         savedSerialeArrStr := "000011"
@@ -834,7 +834,7 @@ GetItemSaveCountValue(tableIndex, Index) {
     itemtable := MySoftData.TableInfo[tableIndex]
     if (itemtable.LoopCountConArr.Length >= Index) {
         value := itemtable.LoopCountConArr[Index].Text
-        if (value == "无限")
+        if (value == GetLang("无限"))
             return -1
         if (IsInteger(value)) {
             if (Integer(value) < 0)
@@ -1400,7 +1400,7 @@ TryGetVariableValue(&Value, tableItem, index, variableName, variTip := true) {
 
 ShowNoVariableTip(variableName) {
     if (MySoftData.NoVariableTip)
-        MsgBox("当前环境不存在变量 " variableName)
+        MsgBox(GetLang("当前环境不存在变量") variableName)
 }
 
 GetSerialStr(CmdStr) {

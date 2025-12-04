@@ -70,27 +70,27 @@ OnSaveSetting(*) {
 
 CheckFloatSettingValid() {
     if (IsFloat(MySoftData.HoldFloatCtrl.Value)) {
-        MsgBox("按住时间浮动值只能是整数")
+        MsgBox(GetLang("按住时间浮动值只能是整数"))
         return false
     }
 
     if (IsFloat(MySoftData.PreIntervalFloatCtrl.Value)) {
-        MsgBox("每次间隔浮动值只能是整数")
+        MsgBox(GetLang("每次间隔浮动值只能是整数"))
         return false
     }
 
     if (IsFloat(MySoftData.IntervalFloatCtrl.Value)) {
-        MsgBox("间隔指令浮动值只能是整数")
+        MsgBox(GetLang("间隔指令浮动值只能是整数"))
         return false
     }
 
     if (IsFloat(MySoftData.CoordXFloatCon.Value)) {
-        MsgBox("坐标X浮动值只能是整数")
+        MsgBox(GetLang("坐标X浮动值只能是整数"))
         return false
     }
 
     if (IsFloat(MySoftData.CoordYFloatCon.Value)) {
-        MsgBox("坐标Y浮动值只能是整数")
+        MsgBox(GetLang("坐标Y浮动值只能是整数"))
         return false
     }
 
@@ -194,7 +194,7 @@ InitFilePath() {
     filePath := A_WorkingDir "\Setting\" MySoftData.CurSettingName "\使用说明&署名.txt"
     if (!FileExist(filePath)) {
         FileAppend(
-            "(请在导出配置前，务必完善操作说明，该文件目录可下增加图片解释说明)[上传导出前请删除此行，否则判定没有完善使用说明]`n资源名称：`n`n原作者：`n联系方式：(QQ或电话，仅用于告知您需要调整的地方)`n功能：`n   `n操作说明：`n   `n协议：CC BY - NC - SA 4.0`n原始来源：RMT(若梦兔) 软件导出`n说明：仅限非商业用途，转载请注明来源并保持相同协议 `n",
+            GetLang("(请在导出配置前，务必完善操作说明，该文件目录可下增加图片解释说明)[上传导出前请删除此行，否则判定没有完善使用说明]`n资源名称：`n`n原作者：`n联系方式：(QQ或电话，仅用于告知您需要调整的地方)`n功能：`n   `n操作说明：`n   `n协议：CC BY - NC - SA 4.0`n原始来源：RMT(若梦兔) 软件导出`n说明：仅限非商业用途，转载请注明来源并保持相同协议 `n"),
             filePath, "UTF-8")
     }
 
@@ -547,7 +547,7 @@ OnGetSelectAreaUp(key, *) {
 TogSelectArea(isEnable, action := "") {
     if (isEnable && action != "") {
         MySoftData.SelectAreaAction := action
-        ToolTipContent("请框选截图范围")
+        ToolTipContent(GetLang("请框选截图范围"))
         actionDown := OnBindKeyDown.Bind("LButton")
         Hotkey("LButton", actionDown)
     }

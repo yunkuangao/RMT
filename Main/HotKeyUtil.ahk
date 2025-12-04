@@ -1073,7 +1073,7 @@ MenuReload(*) {
 
 OnToolTextFilterSelectImage(*) {
     global ToolCheckInfo
-    path := FileSelect(, , "选择图片")
+    path := FileSelect(, , GetLang("选择图片"))
     if (path == "")
         return
     ocr := ToolCheckInfo.OCRTypeCtrl.Value == 1 ? MyChineseOcr : MyEnglishOcr
@@ -1311,12 +1311,12 @@ SendLogicKey(Key, state, tableItem, index) {
 
 SendJoyBtnClick(KeyArrStr, holdTime, tableItem, index, keyType) {
     if (!CheckIfInstallVjoy()) {
-        MsgBox("使用手柄功能前,请先安装Joy目录下的vJoy驱动!")
+        MsgBox(GetLang("使用手柄功能前,请先安装Joy目录下的vJoy驱动!"))
         return
     }
 
     if (Type(MyvJoy) == "String") {
-        MsgBox("vjoy加载失败，请安装或卸载后重新安装vjoy，然后尝试使用手柄功能")
+        MsgBox(GetLang("vjoy加载失败，请安装或卸载后重新安装vjoy，然后尝试使用手柄功能"))
         return
     }
 
@@ -1354,12 +1354,12 @@ SendJoyBtnKey(key, state, tableItem, index) {
 
 SendJoyAxisClick(KeyArrStr, holdTime, tableItem, index, keyType) {
     if (!CheckIfInstallVjoy()) {
-        MsgBox("使用手柄功能前,请先安装Joy目录下的vJoy驱动!")
+        MsgBox(GetLang("使用手柄功能前,请先安装Joy目录下的vJoy驱动!"))
         return
     }
 
     if (Type(MyvJoy) == "String") {
-        MsgBox("vjoy加载失败，请安装或卸载后重新安装vjoy，然后尝试使用手柄功能")
+        MsgBox(GetLang("vjoy加载失败，请安装或卸载后重新安装vjoy，然后尝试使用手柄功能"))
         return
     }
 

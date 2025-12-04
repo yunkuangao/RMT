@@ -4,7 +4,7 @@ class FolderPackager {
     ; 打包文件夹为二进制文件
     static PackFolder(folderPath, outputFile) {
         if !DirExist(folderPath)
-            throw Error("文件夹不存在: " folderPath)
+            throw Error(GetLang("文件夹不存在:") folderPath)
 
         ; 获取所有文件列表
         files := this._GetAllFiles(folderPath)
@@ -43,7 +43,7 @@ class FolderPackager {
 
         ; 保存到文件
         FileOpen(outputFile, "w").RawWrite(mainBuffer)
-        MsgBox("打包完成:" outputFile)
+        MsgBox(GetLang("打包完成:") outputFile)
 
         return true
     }
@@ -51,10 +51,10 @@ class FolderPackager {
     ; 解包二进制文件为文件夹
     static UnpackFile(packedFile, outputFolder, callback := "") {
         if !FileExist(packedFile)
-            throw Error("打包文件不存在:" packedFile)
+            throw Error(GetLang("打包文件不存在:") packedFile)
 
         if callback
-            callback("开始解包文件:" packedFile)
+            callback(GetLang("开始解包文件:") packedFile)
 
         ; 读取二进制数据 - 修正这里
         file := FileOpen(packedFile, "r")
@@ -64,12 +64,12 @@ class FolderPackager {
         file.Close()
 
         if bytesRead != fileSize
-            throw Error("文件读取不完整，期望 " fileSize " 字节，实际读取 " bytesRead " 字节")
+            throw Error(GetLang("文件读取不完整，期望") fileSize GetLang("字节，实际读取") bytesRead GetLang("字节"))
 
         ; 解析文件头
         headerInfo := this._ParseHeader(data)
         if !headerInfo
-            throw Error("无效的打包文件格式")
+            throw Error(GetLang("无效的打包文件格式"))
 
         pos := headerInfo.endPos
         totalSize := data.Size
@@ -114,13 +114,13 @@ class FolderPackager {
         tempPath := outputFolder := A_WorkingDir "\Temp"
         FolderPackager.UnpackFile(selectedFile, tempPath)
         if (!FileExist(tempPath "\使用说明&署名.txt")) {
-            MsgBox("使用说明&署名文件不存在，请再完善使用说明&署名文件后，导出上传配置")
+            MsgBox(GetLang("使用说明&署名文件不存在，请再完善使用说明&署名文件后，导出上传配置"))
             return false
         }
 
         loop read, tempPath "\使用说明&署名.txt" {
-            if (A_LoopReadLine == "(请在导出配置前，务必完善操作说明，该文件目录可下增加图片解释说明)[上传导出前请删除此行，否则判定没有完善使用说明]") {
-                MsgBox("请在完善使用说明&署名文件后，导出上传配置")
+            if (A_LoopReadLine == GetLang("(请在导出配置前，务必完善操作说明，该文件目录可下增加图片解释说明)[上传导出前请删除此行，否则判定没有完善使用说明]")) {
+                MsgBox(GetLang("请在完善使用说明&署名文件后，导出上传配置"))
                 return false
             }
             break

@@ -29,95 +29,95 @@ class SettingMgrGui {
     }
 
     AddGui() {
-        MyGui := Gui(, "配置管理编辑器")
+        MyGui := Gui(, GetLang("配置管理编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S11 W550 Q2", MySoftData.FontType)
 
         PosX := 20
         PosY := 10
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "所有配置：")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("所有配置："))
 
         PosX := 330
-        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), "配置迁移")
+        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), GetLang("配置迁移"))
         con.OnEvent("Click", this.OnReplaceBtnClick.Bind(this))
 
         PosX := 20
         PosY += 35
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "当前配置：")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("当前配置："))
 
         PosX += 70
         this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 130), "")
 
         PosX := 265
-        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), "重命名")
+        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), GetLang("重命名"))
         con.OnEvent("Click", this.OnReNameBtnClick.Bind(this))
 
         PosX := 330
-        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), "配置校准")
+        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), GetLang("配置校准"))
         con.OnEvent("Click", this.OnRepairBtnClick.Bind(this))
 
         PosX := 20
         PosY += 35
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "仓库配置：")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("仓库配置："))
 
         PosX := 250
-        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), "打开仓库")
+        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), GetLang("打开仓库"))
         con.OnEvent("Click", this.OnOpenRMTSettingBtnClick.Bind(this))
 
         PosX := 330
-        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), "共享上传")
+        con := MyGui.Add("Button", Format("x{} y{}", PosX, PosY - 5), GetLang("共享上传"))
         con.OnEvent("Click", this.OnRMTUploadBtnClick.Bind(this))
 
         PosX := 10
         PosY += 35
-        MyGui.Add("GroupBox", Format("x{} y{} w400 h150", PosX, PosY), "配置操作")
+        MyGui.Add("GroupBox", Format("x{} y{} w400 h150", PosX, PosY), GetLang("配置操作"))
 
         PosX := 70
         PosY += 30
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "配置选项：")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("配置选项："))
 
         PosX += 80
         this.OperSettingCon := MyGui.Add("DropDownList", Format("x{} y{} w{} R5", PosX, PosY - 3, 200), [])
 
         PosX := 80
         PosY += 35
-        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "加载配置")
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), GetLang("加载配置"))
         con.OnEvent("Click", this.OnLoadBtnClick.Bind(this))
 
         PosX := 260
-        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "删除配置")
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), GetLang("删除配置"))
         con.OnEvent("Click", this.OnDelBtnClick.Bind(this))
 
         PosX := 80
         PosY += 40
-        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "使用说明")
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), GetLang("使用说明"))
         con.OnEvent("Click", this.OnCourseBtnClick.Bind(this))
 
         PosX := 260
-        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "导出配置")
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), GetLang("导出配置"))
         con.OnEvent("Click", this.OnPackBtnClick.Bind(this))
 
         PosX := 10
         PosY += 55
-        MyGui.Add("GroupBox", Format("x{} y{} w400 h100", PosX, PosY), "新增配置操作")
+        MyGui.Add("GroupBox", Format("x{} y{} w400 h100", PosX, PosY), GetLang("新增配置操作"))
 
         PosX := 70
         PosY += 25
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "新配置名：")
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("新配置名："))
 
         PosX += 80
         this.OperNameEditCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 3, 200), "")
         PosX := 40
         PosY += 30
-        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "新增配置")
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), GetLang("新增配置"))
         con.OnEvent("Click", this.OnAddBtnClick.Bind(this))
 
         PosX := 160
-        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "导入配置")
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), GetLang("导入配置"))
         con.OnEvent("Click", this.OnUnpackBtnClick.Bind(this))
 
         PosX := 280
-        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), "复制配置")
+        con := MyGui.Add("Button", Format("x{} y{} w100", PosX, PosY), GetLang("复制配置"))
         con.OnEvent("Click", this.OnCopyBtnClick.Bind(this))
 
         MyGui.Show(Format("w{} h{}", 420, 390))
@@ -125,7 +125,7 @@ class SettingMgrGui {
 
     OnReNameBtnClick(*) {
         ; 显示输入框让用户输入新文件名
-        newFileName := InputBox("请输入新的配置名：", "重命名", "w300 h100")
+        newFileName := InputBox(GetLang("请输入新的配置名："), GetLang("重命名"), "w300 h100")
 
         ; 检查用户是否取消输入
         if newFileName.Result = "Cancel" || newFileName.Value = ""
@@ -153,18 +153,18 @@ class SettingMgrGui {
 
         RepairPath(MySoftData.CurSettingName, SearchFile, 1)
         RepairPath(MySoftData.CurSettingName, SearchProFile, 1)
-        MsgBox("重命名成功")
+        MsgBox(GetLang("重命名成功"))
         Reload()
     }
 
     OnReplaceBtnClick(*) {
         SelectedFolder := DirSelect(, 0,
-            "请选择若梦兔软件下Setting配置文件。`n将清空当前软件的所有配置，并把所选文件中的配置迁移导入本软件。`n为了避免数据丢失，请务必提前备份现有配置。")
+            GetLang("请选择若梦兔软件下Setting配置文件。`n将清空当前软件的所有配置，并把所选文件中的配置迁移导入本软件。`n为了避免数据丢失，请务必提前备份现有配置。"))
         if SelectedFolder == ""  ; 用户取消了选择
             return
         SplitPath SelectedFolder, &name, &dir, &ext, &name_no_ext, &drive
         if (name != "Setting" || name_no_ext != "Setting") {
-            MsgBox("需要选择若梦兔软件下的Setting文件")
+            MsgBox(GetLang("需要选择若梦兔软件下的Setting文件"))
             return
         }
         CurSettingDir := A_WorkingDir "\Setting"
@@ -175,12 +175,12 @@ class SettingMgrGui {
                 this.OnRepairSetting(A_LoopFilePath)
             }
         } catch as e {
-            MsgBox("迁移失败: " e.Message, "错误", 0x10)
+            MsgBox(GetLang("迁移失败: ") e.Message, GetLang("错误"), 0x10)
             return
         }
 
         IniWrite(true, IniFile, IniSection, "IsReload")
-        MsgBox("配置迁移成功")
+        MsgBox(GetLang("配置迁移成功"))
         Reload()
     }
 
@@ -192,7 +192,7 @@ class SettingMgrGui {
         }
         else {
             tipStr := (
-                "未发现需要修复的内容`n重要须知：`n- 针对覆盖配置文件后，搜索图片的配置路径矫正`n- 低版本配置到高版本时，进行兼容适配升级`n"
+                GetLang("未发现需要修复的内容`n重要须知：`n- 针对覆盖配置文件后，搜索图片的配置路径矫正`n- 低版本配置到高版本时，进行兼容适配升级`n")
             )
             MsgBox(tipStr)
         }
@@ -205,28 +205,28 @@ class SettingMgrGui {
     OnRMTUploadBtnClick(*) {
         IsForbid := RMT_Http.IsForbid()
         if (IsForbid) {
-            MsgBox("因为以下原因配置无法上传：`n服务器没有启动`n今日上传次数太多")
+            MsgBox(GetLang("因为以下原因配置无法上传：`n服务器没有启动`n今日上传次数太多"))
             return
         }
-        selectedFile := FileSelect(1, , "选择要共享上传的 RMT 文件", "RMT Files (*.rmt)")
+        selectedFile := FileSelect(1, , GetLang("选择要共享上传的 RMT 文件"), "RMT Files (*.rmt)")
         if selectedFile == ""  ; 用户取消了选择
             return
 
         SplitPath selectedFile, &fileName, , &fileExt, &fileNameNoExt
         ; 检查文件扩展名
         if fileExt != "rmt" {
-            MsgBox("请选择 .rmt 文件！", "错误", 0x10)
+            MsgBox(GetLang("请选择 .rmt 文件！"), GetLang("错误"), 0x10)
             return
         }
 
-        if (fileNameNoExt == "RMT默认配置") {
-            MsgBox("请重命名配置文件后再上传（配置名需要与功能相关）")
+        if (fileNameNoExt == GetLang("RMT默认配置")) {
+            MsgBox(GetLang("请重命名配置文件后再上传（配置名需要与功能相关）"))
             return
         }
 
         isVaild := this.IsValidFolderName(fileNameNoExt)
         if (!isVaild) {
-            MsgBox("配置名不符合文件目录命名规则，请修改")
+            MsgBox(GetLang("配置名不符合文件目录命名规则，请修改"))
             return
         }
 
@@ -246,27 +246,27 @@ class SettingMgrGui {
 
     OnUnpackBtnClick(*) {
         ; 选择 .rmt 文件
-        selectedFile := FileSelect(1, , "选择要导入的 RMT 文件", "RMT Files (*.rmt)")
+        selectedFile := FileSelect(1, , GetLang("选择要导入的 RMT 文件"), "RMT Files (*.rmt)")
         if selectedFile == ""  ; 用户取消了选择
             return
 
         SplitPath selectedFile, &fileName, , &fileExt, &fileNameNoExt
         ; 检查文件扩展名
         if fileExt != "rmt" {
-            MsgBox("请选择 .rmt 文件！", "错误", 0x10)
+            MsgBox(GetLang("请选择 .rmt 文件！"), GetLang("错误"), 0x10)
             return
         }
 
         isVaild := this.IsValidFolderName(fileNameNoExt)
         if (!isVaild) {
-            MsgBox("配置名不符合文件目录命名规则，请修改")
+            MsgBox(GetLang("配置名不符合文件目录命名规则，请修改"))
             return false
         }
 
         LoadType := 1   ;增加导入 覆盖导入 自增导入
         for settingName in this.SettingList {
             if (fileNameNoExt == settingName) {
-                SelectType := CustomMsgBox("配置已存在，请选择导入方式：", "配置导入选项", "覆盖导入|自增导入|取消导入")
+                SelectType := CustomMsgBox(GetLang("配置已存在，请选择导入方式："), GetLang("配置导入选项"), GetLang("覆盖导入|自增导入|取消导入"))
                 if (SelectType == 0 || SelectType == 3)
                     return
 
@@ -294,10 +294,10 @@ class SettingMgrGui {
             MySoftData.CurSettingName := fileNameNoExt
             IniWrite(MySoftData.CurSettingName, IniFile, IniSection, "CurSettingName")
             IniWrite(true, IniFile, IniSection, "IsReload")
-            MsgBox(fileNameNoExt " 配置导入成功")
+            MsgBox(fileNameNoExt GetLang("配置导入成功"))
             Reload()
         } catch as e {
-            MsgBox("解包失败: " e.Message, "错误", 0x10)
+            MsgBox(GetLang("解包失败: ") e.Message, GetLang("错误"), 0x10)
         }
     }
 
@@ -314,16 +314,16 @@ class SettingMgrGui {
         if (FileExist(filePath))
             Run filePath
         else
-            MsgBox(filePath "说明文件不存在")
+            MsgBox(filePath GetLang("说明文件不存在"))
     }
 
     OnDelBtnClick(*) {
         if (this.OperSettingCon.Text == MySoftData.CurSettingName) {
-            MsgBox("不可删除当前配置")
+            MsgBox(GetLang("不可删除当前配置"))
             return
         }
 
-        result := MsgBox(Format("是否删除{}配置", this.OperSettingCon.Text), "提示", 1)
+        result := MsgBox(Format(GetLang("是否删除{}配置"), this.OperSettingCon.Text), GetLang("提示"), 1)
         if (result == "Cancel")
             return
 
@@ -339,7 +339,7 @@ class SettingMgrGui {
         SettingArrStr := RTrim(SettingArrStr, "π")
         MySoftData.SettingArrStr := SettingArrStr
         IniWrite(MySoftData.SettingArrStr, IniFile, IniSection, "SettingArrStr")
-        MsgBox("删除配置: " this.OperSettingCon.Text)
+        MsgBox(GetLang("删除配置: ") this.OperSettingCon.Text)
         this.Refresh()
     }
 
@@ -353,7 +353,7 @@ class SettingMgrGui {
 
         MySoftData.SettingArrStr .= "π" this.OperNameEditCon.Value
         IniWrite(MySoftData.SettingArrStr, IniFile, IniSection, "SettingArrStr")
-        MsgBox("成功新增配置：" this.OperNameEditCon.Value)
+        MsgBox(GetLang("成功新增配置：") this.OperNameEditCon.Value)
         Reload()
     }
 
@@ -368,7 +368,7 @@ class SettingMgrGui {
         DirCopy(SourcePath, DestPath, 1)
         RepairPath(this.OperNameEditCon.Value, SearchFile, 1)
         RepairPath(this.OperNameEditCon.Value, SearchProFile, 1)
-        MsgBox(Format("成功复制<{}>配置到<{}>中", MySoftData.CurSettingName, this.OperNameEditCon.Value))
+        MsgBox(Format(GetLang("成功复制<{}>配置到<{}>中"), MySoftData.CurSettingName, this.OperNameEditCon.Value))
 
         MySoftData.CurSettingName := this.OperNameEditCon.Value
         IniWrite(MySoftData.CurSettingName, IniFile, IniSection, "CurSettingName")
@@ -388,13 +388,13 @@ class SettingMgrGui {
     CheckIfExistAndValid(FileName) {
         isVaild := this.IsValidFolderName(FileName)
         if (!isVaild) {
-            MsgBox("配置名不符合文件目录命名规则，请修改")
+            MsgBox(GetLang("配置名不符合文件目录命名规则，请修改"))
             return false
         }
 
         for settingName in this.SettingList {
             if (FileName == settingName) {
-                MsgBox("配置名已存在")
+                MsgBox(GetLang("配置名已存在"))
                 return false
             }
         }
@@ -404,13 +404,13 @@ class SettingMgrGui {
     IsValidName() {
         isVaild := this.IsValidFolderName(this.OperNameEditCon.Value)
         if (!isVaild) {
-            MsgBox("新配置名不符合文件目录命名规则，请修改新配置名")
+            MsgBox(GetLang("新配置名不符合文件目录命名规则，请修改新配置名"))
             return false
         }
 
         for settingName in this.SettingList {
             if (this.OperNameEditCon.Value == settingName) {
-                MsgBox("配置已存在，新增配置失败！！！")
+                MsgBox(GetLang("配置已存在，新增配置失败！！！"))
                 return false
             }
         }

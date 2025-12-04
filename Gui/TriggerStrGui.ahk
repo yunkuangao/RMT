@@ -31,7 +31,7 @@ class TriggerStrGui {
         if (this.SettingTipCon == "")
             return
 
-        tipStr := "当前配置的触发字串为："
+        tipStr := GetLang("当前配置的触发字串为：")
         tipStr .= this.GetTriggerStr()
         this.SettingTipCon.Value := tipStr
         this.IsEndCharCon.Value := this.IsEndChar
@@ -88,10 +88,10 @@ class TriggerStrGui {
 
     AddGui() {
         {
-            MyGui := Gui(, "字串触发编辑器")
+            MyGui := Gui(, GetLang("字串触发编辑器"))
             this.Gui := MyGui
             MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
-            MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", 10, 10, 1120, 230), "请从下面字符中组合你想要触发宏的字串：")
+            MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", 10, 10, 1120, 230), GetLang("请从下面字符中组合你想要触发宏的字串："))
 
             PosX := 20
             PosY := 40
@@ -422,54 +422,54 @@ class TriggerStrGui {
 
         PosY += 50
         PosX := 20
-        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 120), "终止符")
+        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 120), GetLang("终止符"))
         con.OnEvent("Click", (*) => this.OnClickNoEndCharCon())
         this.IsEndCharCon := con
 
         PosX += 200
-        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 100), "允许子字串")
+        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 100), GetLang("允许子字串"))
         con.OnEvent("Click", (*) => this.OnClickSubStrCon())
         this.IsSubStrCon := con
 
         PosX += 200
-        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 150), "删除触发字串")
+        con := MyGui.Add("Checkbox", Format("x{} y{} h{} w{}", PosX, PosY, 20, 150), GetLang("删除触发字串"))
         con.OnEvent("Click", (*) => this.OnClickNoDeleteCon())
         this.IsDeleteCon := con
 
         PosY += 40
         PosX := 20
         con := MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000),
-        "终止符说明：当输入字串时，需要输入一个终止符触发。终止符包含：-()[]{}':;/\,.?! Enter Space Tab以及引号")
+        GetLang("终止符说明：当输入字串时，需要输入一个终止符触发。终止符包含：-()[]{}':;/\,.?! Enter Space Tab以及引号"))
 
         PosY += 25
         PosX := 20
         con := MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000),
-        "子字串说明:字串在另一个单词中也会被触发,例如输入Word会触发rd、ord、word。如果非子字串,只会触发word。")
+        GetLang("子字串说明:字串在另一个单词中也会被触发,例如输入Word会触发rd、ord、word。如果非子字串,只会触发word。"))
 
         PosY += 25
         PosX := 20
-        con := MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000), "备注:字串长度必须大于0,但不能超过40, 鼠标点击会重置字串识别器")
+        con := MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000), GetLang("备注:字串长度必须大于0,但不能超过40, 鼠标点击会重置字串识别器"))
 
         PosY += 30
         PosX := 20
-        con := MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000), "当前配置的触发键：无")
+        con := MyGui.Add("Text", Format("x{} y{} h{} w{}", PosX, PosY, 20, 1000), GetLang("当前配置的触发键：无"))
         this.SettingTipCon := con
 
         PosY += 30
         PosX := 50
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "退格")
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("退格"))
         btnCon.OnEvent("Click", (*) => this.Backspace())
 
         PosX += 240
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "清空字串")
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("清空字串"))
         btnCon.OnEvent("Click", (*) => this.ClearStr())
 
         PosX += 240
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "确定选项")
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("确定选项"))
         btnCon.OnEvent("Click", (*) => this.OnSureBtnClick())
 
         PosX += 240
-        this.SaveBtnCtrl := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), "应用并保存")
+        this.SaveBtnCtrl := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("应用并保存"))
         this.SaveBtnCtrl.OnEvent("Click", (*) => this.OnSaveBtnClick())
 
         MyGui.Show(Format("w{} h{}", 1150, 460))
@@ -479,7 +479,7 @@ class TriggerStrGui {
     OnSureBtnClick() {
         isValid := this.CheckConfigValid()
         if (!isValid) {
-            MsgBox("字串长度必须大于0,但不能超过40,有异议请联系UP: 浮生若梦的兔子。")
+            MsgBox(GetLang("字串长度必须大于0,但不能超过40,有异议请联系UP: 浮生若梦的兔子。"))
             return
         }
 
@@ -493,7 +493,7 @@ class TriggerStrGui {
     OnSaveBtnClick() {
         isValid := this.CheckConfigValid()
         if (!isValid) {
-            MsgBox("字串长度必须大于0,但不能超过40,有异议请联系UP: 浮生若梦的兔子。")
+            MsgBox(GetLang("字串长度必须大于0,但不能超过40,有异议请联系UP: 浮生若梦的兔子。"))
             return
         }
 
@@ -568,7 +568,7 @@ class TriggerStrGui {
     SureTriggerStr() {
         isValid := this.CheckConfigValid()
         if (!isValid) {
-            MsgBox("字串长度必须大于0,但不能超过40,有异议请联系UP: 浮生若梦的兔子。")
+            MsgBox(GetLang("字串长度必须大于0,但不能超过40,有异议请联系UP: 浮生若梦的兔子。"))
             return false
         }
 
