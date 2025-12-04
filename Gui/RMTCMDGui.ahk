@@ -98,7 +98,7 @@ class RMTCMDGui {
     CheckIfValid() {
         if (this.OperTypeCon.Text == GetLang("禁用键鼠")) {
             tipStr := (
-                GetLang("此操作将 立即禁用键盘和鼠标输入，您将无法通过键鼠操作计算机！`n重要须知：`n- 以管理员身份运行本软件，否则该指令无效。`n- 务必后续执行 *启用键鼠*，否则输入设备将保持禁用状态！`n'是否确认禁用？")
+                Format("{}`n{}`n{}`n{}`n{}", GetLang("此操作将 立即禁用键盘和鼠标输入，您将无法通过键鼠操作计算机！"), GetLang("重要须知："), GetLang("- 以管理员身份运行本软件，否则该指令无效。"), GetLang("- 务必后续执行 *启用键鼠*，否则输入设备将保持禁用状态！"), GetLang("是否确认禁用？"))
             )
             result := MsgBox(tipStr, GetLang("禁用键鼠（需管理员权限）"), "4")
             if (result == "No")
@@ -107,7 +107,7 @@ class RMTCMDGui {
 
         if (this.OperTypeCon.Text == GetLang("启用键鼠")) {
             tipStr := (
-                GetLang("- 必须 以管理员身份运行本软件，否则该指令无效。`n")
+                GetLang("- 必须 以管理员身份运行本软件，否则该指令无效。")
             )
             MsgBox(tipStr, GetLang("启用键鼠（需管理员权限）"))
         }

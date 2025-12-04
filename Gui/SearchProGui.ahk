@@ -513,7 +513,8 @@ class SearchProGui {
     }
 
     OnClickTargeterHelpBtn(*) {
-        MsgBox(GetLang("1.左键拖拽改变位置`n2.上下左右方向键微调位置`n3.左键双击或回车键关闭取色器，同时确定点位信息"), GetLang("定位取色器操作说明"))
+        str := Format("{}`n{}`n{}", "1.左键拖拽改变位置", "2.上下左右方向键微调位置", "3.左键双击或回车键关闭取色器，同时确定点位信息")
+        MsgBox(str, GetLang("定位取色器操作说明"))
     }
 
     OnClickSureBtn() {

@@ -49,8 +49,7 @@ class OperationSubGui {
 
         PosX := 10
         PosY := 10
-        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 350),
-        GetLang("运算符：+（加）、-（减）、*（乘）、（/）除、`n^（乘方）、..（字符拼接）"))
+        this.FocusCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 350), Format("{}`n{}", GetLang("运算符：+（加）、-（减）、*（乘）、（/）除、"), GetLang("^（乘方）、..（字符拼接）")))
 
         PosX := 10
         PosY += 40

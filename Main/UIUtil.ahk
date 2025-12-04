@@ -897,7 +897,10 @@ AddRewardUI(index) {
     posY += 40
     posX += 15
     countStr := FormatIntegerWithCommas(MySoftData.MacroTotalCount)
-    str := Format(GetLang("若梦兔（RMT）—— 这款完全免费的开源软件，始终陪在你身边。`n至今已为您执行 {:} 次宏指令。`n诚邀本月打赏成为若梦兔的 “守护者”，一起让若梦兔走得更远。"), countStr)
+    str1 := GetLang("若梦兔（RMT）—— 这款完全免费的开源软件，始终陪在你身边。")
+    str2 := Format(GetLang("至今已为您执行 {:} 次宏指令。"), countStr)
+    str3 := GetLang("诚邀本月打赏成为若梦兔的 “守护者”，一起让若梦兔走得更远。")
+    str := Format("{}`n{}`n{}", str1, str2, str3)
     con := MyGui.Add("Text", Format("x{} y{} w{} h{}", posX, posY, 800, 80), str)
     con.SetFont((Format("S{} W{} Q{}", 12, 600, 0)))
     conInfo := ItemConInfo(con, tableItem, 1)
@@ -924,8 +927,7 @@ AddRewardUI(index) {
 
     posY += 300
     posX := MySoftData.TabPosX + 15
-    con := MyGui.Add("Text", Format("x{} y{} w{} h{}", posX, posY, 860, 80),
-    GetLang("当然，如果你暂时不方便，分享给朋友也是很棒的支持~`n开发不易，感谢你的每一份温暖！"))
+    con := MyGui.Add("Text", Format("x{} y{} w{} h{}", posX, posY, 860, 80), Format("{}`n{}", GetLang("当然，如果你暂时不方便，分享给朋友也是很棒的支持~"), GetLang("开发不易，感谢你的每一份温暖！")))
     con.SetFont((Format("S{} W{} Q{}", 12, 600, 0)))
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)

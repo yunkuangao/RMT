@@ -503,7 +503,7 @@ AddThankUI(index) {
 
     posX := OriPosX
     posY += 50
-    con := MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", posX, posY, 850, 400), "感谢以下用户积极参与测试、反馈Bug并提出优化建议：（QQ昵称）")
+    con := MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", posX, posY, 850, 400), GetLang("感谢以下用户积极参与测试、反馈Bug并提出优化建议：（QQ昵称）"))
     tableItem.AllConArr.Push(ItemConInfo(con, tableItem, 1))
     tableItem.AllGroup.Push(con)
 
@@ -913,8 +913,8 @@ AddThankUI(index) {
 
     posX := OriPosX
     posY += 50
-    con := MyGui.Add("Text", Format("x{} y{} w{} h{}", posX, posY, 850, 70),
-    GetLang("感谢每一位陪伴我们走过这段旅程的粉丝和群友们！是你们的支持与信任，让这个软件从一个小小的想法，一步步成长为今天的样子。每一次的鼓励、每一条的建议，都是我们前进的动力。`n感谢你们不离不弃，与我们共同见证每一次的迭代与成长。"))
+    con := MyGui.Add("Text", Format("x{} y{} w{} h{}", posX, posY, 850, 70), 
+    Format("{}`n{}", GetLang("感谢每一位陪伴我们走过这段旅程的粉丝和群友们！是你们的支持与信任，让这个软件从一个小小的想法，一步步成长为今天的样子。每一次的鼓励、每一条的建议，都是我们前进的动力。"), GetLang("感谢你们不离不弃，与我们共同见证每一次的迭代与成长。")))
     con.SetFont((Format("S{} W{} Q{}", 12, 600, 0)))
     con.Focus()
     conInfo := ItemConInfo(con, tableItem, 1)
@@ -923,7 +923,7 @@ AddThankUI(index) {
     posX := OriPosX
     posY += 75
     con := MyGui.Add("Text", Format("x{} y{} w{} h{}", posX, posY, 850, 70),
-    GetLang("再次感谢所有关心、支持、帮助过这个项目的每一个人！`n因为有你，这个项目才变得更有意义。"))
+    Format("{}`n{}", GetLang("再次感谢所有关心、支持、帮助过这个项目的每一个人！"), GetLang("因为有你，这个项目才变得更有意义。")))
     con.SetFont((Format("S{} W{} Q{}", 12, 600, 0)))
     con.Focus()
     conInfo := ItemConInfo(con, tableItem, 1)

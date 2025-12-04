@@ -255,7 +255,8 @@ class SearchGui {
         }
 
         if (this.Data.SearchImagePath != "" && !FileExist(this.Data.SearchImagePath)) {
-            MsgBox(Format(GetLang("{} 图片不存在`n如果是软件位置发生改变，请点击若梦兔-配置管理-配置校准"), this.Data.SearchImagePath))
+            ; MsgBox(Format(GetLang("{} 图片不存在`n如果是软件位置发生改变，请点击若梦兔-配置管理-配置校准"), this.Data.SearchImagePath))
+            MsgBox(Format("{} {}`n{}", this.Data.SearchImagePath, GetLang("图片不存在"), GetLang("如果是软件位置发生改变，请点击若梦兔-配置管理-配置校准")))
             return false
         }
         return true
@@ -410,7 +411,8 @@ class SearchGui {
     }
 
     OnClickTargeterHelpBtn(*) {
-        MsgBox(GetLang("1.左键拖拽改变位置`n2.上下左右方向键微调位置`n3.左键双击或回车键关闭取色器，同时确定点位信息"), GetLang("定位取色器操作说明"))
+        str := Format("{}`n{}`n{}", "1.左键拖拽改变位置", "2.上下左右方向键微调位置", "3.左键双击或回车键关闭取色器，同时确定点位信息")
+        MsgBox(str, GetLang("定位取色器操作说明"))
     }
 
     OnScreenShotGetArea(x1, y1, x2, y2) {
