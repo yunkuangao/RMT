@@ -74,9 +74,9 @@ class IntervalGui {
 
     GetCmdStr() {
         if (IsNumber(this.TimeVarCon.Text)) {
-            return "间隔_" this.TimeVarCon.Text
+            return Format("{}_{}", GetLang("间隔"), this.TimeVarCon.Text)
         }
-
-        return "间隔_变量_" this.TimeVarCon.Text
+        
+        return Format("{}_{}_{}", GetLang("间隔"), GetLang("变量"), this.TimeVarCon.Text)
     }
 }

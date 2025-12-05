@@ -1195,7 +1195,7 @@ class KeyGui {
         isShowCount := isShowHoldTime && this.KeyCountCon.Value != 1
         isShowInterval := isShowCount && this.PerIntervalCon.Value != 0
 
-        CommandStr := "按键"
+        CommandStr := GetLang("按键")
         CommandStr .= "_" this.KeyStr
         CommandStr .= "_" this.KeyTypeCon.Value
         if (isShowHoldTime) {

@@ -36,7 +36,7 @@ class BGKeyGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile GetLang("后台按键编辑器"))
+        MyGui := Gui(, this.ParentTile GetLang("后台按键编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
@@ -60,7 +60,7 @@ class BGKeyGui {
         con.OnEvent("Click", (*) => this.OnSureHotkey())
 
         PosX += 90
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75),  GetLang("窗口信息:"))
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("窗口信息:"))
         PosX += 75
         this.FrontCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX, PosY - 3, 190), "")
 
@@ -718,7 +718,8 @@ class BGKeyGui {
         PosX := 100
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 50), GetLang("类型:"))
         PosX += 50
-        this.KeyTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{} h{}", PosX, PosY - 3, 80, 100), GetLangArr(["按下",
+        this.KeyTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{} h{}", PosX, PosY - 3, 80, 100), GetLangArr([
+            "按下",
             "松开", "点击"]))
         this.KeyTypeCon.OnEvent("Change", (*) => this.OnChangeEditValue())
         this.KeyTypeCon.Value := 1
@@ -912,7 +913,7 @@ class BGKeyGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "后台按键_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("后台按键"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

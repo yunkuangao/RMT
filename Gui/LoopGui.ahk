@@ -36,7 +36,7 @@ class LoopGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile GetLang("循环编辑器"))
+        MyGui := Gui(, this.ParentTile GetLang("循环编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
@@ -72,7 +72,8 @@ class LoopGui {
         MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("类型:"))
 
         PosX += 45
-        this.CondiCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 120), GetLangArr(["无", "继续条件", "退出条件"]))
+        this.CondiCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 120), GetLangArr(["无", "继续条件",
+            "退出条件"]))
         this.CondiCon.OnEvent("Change", (*) => this.OnRefresh())
 
         PosX += 180
@@ -89,7 +90,8 @@ class LoopGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX + 35, PosY - 3, 120), [])
         this.NameConArr.Push(con)
 
-        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于", "等于", "小于等于",
+        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于",
+            "等于", "小于等于",
             "小于", "字符包含", "变量存在"]))
         con.Value := 1
         con.OnEvent("Change", (*) => this.OnRefresh())
@@ -107,7 +109,8 @@ class LoopGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX + 35, PosY - 3, 120), [])
         this.NameConArr.Push(con)
 
-        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于", "等于", "小于等于",
+        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于",
+            "等于", "小于等于",
             "小于", "字符包含", "变量存在"]))
         con.Value := 1
         con.OnEvent("Change", (*) => this.OnRefresh())
@@ -125,7 +128,8 @@ class LoopGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX + 35, PosY - 3, 120), [])
         this.NameConArr.Push(con)
 
-        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于", "等于", "小于等于",
+        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于",
+            "等于", "小于等于",
             "小于", "字符包含", "变量存在"]))
         con.Value := 1
         con.OnEvent("Change", (*) => this.OnRefresh())
@@ -143,7 +147,8 @@ class LoopGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5", PosX + 35, PosY - 3, 120), [])
         this.NameConArr.Push(con)
 
-        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于", "等于", "小于等于",
+        con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 160, PosY - 3, 80), GetLangArr(["大于", "大于等于",
+            "等于", "小于等于",
             "小于", "字符包含", "变量存在"]))
         con.Value := 1
         con.OnEvent("Change", (*) => this.OnRefresh())
@@ -231,7 +236,7 @@ class LoopGui {
             this.MacroGui := MacroEditGui()
             this.MacroGui.VariableObjArr := this.VariableObjArr
             this.MacroGui.SureFocusCon := this.FocusCon
-            
+
             ParentTile := StrReplace(this.Gui.Title, GetLang("编辑器"), "")
             this.MacroGui.ParentTile := ParentTile "-"
         }
@@ -286,7 +291,7 @@ class LoopGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "循环_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("循环"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

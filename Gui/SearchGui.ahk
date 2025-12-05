@@ -229,7 +229,7 @@ class SearchGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "搜索_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("搜索"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }
@@ -256,7 +256,8 @@ class SearchGui {
 
         if (this.Data.SearchImagePath != "" && !FileExist(this.Data.SearchImagePath)) {
             ; MsgBox(Format(GetLang("{} 图片不存在`n如果是软件位置发生改变，请点击若梦兔-配置管理-配置校准"), this.Data.SearchImagePath))
-            MsgBox(Format("{} {}`n{}", this.Data.SearchImagePath, GetLang("图片不存在"), GetLang("如果是软件位置发生改变，请点击若梦兔-配置管理-配置校准")))
+            MsgBox(Format("{} {}`n{}", this.Data.SearchImagePath, GetLang("图片不存在"), GetLang(
+                "如果是软件位置发生改变，请点击若梦兔-配置管理-配置校准")))
             return false
         }
         return true

@@ -369,7 +369,7 @@ class SearchProGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "搜索Pro_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("搜索Pro"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

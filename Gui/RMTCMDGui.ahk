@@ -5,8 +5,8 @@ class RMTCMDGui {
         this.ParentTile := ""
         this.Gui := ""
         this.SureBtnAction := ""
-        this.CmdStrArr := ["截图", "截图提取文本", "自由贴",
-            "开启指令显示", "关闭指令显示", "显示菜单", "关闭菜单", "启用键鼠", "禁用键鼠", "休眠", "暂停所有宏", "恢复所有宏", "终止所有宏", "重载", "关闭软件"]
+        this.CmdStrArr := GetLangArr(["截图", "截图提取文本", "自由贴",
+            "开启指令显示", "关闭指令显示", "显示菜单", "关闭菜单", "启用键鼠", "禁用键鼠", "休眠", "暂停所有宏", "恢复所有宏", "终止所有宏", "重载", "关闭软件"])
         this.OperTypeCon := ""
 
         this.MenuRelateArrCon := []
@@ -27,8 +27,8 @@ class RMTCMDGui {
 
     Init(cmd) {
         cmdArr := cmd != "" ? StrSplit(cmd, "_") : []
-        cmdStr := cmdArr.Length >= 2 ? cmdArr[2] : "截图"
-        menuDLIndex := cmdStr == "显示菜单" && cmdArr.Length >= 3 ? cmdArr[3] : 1
+        cmdStr := cmdArr.Length >= 2 ? cmdArr[2] : GetLang("截图")
+        menuDLIndex := cmdStr == GetLang("显示菜单") && cmdArr.Length >= 3 ? cmdArr[3] : 1
 
         loop this.CmdStrArr.Length {
             if (this.CmdStrArr[A_Index] == cmdStr) {
@@ -98,7 +98,8 @@ class RMTCMDGui {
     CheckIfValid() {
         if (this.OperTypeCon.Text == GetLang("禁用键鼠")) {
             tipStr := (
-                Format("{}`n{}`n{}`n{}`n{}", GetLang("此操作将 立即禁用键盘和鼠标输入，您将无法通过键鼠操作计算机！"), GetLang("重要须知："), GetLang("- 以管理员身份运行本软件，否则该指令无效。"), GetLang("- 务必后续执行 *启用键鼠*，否则输入设备将保持禁用状态！"), GetLang("是否确认禁用？"))
+                Format("{}`n{}`n{}`n{}`n{}", GetLang("此操作将 立即禁用键盘和鼠标输入，您将无法通过键鼠操作计算机！"), GetLang("重要须知："), GetLang(
+                    "- 以管理员身份运行本软件，否则该指令无效。"), GetLang("- 务必后续执行 *启用键鼠*，否则输入设备将保持禁用状态！"), GetLang("是否确认禁用？"))
             )
             result := MsgBox(tipStr, GetLang("禁用键鼠（需管理员权限）"), "4")
             if (result == "No")
@@ -116,11 +117,9 @@ class RMTCMDGui {
     }
 
     GetCommandStr() {
+        CommandStr := Format("{}_{}", GetLang("RMT指令"), this.OperTypeCon.Text)
         if (this.OperTypeCon.Text == GetLang("显示菜单")) {
-            CommandStr := "RMT指令_" this.OperTypeCon.Text "_" this.MenuDLCon.Value
-        }
-        else {
-            CommandStr := "RMT指令_" this.OperTypeCon.Text
+            CommandStr .= "_" this.MenuDLCon.Value
         }
         return CommandStr
     }

@@ -38,7 +38,7 @@ class ExVariableGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile GetLang("变量提取编辑器"))
+        MyGui := Gui(, this.ParentTile GetLang("变量提取编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
@@ -71,7 +71,8 @@ class ExVariableGui {
         PosX += 200
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY + 3, 110), GetLang("文本识别模型:"))
         PosX += 110
-        this.OCRTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{} Center", PosX, PosY - 2, 130), GetLangArr(["中文",
+        this.OCRTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{} Center", PosX, PosY - 2, 130), GetLangArr([
+            "中文",
             "英文"]))
         this.OCRTypeCon.Value := 1
 
@@ -113,14 +114,15 @@ class ExVariableGui {
         PosY += 35
         PosX := 10
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 550),
-            Format("{}`n{}`n{}", GetLang("提取文本：空内容时，屏幕/剪切板所有文本信息保存到变量中"), GetLang("提取文本：&&x表示数字变量，&&c表示文本变量"), GetLang("提取文本：形如**坐标(&&x,&&x)**可以提取**坐标(10.5,8.6)**中的10.5和8.6到变量1和变量2"))
-        )
+        Format("{}`n{}`n{}", GetLang("提取文本：空内容时，屏幕/剪切板所有文本信息保存到变量中"), GetLang("提取文本：&&x表示数字变量，&&c表示文本变量"), GetLang(
+            "提取文本：形如**坐标(&&x,&&x)**可以提取**坐标(10.5,8.6)**中的10.5和8.6到变量1和变量2")))
 
         PosY += 65
         PosX := 10
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("提取文本："))
         this.ExtractStrCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX + 75, PosY - 5, 250), "")
-        this.ExtractTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 345, PosY - 5, 80), GetLangArr(["屏幕",
+        this.ExtractTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 345, PosY - 5, 80), GetLangArr([
+            "屏幕",
             "剪切板"]))
         this.ExtractTypeCon.Value := 1
 
@@ -346,7 +348,7 @@ class ExVariableGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "变量提取_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("变量提取"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

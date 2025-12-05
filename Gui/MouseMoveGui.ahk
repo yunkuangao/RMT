@@ -134,7 +134,7 @@ class MouseMoveGui {
         showRelative := this.IsRelativeCon.Value == 1
         showSpeed := true
 
-        CommandStr := "移动"
+        CommandStr := GetLang("移动")
         CommandStr .= "_" this.PosXCon.Value
         CommandStr .= "_" this.PosYCon.Value
 

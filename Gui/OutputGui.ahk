@@ -36,7 +36,7 @@ class OutputGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile GetLang("输出编辑器"))
+        MyGui := Gui(, this.ParentTile GetLang("输出编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
@@ -237,7 +237,7 @@ class OutputGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "输出_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("输出"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

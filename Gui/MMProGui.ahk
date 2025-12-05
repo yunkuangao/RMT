@@ -175,7 +175,7 @@ class MMProGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "移动Pro_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("移动Pro"), this.Data.SerialStr) 
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

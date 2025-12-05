@@ -717,3 +717,4 @@ RMT默认初始化配置=RMT Default Setting
 截图方式：=Shot Mode:
 定时=Timer
 结果=Result
+添加指令=Add Cmd

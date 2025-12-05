@@ -29,7 +29,7 @@ class SubMacroGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile GetLang("宏操作编辑器"))
+        MyGui := Gui(, this.ParentTile GetLang("宏操作编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
@@ -54,7 +54,8 @@ class SubMacroGui {
         MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 70, 20), GetLang("宏类型:"))
 
         PosX += 70
-        this.TypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), GetLangArr(["当前宏", "按键宏", "字串宏",
+        this.TypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), GetLangArr(["当前宏", "按键宏",
+            "字串宏",
             "菜单宏", "定时宏", "宏"]))
         this.TypeCon.Value := 1
         this.TypeCon.OnEvent("Change", (*) => this.OnRefresh())
@@ -70,7 +71,8 @@ class SubMacroGui {
         MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 70, 20), GetLang("操作类型:"))
 
         PosX += 70
-        this.CallTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), GetLangArr(["插入到当前宏", "触发", "暂停",
+        this.CallTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 110), GetLangArr(["插入到当前宏",
+            "触发", "暂停",
             "取消暂停", "终止"]))
         this.CallTypeCon.Value := 1
         this.CallTypeCon.OnEvent("Change", (*) => this.OnRefresh())
@@ -218,7 +220,7 @@ class SubMacroGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "宏操作_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("宏操作"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

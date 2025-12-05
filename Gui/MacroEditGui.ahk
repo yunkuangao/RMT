@@ -53,12 +53,12 @@ class MacroEditGui {
             "如果Pro",
             "运算", "RMT指令", "后台鼠标", "后台按键"])
 
-        this.IconMap := Map("间隔", "Icon1", "按键", "Icon2", "搜索", "Icon3", "搜索Pro", "Icon4", "移动", "Icon5", "移动Pro",
-            "Icon6", "输出", "Icon7", "运行", "Icon8", "循环", "Icon9", "宏操作", "Icon10", "变量", "Icon11", "变量提取", "Icon12",
-            "如果", "Icon13", "如果Pro",
-            "Icon14", "运算", "Icon15", "RMT指令", "Icon16", "后台鼠标", "Icon17", "后台按键", "Icon2", "真", "Icon18", "假",
-            "Icon19", "循环次数", "Icon20",
-            "条件", "Icon21", "循环体", "Icon22")
+        this.IconMap := Map(GetLang("间隔"), "Icon1", GetLang("按键"), "Icon2", GetLang("搜索"), "Icon3", GetLang("搜索Pro"), "Icon4", GetLang("移动"), "Icon5", GetLang("移动Pro"),
+            "Icon6", GetLang("输出"), "Icon7", GetLang("运行"), "Icon8", GetLang("循环"), "Icon9", GetLang("宏操作"), "Icon10", GetLang("变量"), "Icon11", GetLang("变量提取"), "Icon12",
+            GetLang("如果"), "Icon13", GetLang("如果Pro"),
+            "Icon14", GetLang("运算"), "Icon15", GetLang("RMT指令"), "Icon16", GetLang("后台鼠标"), "Icon17", GetLang("后台按键"), "Icon2", GetLang("真"), "Icon18", GetLang("假"),
+            "Icon19", GetLang("循环次数"), "Icon20",
+            GetLang("条件"), "Icon21", GetLang("循环体"), "Icon22")
 
         this.InitSubGui()
     }
@@ -66,75 +66,75 @@ class MacroEditGui {
     InitSubGui() {
         this.IntervalGui := IntervalGui()
         this.IntervalGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("间隔", this.IntervalGui)
+        this.SubGuiMap.Set(GetLang("间隔"), this.IntervalGui)
 
         this.KeyGui := KeyGui()
         this.KeyGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("按键", this.KeyGui)
+        this.SubGuiMap.Set(GetLang("按键"), this.KeyGui)
 
         this.MoveMoveGui := MouseMoveGui()
         this.MoveMoveGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("移动", this.MoveMoveGui)
+        this.SubGuiMap.Set(GetLang("移动"), this.MoveMoveGui)
 
         this.SearchGui := SearchGui()
         this.SearchGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("搜索", this.SearchGui)
+        this.SubGuiMap.Set(GetLang("搜索"), this.SearchGui)
 
         this.SearchProGui := SearchProGui()
         this.SearchProGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("搜索Pro", this.SearchProGui)
+        this.SubGuiMap.Set(GetLang("搜索Pro"), this.SearchProGui)
 
         this.RunGui := RunGui()
         this.RunGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("运行", this.RunGui)
+        this.SubGuiMap.Set(GetLang("运行"), this.RunGui)
 
         this.CompareGui := CompareGui()
         this.CompareGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("如果", this.CompareGui)
+        this.SubGuiMap.Set(GetLang("如果"), this.CompareGui)
 
         this.CompareProGui := CompareProGui()
         this.CompareProGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("如果Pro", this.CompareProGui)
+        this.SubGuiMap.Set(GetLang("如果Pro"), this.CompareProGui)
 
         this.MMProGui := MMProGui()
         this.MMProGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("移动Pro", this.MMProGui)
+        this.SubGuiMap.Set(GetLang("移动Pro"), this.MMProGui)
 
         this.OutputGui := OutputGui()
         this.OutputGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("输出", this.OutputGui)
+        this.SubGuiMap.Set(GetLang("输出"), this.OutputGui)
 
         this.VariableGui := VariableGui()
         this.VariableGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("变量", this.VariableGui)
+        this.SubGuiMap.Set(GetLang("变量"), this.VariableGui)
 
         this.ExVariableGui := ExVariableGui()
         this.ExVariableGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("变量提取", this.ExVariableGui)
+        this.SubGuiMap.Set(GetLang("变量提取"), this.ExVariableGui)
 
         this.SubMacroGui := SubMacroGui()
         this.SubMacroGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("宏操作", this.SubMacroGui)
+        this.SubGuiMap.Set(GetLang("宏操作"), this.SubMacroGui)
 
         this.LoopGui := LoopGui()
         this.LoopGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("循环", this.LoopGui)
+        this.SubGuiMap.Set(GetLang("循环"), this.LoopGui)
 
         this.OperationGui := OperationGui()
         this.OperationGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("运算", this.OperationGui)
+        this.SubGuiMap.Set(GetLang("运算"), this.OperationGui)
 
         this.BGMouseGui := BGMouseGui()
         this.BGMouseGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("后台鼠标", this.BGMouseGui)
+        this.SubGuiMap.Set(GetLang("后台鼠标"), this.BGMouseGui)
 
         this.BGKeyGui := BGKeyGui()
         this.BGKeyGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("后台按键", this.BGKeyGui)
+        this.SubGuiMap.Set(GetLang("后台按键"), this.BGKeyGui)
 
         this.RMTCMDGui := RMTCMDGui()
         this.RMTCMDGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
-        this.SubGuiMap.Set("RMT指令", this.RMTCMDGui)
+        this.SubGuiMap.Set(GetLang("RMT指令"), this.RMTCMDGui)
     }
 
     ShowGui(CommandStr, ShowSaveBtn) {
@@ -353,6 +353,7 @@ class MacroEditGui {
     }
 
     Init(MacroStr, ShowSaveBtn) {
+        MacroStr := GetLangMacro(MacroStr, 1)
         this.ShowSaveBtn := ShowSaveBtn
         this.SubMacroLastIndex := 0
         this.SaveBtnCtrl.Visible := this.ShowSaveBtn
@@ -408,6 +409,7 @@ class MacroEditGui {
 
     OnSaveBtnClick() {
         macroStr := this.GetMacroStr()
+        macroStr := GetLangMacro(macroStr, 2)
         action := this.SureBtnAction
         action(macroStr)
 
@@ -421,6 +423,7 @@ class MacroEditGui {
 
     OnSureBtnClick() {
         macroStr := this.GetMacroStr()
+        macroStr := GetLangMacro(macroStr, 2)
         action := this.SureBtnAction
         action(macroStr)
 
@@ -684,7 +687,7 @@ class MacroEditGui {
             Data := JSON.parse(saveStr, , false)
 
             iconStr := this.GetCmdIconStr("循环次数")
-            CountRoot := this.MacroTreeViewCon.Add(Format("⎖{}:{}", GetLang("循环次数"),Data.LoopCount), root, iconStr)
+            CountRoot := this.MacroTreeViewCon.Add(Format("⎖{}:{}", GetLang("循环次数"), Data.LoopCount), root, iconStr)
 
             if (Data.CondiType != 1) {
                 iconStr := this.GetCmdIconStr("条件")
@@ -857,7 +860,8 @@ class MacroEditGui {
         NodeItemID := this.CurItemID
         RealItemID := ParentID
         macroStr := ""
-        if (itemText != GetLang("真") && itemText != GetLang("假") && itemText != GetLang("循环体") && SubStr(itemText, 1, 2) != GetLang("条件")) {
+        if (itemText != GetLang("真") && itemText != GetLang("假") && itemText != GetLang("循环体") && SubStr(itemText, 1, 2
+        ) != GetLang("条件")) {
             this.MacroTreeViewCon.Delete(this.CurItemID)
             macroStr := this.GetTreeMacroStr(ParentID)
             NodeItemID := ParentID

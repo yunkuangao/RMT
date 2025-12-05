@@ -261,7 +261,7 @@ class BGMouseGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "后台鼠标_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("后台鼠标"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

@@ -158,7 +158,7 @@ class OperationGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "运算_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("运算"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

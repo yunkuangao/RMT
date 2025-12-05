@@ -53,7 +53,8 @@ class RunGui {
 
         PosX := 10
         PosY += 20
-        this.MouseProNameCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 380, 20), GetLang("鼠标下进程名:Zone.exe"))
+        this.MouseProNameCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 380, 20), GetLang(
+            "鼠标下进程名:Zone.exe"))
 
         PosX := 10
         PosY += 30
@@ -103,7 +104,7 @@ class RunGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "运行_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("运行"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

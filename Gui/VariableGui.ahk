@@ -31,7 +31,7 @@ class VariableGui {
     }
 
     AddGui() {
-        MyGui := Gui(,this.ParentTile GetLang("变量编辑器"))
+        MyGui := Gui(, this.ParentTile GetLang("变量编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
 
@@ -136,7 +136,8 @@ class VariableGui {
             this.VariableConArr.Push(con)
 
             PosX += 125
-            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), GetLangArr(GetLangArr(["数值", "随机数值", "字符",
+            con := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 2, 80), GetLangArr(GetLangArr(["数值",
+                "随机数值", "字符",
                 "删除"])))
             con.OnEvent("Change", (*) => this.OnRefresh())
             this.OperaTypeConArr.Push(con)
@@ -251,7 +252,7 @@ class VariableGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "变量_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", "变量", this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

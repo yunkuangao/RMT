@@ -17,7 +17,7 @@ class CompareProGui {
             "小于", "字符包含", "变量存在"])
 
         this.CompareTypeStrMap := Map(GetLang("大于"), 1, GetLang("大于等于"), 2, GetLang("等于"), 3, GetLang("小于等于"),
-            4, GetLang("小于"), 5, GetLang("字符包含"), 6, GetLang("变量存在"), 7)
+        4, GetLang("小于"), 5, GetLang("字符包含"), 6, GetLang("变量存在"), 7)
 
         this.Data := ""
     }
@@ -57,7 +57,8 @@ class CompareProGui {
 
         PosX := 10
         PosY += 30
-        this.LVCon := MyGui.Add("ListView", Format("x{} y{} w480 h280 -LV0x10 NoSort", PosX, PosY), GetLangArr(["条件", "关系", "指令"]))
+        this.LVCon := MyGui.Add("ListView", Format("x{} y{} w480 h280 -LV0x10 NoSort", PosX, PosY), GetLangArr(["条件",
+            "关系", "指令"]))
         this.LVCon.OnEvent("ContextMenu", this.ShowContextMenu.Bind(this))
         this.LVCon.OnEvent("DoubleClick", this.OnDoubleClick.Bind(this))
         ; 设置列宽（单位：px）
@@ -243,7 +244,7 @@ class CompareProGui {
 
     GetCommandStr() {
         hasRemark := this.RemarkCon.Value != ""
-        CommandStr := "如果Pro_" this.Data.SerialStr
+        CommandStr := Format("{}_{}", GetLang("如果Pro"), this.Data.SerialStr)
         if (hasRemark) {
             CommandStr .= "_" this.RemarkCon.Value
         }

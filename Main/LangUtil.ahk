@@ -1,5 +1,12 @@
 #Requires AutoHotkey v2.0
 LangKeyMap := Map()
+
+;指令相关的key
+LangCmdKeyArr := ["截图", "截图提取文本", "自由贴", "开启指令显示", "关闭指令显示", "显示菜单", "关闭菜单", "启用键鼠", "禁用键鼠", "休眠",
+    "暂停所有宏", "恢复所有宏", "终止所有宏", "重载", "关闭软件", "间隔", "按键", "搜索", "搜索Pro", "移动", "移动Pro", "输出", "运行", "循环", "宏操作", "变量", "变量提取",
+    "如果", "如果Pro", "运算", "RMT指令", "后台鼠标", "后台按键"]
+LangValueMap := Map()   ;部分文本需要反向映射
+
 LangInitSetting() {
     LangMap := Map("中文", 1)   ;确保存在中文
     if (DirExist(LangDir)) {
@@ -50,6 +57,12 @@ LangKeysInit() {
     } catch as e {
         MsgBox GetLang("读取文件失败:") e.Message
     }
+
+    for value in LangCmdKeyArr {
+        key := GetLang(value)
+        if (key != value)
+            LangValueMap.Set(key, value)
+    }
 }
 
 LangRemoveRepeat() {
@@ -94,4 +107,44 @@ GetLangArr(KeyArr) {
         ResArr.Push(GetLang(Value))
     }
     return ResArr
+}
+
+GetLangKey(value) {
+    ;中文或者LangKeyMap不存在时 直接返回key就行
+    if (MySoftData.Lang == "中文" || LangValueMap.Count == 0)
+        return value
+
+    if (LangValueMap.Has(value))
+        return LangValueMap[value]
+
+    return value
+}
+
+GetLangKeyArr(ValueArr) {
+    ResArr := []
+    for Value in ValueArr {
+        ResArr.Push(GetLangKey(Value))
+    }
+    return ResArr
+}
+
+GetLangMacro(MacroStr, Mode) {
+    cmdArr := SplitMacro(MacroStr)
+    for cmdStr in cmdArr {
+        cmdStr := GetLangCmd(cmdStr, Mode)
+        cmdArr[A_Index] := cmdStr
+    }
+    return GetMacroStrByCmdArr(cmdArr)
+}
+
+;mode 1多语言模式  2中文语言模式
+GetLangCmd(Cmd, Mode) {
+    paramArr := StrSplit(Cmd, "_")
+    action := Mode == 1 ? GetLang : GetLangKey
+    paramArr[1] := action(paramArr[1])
+
+    if (paramArr[1] == "RMT指令" || paramArr[1] == GetLang("RMT指令")) {
+        paramArr[2] := action(paramArr[2])
+    }
+    return GetCmdByParams(paramArr)
 }
