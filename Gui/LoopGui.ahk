@@ -187,14 +187,14 @@ class LoopGui {
         CountVariableArr.Push(GetLang("无限"))
         this.CountCon.Delete()
         this.CountCon.Add(CountVariableArr)
-        this.CountCon.Text := this.Data.LoopCount
+        this.CountCon.Text := this.Data.LoopCount == -1 ? GetLang("无限") : this.Data.LoopCount
 
         this.CondiCon.Value := this.Data.CondiType
         this.LogicCon.Value := this.Data.LogicType
         this.LoopBodyCon.Value := this.Data.LoopBody
 
+        VariableArr := this.GetDLVariableArr()
         loop 4 {
-            VariableArr := this.GetDLVariableArr()
             this.ToggleConArr[A_Index].Value := this.Data.ToggleArr[A_Index]
             this.NameConArr[A_Index].Delete()
             this.NameConArr[A_Index].Add(VariableArr)
@@ -234,7 +234,7 @@ class LoopGui {
     OnEditMacroBtnClick(*) {
         if (this.MacroGui == "") {
             this.MacroGui := MacroEditGui()
-            this.MacroGui.VariableObjArr := this.VariableObjArr
+            this.MacroGui.VariableObjArr := this.GetDLVariableArr()
             this.MacroGui.SureFocusCon := this.FocusCon
 
             ParentTile := StrReplace(this.Gui.Title, GetLang("编辑器"), "")
@@ -290,10 +290,10 @@ class LoopGui {
     }
 
     GetCommandStr() {
-        hasRemark := this.RemarkCon.Value != ""
         CommandStr := Format("{}_{}", GetLang("循环"), this.Data.SerialStr)
-        if (hasRemark) {
-            CommandStr .= "_" this.RemarkCon.Value
+        Remark := CorrectRemark(this.RemarkCon.Value)
+        if (Remark != "") {
+            CommandStr .= "_" Remark
         }
 
         return CommandStr

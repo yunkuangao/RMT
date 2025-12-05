@@ -24,12 +24,13 @@ GetMacroStrGlobalVar(macroStr, VariableMap, visitMap) {
         if (paramArr.Length >= 2 && visitMap.Has(paramArr[2]))
             continue
 
-        IsVariable := StrCompare(paramArr[1], "变量", false) == 0
-        IsExVariable := StrCompare(paramArr[1], "变量提取", false) == 0
-        IsIf := StrCompare(paramArr[1], "如果", false) == 0
-        IsOpera := StrCompare(paramArr[1], "运算", false) == 0
-        IsSearch := StrCompare(paramArr[1], "搜索", false) == 0
-        IsSearchPro := StrCompare(paramArr[1], "搜索Pro", false) == 0
+        IsVariable := StrCompare(paramArr[1], GetLang("变量"), false) == 0
+        IsExVariable := StrCompare(paramArr[1], GetLang("变量提取"), false) == 0
+        IsIf := StrCompare(paramArr[1], GetLang("如果"), false) == 0
+        IsOpera := StrCompare(paramArr[1], GetLang("运算"), false) == 0
+        IsSearch := StrCompare(paramArr[1], GetLang("搜索"), false) == 0
+        IsSearchPro := StrCompare(paramArr[1], GetLang("搜索Pro"), false) == 0
+        IsLoop := StrCompare(paramArr[1], GetLang("循环"), false) == 0
 
         if (IsVariable) {
             saveStr := IniRead(VariableFile, IniSection, paramArr[2], "")
@@ -79,6 +80,9 @@ GetMacroStrGlobalVar(macroStr, VariableMap, visitMap) {
                 VariableMap[Data.CoordYName] := true
             }
         }
+        else if (IsLoop) {
+            VariableMap[GetLang("指令循环次数")] := true
+        }
 
         TrueMacro := ""
         FalseMacro := ""
@@ -114,11 +118,12 @@ GetLocalVar(macroStr) {
     return VariableMap
 }
 
-
 GetGuiVariableObjArr(curMacroStr, VariableObjArr) {
     ResultArr := []
     ResultMap := GetLocalVar(curMacroStr)
-    SpecialKeyArr := ["宏循环次数", "当前鼠标坐标X", "当前鼠标坐标Y"]
+    HasLoopCount := false   ;含有指令循环次数变量
+    SpecialKeyArr1 := [GetLang("宏循环次数"), GetLang("当前鼠标坐标X"), GetLang("当前鼠标坐标Y")]
+    SpecialKeyArr2 := [GetLang("指令循环次数"), GetLang("宏循环次数"), GetLang("当前鼠标坐标X"), GetLang("当前鼠标坐标Y")]
 
     ; 将VariableObjArr中的变量添加到映射中
     for Value in VariableObjArr {
@@ -133,8 +138,10 @@ GetGuiVariableObjArr(curMacroStr, VariableObjArr) {
     }
 
     ;为了让特殊变量出现在末尾，先删除
-    for curKey in SpecialKeyArr {
+    for curKey in SpecialKeyArr2 {
         if ResultMap.Has(curKey) {
+            if (curKey == GetLang("指令循环次数"))
+                HasLoopCount := true
             ResultMap.Delete(curKey)
         }
     }
@@ -143,6 +150,7 @@ GetGuiVariableObjArr(curMacroStr, VariableObjArr) {
     for Key in ResultMap {
         ResultArr.Push(Key)
     }
+    SpecialKeyArr := HasLoopCount ? SpecialKeyArr2 : SpecialKeyArr1
     ResultArr.Push(SpecialKeyArr*)
 
     return ResultArr

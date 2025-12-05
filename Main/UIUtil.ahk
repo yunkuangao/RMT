@@ -84,7 +84,7 @@ AddUI() {
     MySoftData.TabPosY := 10
     MySoftData.TabPosX := 130
     MySoftData.TabCtrl := MyGui.Add("Tab3", Format("x{} y{} w{} Choose{}", MySoftData.TabPosX, MySoftData.TabPosY, 910,
-        MySoftData.TableIndex), MySoftData.TabNameArr)
+        MySoftData.TableIndex), GetLangArr(MySoftData.TabNameArr))
 
     loop MySoftData.TabNameArr.Length {
         MySoftData.TabCtrl.UseTab(A_Index)

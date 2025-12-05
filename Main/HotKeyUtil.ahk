@@ -20,6 +20,7 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
     tableItem.PauseArr[index] := false
     tableItem.ActionCount[index] := 0
     tableItem.VariableMapArr[index]["宏循环次数"] := 1
+    tableItem.VariableMapArr[index]["指令循环次数"] := 0
     isContinue := tableItem.TKArr.Has(index) && MySoftData.ContinueKeyMap.Has(tableItem.TKArr[index]) && tableItem.LoopCountArr[
         index] == 1
     isLoop := tableItem.LoopCountArr[index] == -1

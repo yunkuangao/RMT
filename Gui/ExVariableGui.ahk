@@ -347,10 +347,10 @@ class ExVariableGui {
     }
 
     GetCommandStr() {
-        hasRemark := this.RemarkCon.Value != ""
         CommandStr := Format("{}_{}", GetLang("变量提取"), this.Data.SerialStr)
-        if (hasRemark) {
-            CommandStr .= "_" this.RemarkCon.Value
+        Remark := CorrectRemark(this.RemarkCon.Value)
+        if (Remark != "") {
+            CommandStr .= "_" Remark
         }
         return CommandStr
     }
