@@ -126,6 +126,12 @@ class WorkPool {
     }
 
     OnGetCmd(wParam, lParam, msg, hwnd) {
+        ;告知一下子进程收到信息
+        loop MyWorkPool.maxSize {
+            workPath := A_ScriptDir "\Thread\Work" A_Index ".exe"
+            MyWorkPool.PostMessage(WM_RECEIVE_INFO, workPath, wParam, 0)
+        }
+    
         StringAddress := NumGet(lParam, 2 * A_PtrSize, "Ptr")  ; 检索 CopyDataStruct 的 lpData 成员.
         Cmd := StrGet(StringAddress)  ; 从结构中复制字符串.
         paramArr := StrSplit(Cmd, "_")
