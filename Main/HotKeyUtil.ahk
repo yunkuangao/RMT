@@ -1300,7 +1300,7 @@ SendLogicKey(Key, state, tableItem, index) {
 
     IbSend(keySymbol)
     if (state == 1) {
-        tableItem.HoldKeyArr[index][Key] := "Normal"
+        tableItem.HoldKeyArr[index][Key] := "Logic"
     }
     else {
         if (tableItem.HoldKeyArr[index].Has(Key)) {

@@ -804,6 +804,9 @@ KillTableItemMacro(tableItem, index) {
         else if (value == "Normal") {
             SendNormalKey(key, 0, tableItem, index)
         }
+        else if (value == "Logic") {
+            SendLogicKey(key, 0, tableItem, index)
+        }
         else if (value == "Joy") {
             SendJoyBtnKey(key, 0, tableItem, index)
         }
