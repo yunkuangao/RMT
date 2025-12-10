@@ -312,7 +312,7 @@ InitLogitechGHubNew() {
     if (MySoftData.IsLogitechInit)
         return true
 
-    res := IbSendInit("LogitechGHubNew")
+    res := IbSendInit("LogitechGHubNew", 1)
     if (res = false)
         return false
 
