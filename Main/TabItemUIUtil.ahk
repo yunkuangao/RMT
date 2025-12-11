@@ -389,6 +389,7 @@ OnItemDelMacro(tableItem, itemIndex, foldInfo, foldIndex) {
     beforeHei := GetFoldGroupHeight(foldInfo, foldIndex, isMenu)
     UpdateFoldIndexInfo(foldInfo, itemIndex, foldIndex, false)
     UpdateConItemIndex(tableItem, itemIndex, foldIndex, false)
+    HandleItemTopLabel(foldInfo, tableItem, foldIndex)
     afterHei := GetFoldGroupHeight(foldInfo, foldIndex, isMenu)
     tableItem.FoldOffsetArr[foldIndex] += afterHei - beforeHei
     tableItem.AllGroup[foldIndex].Move(, , , afterHei)
@@ -688,9 +689,6 @@ OnFoldBtnClick(tableItem, btn, *) {
     tableItem.FoldBtnArr[foldIndex].Text := btnStr
 
     tableItem.AllGroup[foldIndex].Move(, , , afterHei)
-
-    ; MySlider.SwitchTab(tableItem)
-    ; UpdateItemConPos(tableItem, true)
     MySlider.RefreshTab()
 }
 
@@ -769,6 +767,21 @@ UpdateConItemIndex(tableItem, OperIndex, FoldIndex, IsAdd) {
     }
 }
 
+HandleItemTopLabel(foldInfo, tableItem, foldIndex) {
+    isNull := foldInfo.IndexSpanArr[foldIndex] == "无-无"
+    if (!isNull)
+        return
+
+    for index, value in tableItem.AllConArr {
+        if (value.FoldIndex != foldIndex)
+            continue
+        if (value.IsTitle)
+            continue
+    
+        value.Hide()
+    }
+}
+
 UpdateConFoldIndex(tableItem, FoldIndex, IsAdd) {
     tableItem.AllGroup[FoldIndex].GetPos(&x, &y, &w, &h)
     DelOffsetY := h - tableItem.FoldOffsetArr[FoldIndex]
@@ -791,7 +804,6 @@ UpdateConFoldIndex(tableItem, FoldIndex, IsAdd) {
                 value.FoldIndex -= 1
                 value.DelAfterOffset(DelOffsetY)
             }
-
         }
     }
 }

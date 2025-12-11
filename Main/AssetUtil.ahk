@@ -1482,6 +1482,7 @@ CustomMsgBox(Text := "", Title := "", Buttons := "") {
 
     ; 创建 GUI
     MyGui := Gui()
+    MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
     MyGui.Title := Title
     MyGui.OnEvent("Close", GuiClose)
     MyGui.OnEvent("Escape", GuiClose)
