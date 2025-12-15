@@ -94,7 +94,7 @@ class UseExplainGui {
         this.ImagePathArr := []
         this.HasChange := false
         if (this.Mode == 2)
-            this.Gui.Title := "请完善使用说明"
+            this.Gui.Title := GetLang("请完善使用说明")
         OperFilePath := SettingPath "\使用说明&署名.txt"
         IniSection := "Instructions for Use & Attribution"
         AuthorText := IniRead(OperFilePath, IniSection, "Author", "")
