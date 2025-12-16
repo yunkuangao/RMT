@@ -687,7 +687,8 @@ class MacroEditGui {
             Data := JSON.parse(saveStr, , false)
 
             iconStr := this.GetCmdIconStr(GetLang("循环次数"))
-            CountRoot := this.MacroTreeViewCon.Add(Format("{}:{}", GetLang("⎖循环次数"), Data.LoopCount), root, iconStr)
+            countStr := Data.LoopCount == -1 ? GetLang("无限") : Data.LoopCount
+            CountRoot := this.MacroTreeViewCon.Add(Format("{}:{}", GetLang("⎖循环次数"), countStr), root, iconStr)
 
             if (Data.CondiType != 1) {
                 iconStr := this.GetCmdIconStr(GetLang("条件"))
