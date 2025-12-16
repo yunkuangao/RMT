@@ -142,6 +142,7 @@ RMT输出弹窗=RMT Popup
 无限=Infinite
 提取文本：不包含&x 或 &c 无法提取内容到变量中=Cannot extract: no &x or &c found.
 {}. 变量名不规范：变量名不能是纯数字={}. Invalid var name: Cannot be only numbers.
+{}. 变量名不规范：变量名不能包含下划线={}. Invalid variable name: underscores are not allowed.
 变量提取失败=Extract Failed
 已提取以下变量=Extracted Vars
 变量提取=Extract

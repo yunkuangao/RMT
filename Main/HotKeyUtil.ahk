@@ -195,7 +195,7 @@ OnSearch(tableItem, cmd, index) {
         }
 
         if (Data.ResultToggle) {
-            MySetGlobalVariable(Data.ResultSaveName, Data.FalseValue, false)
+            MySetGlobalVariable([Data.ResultSaveName], [Data.FalseValue], false)
         }
 
         if (Data.FalseMacro == "")
@@ -255,12 +255,12 @@ OnSearchOnce(tableItem, Data, index) {
         }
 
         if (Data.ResultToggle) {
-            MySetGlobalVariable(Data.ResultSaveName, Data.TrueValue, false)
+            MySetGlobalVariable([Data.ResultSaveName], [Data.TrueValue], false)
         }
 
         if (Data.CoordToogle) {
-            MySetGlobalVariable(Data.CoordXName, Pos[1], false)
-            MySetGlobalVariable(Data.CoordYName, Pos[2], false)
+            MySetGlobalVariable([Data.CoordXName], [Pos[1]], false)
+            MySetGlobalVariable([Data.CoordYName], [Pos[2]], false)
         }
 
         Pos[1] := GetFloatValue(Pos[1], MySoftData.CoordXFloat)
@@ -353,7 +353,7 @@ OnCompare(tableItem, cmd, index) {
 
     if (Data.SaveToggle) {
         SaveValue := result ? Data.TrueValue : Data.FalseValue
-        MySetGlobalVariable(Data.SaveName, SaveValue, Data.IsIgnoreExist)
+        MySetGlobalVariable([Data.SaveName], [SaveValue], Data.IsIgnoreExist)
     }
 
     macro := ""
@@ -680,12 +680,15 @@ OnVariable(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
     Data := GetMacroCMDData(VariableFile, paramArr[2])
     LocalVariableMap := tableItem.VariableMapArr[index]
+    DeleteNameArr := []
+    VariableNameArr := []
+    ValueArr := []
     loop 4 {
         if (!Data.ToggleArr[A_Index])
             continue
         VariableName := Data.VariableArr[A_Index]
         if (Data.OperaTypeArr[A_Index] == 4) {  ;删除
-            MyDelGlobalVariable(VariableName)
+            DeleteNameArr.Push(VariableName)
             continue
         }
 
@@ -706,8 +709,15 @@ OnVariable(tableItem, cmd, index) {
             Value := Data.CopyVariableArr[A_Index]
         }
 
-        MySetGlobalVariable(VariableName, Value, Data.IsIgnoreExist)
+        VariableNameArr.Push(VariableName)
+        ValueArr.Push(Value)
     }
+
+    if (DeleteNameArr.Length != 0)
+        MyDelGlobalVariable(DeleteNameArr)
+
+    if (VariableNameArr.Length != 0)
+        MySetGlobalVariable(VariableNameArr, ValueArr, Data.IsIgnoreExist)
 }
 
 OnExVariable(tableItem, cmd, index) {
@@ -717,13 +727,15 @@ OnExVariable(tableItem, cmd, index) {
     interval := Data.SearchInterval
 
     ;变量初始化默认值0
+    NameArr := []
+    ValueArr := []
     loop 4 {
         if (Data.ToggleArr[A_Index]) {
-            name := Data.VariableArr[A_Index]
-            value := 0
-            MySetGlobalVariable(name, Value, true)
+            NameArr.Push(Data.VariableArr[A_Index])
+            ValueArr.Push(0)
         }
     }
+    MySetGlobalVariable(NameArr, ValueArr, true)
 
     if (Data.SearchCount == -1) {
         return OnExVariableOnce(tableItem, index, Data)
@@ -779,14 +791,15 @@ OnExVariableOnce(tableItem, index, Data) {
         if (VariableValueArr == "")
             continue
 
+        RealNameArr := []
+        RealValueArr := []
         loop VariableValueArr.Length {
             if (Data.ToggleArr[A_Index]) {
-                name := Data.VariableArr[A_Index]
-                value := VariableValueArr[A_Index]
-                MySetGlobalVariable(name, Value, Data.IsIgnoreExist)
+                RealNameArr.Push(Data.VariableArr[A_Index])
+                RealValueArr.Push(VariableValueArr[A_Index])
             }
         }
-
+        MySetGlobalVariable(RealNameArr, RealValueArr, Data.IsIgnoreExist)
         isOk := true
         break
     }
@@ -805,7 +818,7 @@ OnOperation(tableItem, cmd, index) {
         ValueArr := Data.ValueGroups[A_Index]
         Value := GetVariableOperationResult(tableItem, index, Name, SymbolArr, ValueArr)
 
-        MySetGlobalVariable(Data.UpdateNameArr[A_Index], Value, Data.IsIgnoreExist)
+        MySetGlobalVariable([Data.UpdateNameArr[A_Index]], [Value], Data.IsIgnoreExist)
     }
 }
 

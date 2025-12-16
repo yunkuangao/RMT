@@ -16,15 +16,17 @@ OnWorkStopMacro(wParam, lParam, msg, hwnd) {
     }
 }
 
-OnWorkSetGlobalVariable(Name, Value) {
-    global MySoftData
-    MySoftData.VariableMap[Name] := Value
+OnWorkSetGlobalVariable(NameArr, ValueArr) {
+    loop NameArr.Length {
+        MySoftData.VariableMap[NameArr[A_Index]] := ValueArr[A_Index]
+    }
 }
 
-OnWorkDelGlobalVariable(Name) {
-    global MySoftData
-    if (MySoftData.VariableMap.Has(Name))
-        MySoftData.VariableMap.Delete(Name)
+OnWorkDelGlobalVariable(NameArr) {
+    loop NameArr.Length {
+        if (MySoftData.VariableMap.Has(NameArr[A_Index]))
+            MySoftData.VariableMap.Delete(NameArr[A_Index])
+    }
 }
 
 OnWorkGetCmdStr(wParam, lParam, msg, hwnd) {
@@ -36,10 +38,22 @@ OnWorkGetCmdStr(wParam, lParam, msg, hwnd) {
     isCMDTip := StrCompare(paramArr[1], "CMDTip", false) == 0
     isPauseState := StrCompare(paramArr[1], "PauseState", false) == 0
     if (isSetVari) {
-        OnWorkSetGlobalVariable(paramArr[2], paramArr[3])
+        NameValueArr := paramArr.Clone()
+        NameValueArr.RemoveAt(1)
+        NameArr := []
+        ValueArr := []
+        loop NameValueArr.Length {
+            NameArr.Push(NameValueArr[A_Index])
+            ValueArr.Push(NameValueArr[A_Index + 1])
+            A_Index += 1
+        }
+
+        OnWorkSetGlobalVariable(NameArr, ValueArr)
     }
     else if (isDelVari) {
-        OnWorkDelGlobalVariable(paramArr[2])
+        NameArr := paramArr.Clone()
+        NameArr.RemoveAt(1)
+        OnWorkDelGlobalVariable(NameArr)
     }
     else if (isCMDTip) {
         MySoftData.CMDTip := paramArr[2]
@@ -78,7 +92,7 @@ MsgSendHandler(str, Timestamp := "") {
 
     action := CheckIfReceiveInfo.Bind(Timestamp)
     ReceiveCheckMap.Set(Timestamp, action)
-    SetTimer(action, -50)
+    SetTimer(action, -15)
 }
 
 InitWorkFilePath() {
@@ -130,18 +144,48 @@ WorkTriggerSubMacro(tableIndex, itemIndex) {
     MsgPostHandler(WM_TR_MACRO, tableIndex, itemIndex)
 }
 
-WorkSetGlobalVariable(Name, Value, ignoreExist) {
-    global MySoftData
-    if (ignoreExist && MySoftData.VariableMap.Has(Name))
+WorkSetGlobalVariable(NameArr, ValueArr, ignoreExist) {
+    RealNameArr := NameArr.Clone()
+    RealValueArr := ValueArr.Clone()
+    NameValueCMDStr := "SetVari"
+    if (ignoreExist) {
+        RealNameArr := []
+        RealValueArr := []
+        loop NameArr.Length {
+            if (!MySoftData.VariableMap.Has(NameArr[A_Index])) {
+                RealNameArr.Push(NameArr[A_Index])
+                RealValueArr.Push(ValueArr[A_Index])
+            }
+        }
+    }
+    if (RealNameArr.Length == 0)
         return
-    MySoftData.VariableMap[Name] := Value
-    str := Format("SetVari_{}_{}", Name, Value)
-    MsgSendHandler(str)
+
+    loop RealNameArr.Length {
+        if (Type(RealValueArr[A_Index]) == "String") {
+            RealValueArr[A_Index] := Trim(RealValueArr[A_Index], "`n")
+            RealValueArr[A_Index] := Trim(RealValueArr[A_Index])
+        }
+        NameValueCMDStr .= Format("_{}_{}", RealNameArr[A_Index], RealValueArr[A_Index])
+        MySoftData.VariableMap[RealNameArr[A_Index]] := ValueArr[A_Index]
+    }
+    MsgSendHandler(NameValueCMDStr)
 }
 
-WorkDelGlobalVariable(Name) {
-    str := Format("DelVari_{}", Name)
-    MsgSendHandler(str)
+WorkDelGlobalVariable(NameArr) {
+    RealNameArr := []
+    NameValueCMDStr := "DelVari"
+    loop NameArr.Length {
+        if (MySoftData.VariableMap.Has(NameArr[A_Index])) {
+            NameValueCMDStr .= Format("_{}", NameArr[A_Index])
+            MySoftData.VariableMap.Delete(NameArr[A_Index])
+            RealNameArr.Push(NameArr[A_Index])
+        }
+    }
+
+    if (RealNameArr.Length == 0)
+        return
+    MsgSendHandler(NameValueCMDStr)
 }
 
 WorkCMDReport(cmdStr) {

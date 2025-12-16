@@ -611,10 +611,14 @@ OnItemEditMacro(tableItem, btn, *) {
 
     MySoftData.SpecialTableItem.ModeArr[1] := tableItem.ModeArr[index]
     if (MyMacroGui.Gui != "") {
-        style := WinGetStyle(MyCMDTipGui.Gui.Hwnd)
+        style := WinGetStyle(MyMacroGui.Gui.Hwnd)
         isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
-        if (isVisible)
-            MyCMDTipGui.Gui.Hide()
+        if (isVisible) {    ;存在并且显示的话，就打开第二个编辑界面
+            MacroGui := MacroEditGui()
+            MacroGui.SureBtnAction := SureAction
+            MacroGui.ShowGui(macro, true)
+            return
+        }
     }
     MyMacroGui.SureBtnAction := SureAction
     MyMacroGui.ShowGui(macro, true)

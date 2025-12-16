@@ -100,9 +100,9 @@ class VariableListenGui {
         if newValue.Result = "Cancel"
             return
         if (newValue.Value == "") {
-            DelGlobalVariable(varName)
+            DelGlobalVariable([varName])
             return
         }
-        SetGlobalVariable(varName, newValue.Value, false)
+        SetGlobalVariable([varName], [newValue.Value], false)
     }
 }

@@ -163,10 +163,22 @@ class WorkPool {
         isToolTip := StrCompare(paramArr[1], "ToolTip", false) == 0
         isMacroCount := StrCompare(paramArr[1], "MacroCount", false) == 0
         if (isSetVari) {
-            SetGlobalVariable(paramArr[2], paramArr[3], false)
+            NameValueArr := paramArr.Clone()
+            NameValueArr.RemoveAt(1)
+            NameArr := []
+            ValueArr := []
+            loop NameValueArr.Length {
+                NameArr.Push(NameValueArr[A_Index])
+                ValueArr.Push(NameValueArr[A_Index + 1])
+                A_Index += 1
+            }
+
+            SetGlobalVariable(NameArr, ValueArr, false)
         }
         else if (isDelVari) {
-            DelGlobalVariable(paramArr[2])
+            NameArr := paramArr.Clone()
+            NameArr.RemoveAt(1)
+            DelGlobalVariable(NameArr)
         }
         else if (isReport) {
             CMDStr := SubStr(Cmd, 8)

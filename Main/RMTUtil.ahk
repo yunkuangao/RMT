@@ -290,37 +290,61 @@ SubMacroStopAction(tableIndex, itemIndex) {
     MyWorkPool.PostMessage(WM_STOP_MACRO, workPath, 0, 0)
 }
 
-SetGlobalVariable(Name, Value, ignoreExist) {
-    global MySoftData
-    if (ignoreExist && MySoftData.VariableMap.Has(Name))
+SetGlobalVariable(NameArr, ValueArr, ignoreExist) {
+    RealNameArr := NameArr.Clone()
+    RealValueArr := ValueArr.Clone()
+    NameValueCMDStr := "SetVari"
+    if (ignoreExist) {
+        RealNameArr := []
+        RealValueArr := []
+        loop NameArr.Length {
+            if (!MySoftData.VariableMap.Has(NameArr[A_Index])) {
+                RealNameArr.Push(NameArr[A_Index])
+                RealValueArr.Push(ValueArr[A_Index])
+            }
+        }
+    }
+    if (RealNameArr.Length == 0)
         return
-    if (Type(Value) == "String")
-        Value := Trim(Value, "`n")
-    MySoftData.VariableMap[Name] := Value
+
+    loop RealNameArr.Length {
+        if (Type(RealValueArr[A_Index]) == "String") {
+            RealValueArr[A_Index] := Trim(RealValueArr[A_Index], "`n")
+            RealValueArr[A_Index] := Trim(RealValueArr[A_Index])
+        }
+        NameValueCMDStr .= Format("_{}_{}", RealNameArr[A_Index], RealValueArr[A_Index])
+        MySoftData.VariableMap[RealNameArr[A_Index]] := ValueArr[A_Index]
+    }
     MyVarListenGui.Refresh()
     IsMuti := MyWorkPool.CheckEnableMutiThread()
     if (IsMuti) {
         loop MyWorkPool.maxSize {
             workPath := A_ScriptDir "\Thread\Work" A_Index ".exe"
-            str := Format("SetVari_{}_{}", Name, Value)
-            MyWorkPool.SendMessage(WM_COPYDATA, workPath, str)
+            MyWorkPool.SendMessage(WM_COPYDATA, workPath, NameValueCMDStr)
         }
     }
 }
 
-DelGlobalVariable(Name) {
-    global MySoftData
-    if (!MySoftData.VariableMap.Has(Name))
+DelGlobalVariable(NameArr) {
+    RealNameArr := []
+    NameValueCMDStr := "DelVari"
+    loop NameArr.Length {
+        if (MySoftData.VariableMap.Has(NameArr[A_Index])) {
+            NameValueCMDStr .= Format("_{}", NameArr[A_Index])
+            MySoftData.VariableMap.Delete(NameArr[A_Index])
+            RealNameArr.Push(NameArr[A_Index])
+        }
+    }
+
+    if (RealNameArr.Length == 0)
         return
 
-    MySoftData.VariableMap.Delete(Name)
     MyVarListenGui.Refresh()
     IsMuti := MyWorkPool.CheckEnableMutiThread()
     if (IsMuti) {
         loop MyWorkPool.maxSize {
             workPath := A_ScriptDir "\Thread\Work" A_Index ".exe"
-            str := Format("DelVari_{}", Name)
-            MyWorkPool.SendMessage(WM_COPYDATA, workPath, str)
+            MyWorkPool.SendMessage(WM_COPYDATA, workPath, NameValueCMDStr)
         }
     }
 }
