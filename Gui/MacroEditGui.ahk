@@ -23,6 +23,9 @@ class MacroEditGui {
     __new() {
         this.ParentTile := ""
         this.Gui := ""
+        this.GuiMenu := ""
+        this.DebugItemID := 0
+        this.DebugStepNum := 0
         this.ShowSaveBtn := false
         this.SureFocusCon := ""
         this.VariableObjArr := []
@@ -175,6 +178,7 @@ class MacroEditGui {
 
         MySoftData.RecordToggleCon := this.RecordMacroCon
         MySoftData.MacroEditGui := this
+        this.InitGuiMenu()
         this.Init(CommandStr, ShowSaveBtn)
     }
 
@@ -352,7 +356,31 @@ class MacroEditGui {
         this.SaveBtnCtrl := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("应用并保存"))
         this.SaveBtnCtrl.OnEvent("Click", (*) => this.OnSaveBtnClick())
 
-        MyGui.Show(Format("w{} h{}", 920, 550))
+        MyGui.Show(Format("w{} h{}", 920, 570))
+    }
+
+    InitGuiMenu() {
+        if (this.GuiMenu != "")
+            return
+
+        ; 创建菜单栏
+        MyMenuBar := MenuBar()
+
+        ; === 文件菜单 ===
+        ExeMenu := Menu()
+        ExeMenu.Add(GetLang("运行(F5)"), this.MenuHandler.Bind(this))
+        ExeMenu.Add(GetLang("单步运行(F6)"), this.MenuHandler.Bind(this))
+        ExeMenu.Add(GetLang("终止"), this.MenuHandler.Bind(this))
+
+        ; === 编辑菜单 ===
+        ToolMenu := Menu()
+        ToolMenu.Add(GetLang("变量监视"), this.MenuHandler.Bind(this))
+        ToolMenu.Add(GetLang("指令显示"), this.MenuHandler.Bind(this))
+
+        ; === 添加到菜单栏 ===
+        MyMenuBar.Add(GetLang("调试"), ExeMenu)
+        MyMenuBar.Add(GetLang("工具"), ToolMenu)
+        this.Gui.MenuBar := MyMenuBar
     }
 
     Init(MacroStr, ShowSaveBtn) {
@@ -459,32 +487,32 @@ class MacroEditGui {
 
         if (this.ContextMenu == "") {
             this.ContextMenu := Menu()
-            this.ContextMenu.Add(GetLang("编辑"), (*) => this.MenuHandler(GetLang("编辑")))
+            this.ContextMenu.Add(GetLang("编辑"), (*) => this.ContentMenuHandler(GetLang("编辑")))
             this.ContextMenu.IsSkip := true
-            this.ContextMenu.Add(GetLang("跳过指令"), (*) => this.MenuHandler("Skip"))
-            this.ContextMenu.Add(GetLang("指令上移"), (*) => this.MenuHandler(GetLang("指令上移")))
-            this.ContextMenu.Add(GetLang("指令下移"), (*) => this.MenuHandler(GetLang("指令下移")))
+            this.ContextMenu.Add(GetLang("跳过指令"), (*) => this.ContentMenuHandler("Skip"))
+            this.ContextMenu.Add(GetLang("指令上移"), (*) => this.ContentMenuHandler(GetLang("指令上移")))
+            this.ContextMenu.Add(GetLang("指令下移"), (*) => this.ContentMenuHandler(GetLang("指令下移")))
 
             this.ContextMenu.Add()  ; 分隔线
             subMenu := Menu()
             for value in this.CMDStrArr {
-                subMenu.Add(value, this.MenuHandler.Bind(this, "Pre_" value))
+                subMenu.Add(value, this.ContentMenuHandler.Bind(this, "Pre_" value))
             }
             this.ContextMenu.Add(GetLang("上方插入"), subMenu)  ; 将子菜单添加到主菜单
             subMenu := Menu()
             for value in this.CMDStrArr {
-                subMenu.Add(value, this.MenuHandler.Bind(this, "Next_" value))
+                subMenu.Add(value, this.ContentMenuHandler.Bind(this, "Next_" value))
             }
             this.ContextMenu.Add(GetLang("下方插入"), subMenu)  ; 将子菜单添加到主菜单
 
             this.ContextMenu.Add()  ; 分隔线
-            this.ContextMenu.Add(GetLang("共享复制"), (*) => this.MenuHandler(GetLang("共享复制")))
-            this.ContextMenu.Add(GetLang("完全复制"), (*) => this.MenuHandler(GetLang("完全复制")))
-            this.ContextMenu.Add(GetLang("上方粘贴"), (*) => this.MenuHandler(GetLang("上方粘贴")))
-            this.ContextMenu.Add(GetLang("下方粘贴"), (*) => this.MenuHandler(GetLang("下方粘贴")))
+            this.ContextMenu.Add(GetLang("共享复制"), (*) => this.ContentMenuHandler(GetLang("共享复制")))
+            this.ContextMenu.Add(GetLang("完全复制"), (*) => this.ContentMenuHandler(GetLang("完全复制")))
+            this.ContextMenu.Add(GetLang("上方粘贴"), (*) => this.ContentMenuHandler(GetLang("上方粘贴")))
+            this.ContextMenu.Add(GetLang("下方粘贴"), (*) => this.ContentMenuHandler(GetLang("下方粘贴")))
 
             this.ContextMenu.Add()  ; 分隔线
-            this.ContextMenu.Add(GetLang("删除"), (*) => this.MenuHandler(GetLang("删除")))
+            this.ContextMenu.Add(GetLang("删除"), (*) => this.ContentMenuHandler(GetLang("删除")))
         }
 
         if (this.BranchContextMenu == "") {
@@ -492,12 +520,12 @@ class MacroEditGui {
 
             subMenu := Menu()
             for value in this.CMDStrArr {
-                subMenu.Add(value, this.MenuHandler.Bind(this, "Add_" value))
+                subMenu.Add(value, this.ContentMenuHandler.Bind(this, "Add_" value))
             }
             this.BranchContextMenu.Add(GetLang("添加指令"), subMenu)  ; 将子菜单添加到主菜单
 
             this.BranchContextMenu.Add()  ; 分隔线
-            this.BranchContextMenu.Add(GetLang("删除"), (*) => this.MenuHandler(GetLang("删除")))
+            this.BranchContextMenu.Add(GetLang("删除"), (*) => this.ContentMenuHandler(GetLang("删除")))
         }
 
         this.CurItemID := item
@@ -562,6 +590,76 @@ class MacroEditGui {
     }
 
     MenuHandler(cmdStr, *) {
+        switch cmdStr {
+            case GetLang("变量监视"):
+            {
+                if (MyVarListenGui.Gui != "") {
+                    style := WinGetStyle(MyVarListenGui.Gui)
+                    isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+                    if (isVisible) {
+                        MyVarListenGui.Gui.Hide()
+                    }
+                    else {
+                        MyVarListenGui.ShowGui()
+                    }
+                    return
+                }
+                MyVarListenGui.ShowGui()
+            }
+            case GetLang("指令显示"):
+            {
+                if (MyCMDTipGui.Gui != "") {
+                    style := WinGetStyle(MyCMDTipGui.Gui)
+                    isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+                    if (isVisible) {
+                        MyCMDTipGui.Gui.Hide()
+                    }
+                    else {
+                        MyCMDTipGui.ShowGui(GetLang("指令显示"))
+                    }
+                    return
+                }
+                MyCMDTipGui.ShowGui(GetLang("指令显示"))
+            }
+            case GetLang("运行(F5)"):
+            {
+                MacroStr := this.GetMacroStr()
+                OnTriggerSepcialItemMacro(MacroStr)
+            }
+            case GetLang("单步运行(F6)"):
+            {
+                tableItem := MySoftData.SpecialTableItem
+                if (tableItem.ColorStateArr[1] == 1) {
+                    return
+                }
+                MacroStr := this.GetMacroStr()
+                cmdArr := SplitMacro(MacroStr)
+                this.DebugStepNum++
+
+                if (cmdArr.Length >= this.DebugStepNum) {
+                    CurCMD := cmdArr[this.DebugStepNum]
+                    this.DebugItemID := this.MacroTreeViewCon.GetNext(this.DebugItemID)
+                    this.MacroTreeViewCon.Modify(this.DebugItemID, "Select")
+                    OnTriggerSepcialItemMacro(CurCMD)
+                }
+
+                if (this.DebugStepNum >= cmdArr.Length) {
+                    MsgBox(GetLang("单步运行结束"))
+                    this.DebugStepNum := 0
+                    this.DebugItemID := 0
+                    return
+                }
+            }
+            case GetLang("终止"):
+            {
+                this.DebugStepNum := 0
+                this.DebugItemID := 0
+                KillSingleTableMacro(MySoftData.SpecialTableItem)
+            }
+        }
+    }
+
+    ContentMenuHandler(cmdStr, *) {
         itemText := this.MacroTreeViewCon.GetText(this.CurItemID)
         paramsArr := StrSplit(cmdStr, "_")
         if (paramsArr.Length == 2) {
@@ -667,7 +765,8 @@ class MacroEditGui {
         }
 
         if (IsIf || IsSearch || IsSearchPro) {
-            dataFileMap := Map(GetLang("搜索"), SearchFile, GetLang("搜索Pro"), SearchProFile, GetLang("如果"), CompareFile)
+            dataFileMap := Map(GetLang("搜索"), SearchFile, GetLang("搜索Pro"), SearchProFile, GetLang("如果"),
+            CompareFile)
             dataFile := dataFileMap[paramArr[1]]
             saveStr := IniRead(dataFile, IniSection, paramArr[2], "")
             Data := JSON.parse(saveStr, , false)
@@ -864,7 +963,8 @@ class MacroEditGui {
         NodeItemID := this.CurItemID
         RealItemID := ParentID
         macroStr := ""
-        if (itemText != GetLang("真") && itemText != GetLang("假") && itemText != GetLang("循环体") && SubStr(itemText, 1, 2
+        if (itemText != GetLang("真") && itemText != GetLang("假") && itemText != GetLang("循环体") && SubStr(itemText,
+            1, 2
         ) != GetLang("条件")) {
             this.MacroTreeViewCon.Delete(this.CurItemID)
             macroStr := this.GetTreeMacroStr(ParentID)

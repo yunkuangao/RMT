@@ -192,6 +192,20 @@ class TriggerKeyData {
                     MyMenuWheel.OnBtnClick(index)
             }
         }
+
+        if (this.Key == "f5" || this.Key == "f6") {
+            if (!IsObject(MyMacroGui.Gui))
+                return
+
+            style := WinGetStyle(MyMacroGui.Gui.Hwnd)
+            isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+            if (isVisible) {
+                if (this.Key == "f5")
+                    MyMacroGui.MenuHandler(GetLang("运行(F5)"))
+                if (this.Key == "f6")
+                    MyMacroGui.MenuHandler(GetLang("单步运行(F6)"))
+            }
+        }
     }
 
     HandleSoftHotKeyUp() {

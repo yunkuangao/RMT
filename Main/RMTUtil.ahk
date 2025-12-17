@@ -932,3 +932,14 @@ CorrectRemark(Remark) {
     }
     return Remark
 }
+
+OnTriggerSepcialItemMacro(MacroStr) {
+    tableItem := MySoftData.SpecialTableItem
+    tableItem.KilledArr[1] := false
+    tableItem.PauseArr[1] := 0
+    tableItem.ActionCount[1] := 0
+    tableItem.index := 1
+    tableItem.ColorStateArr[1] := 1
+    OnTriggerMacroOnce(tableItem, MacroStr, 1)
+    tableItem.ColorStateArr[1] := 0 ;默认状态
+}

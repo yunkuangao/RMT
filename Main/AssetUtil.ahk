@@ -758,7 +758,8 @@ InitTableItemState() {
     }
 
     tableItem := MySoftData.SpecialTableItem
-    tableItem.ModeArr := [0]
+    tableItem.ModeArr := [1]
+    tableItem.ColorStateArr := [0]
     InitSingleTableState(tableItem)
 }
 
@@ -1437,8 +1438,7 @@ GetRandomStr(length) {
     return result
 }
 
-WaitIfPaused(tableIndex, itemIndex) {
-    tableItem := MySoftData.TableInfo[tableIndex]
+WaitIfPaused(tableItem, itemIndex) {
     while (tableItem.PauseArr[itemIndex]) {
         if (tableItem.KilledArr[itemIndex])
             break

@@ -28,7 +28,7 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
         isFirst := tableItem.ActionCount[index] == 0
         isLast := tableItem.ActionCount[index] == tableItem.LoopCountArr[index] - 1
         isOver := tableItem.ActionCount[index] >= tableItem.LoopCountArr[index]
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             break
@@ -71,7 +71,7 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         if (tableItem.KilledArr[index])
             break
 
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
         paramArr := StrSplit(cmdArr[A_Index], "_")
         if (SubStr(paramArr[1], 1, 2) == "🚫")
             continue
@@ -179,7 +179,7 @@ OnSearch(tableItem, cmd, index) {
     }
     else {
         loop Data.SearchCount {
-            WaitIfPaused(tableItem.index, index)
+            WaitIfPaused(tableItem, index)
 
             if (tableItem.KilledArr[index])
                 return
@@ -433,7 +433,7 @@ OnMMPro(tableItem, cmd, index) {
 
     LastSumTime := 0
     loop Data.Count {
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             return
@@ -545,7 +545,7 @@ OnLoop(tableItem, cmd, index) {
             if (tableItem.KilledArr[index])
                 break
 
-            WaitIfPaused(tableItem.index, index)
+            WaitIfPaused(tableItem, index)
 
             OnTriggerMacroOnce(tableItem, Data.LoopBody, index)
         }
@@ -563,7 +563,7 @@ OnLoop(tableItem, cmd, index) {
             if (tableItem.KilledArr[index])
                 break
 
-            WaitIfPaused(tableItem.index, index)
+            WaitIfPaused(tableItem, index)
 
             OnTriggerMacroOnce(tableItem, Data.LoopBody, index)
         }
@@ -742,7 +742,7 @@ OnExVariable(tableItem, cmd, index) {
     }
     else {
         loop Data.SearchCount {
-            WaitIfPaused(tableItem.index, index)
+            WaitIfPaused(tableItem, index)
 
             if (tableItem.KilledArr[index])
                 return
@@ -879,7 +879,7 @@ OnBGKey(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
     Data := GetMacroCMDData(BGKeyFile, paramArr[2])
     loop Data.ClickCount {
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             break
@@ -1003,7 +1003,7 @@ OnInterval(tableItem, cmd, index) {
     curTime := 0
     clip := Min(500, FloatInterval)
     while (curTime < FloatInterval) {
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             break
@@ -1028,7 +1028,7 @@ OnPressKey(tableItem, cmd, index) {
     IntervalTime := paramArr.Length >= 6 ? Integer(paramArr[6]) : 1000
 
     loop count {
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             break
