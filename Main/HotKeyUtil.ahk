@@ -1277,9 +1277,15 @@ SendLogicKeyClick(KeyArrStr, holdTime, tableItem, index, keyType) {
     if (!InitLogitechGHubNew())
         return
     KeyArr := GetPressKeyArr(KeyArrStr)
+    ;罗技部分按键没有，就降级为AHK_Send把
+    SpecialKeyMap := Map("Volume_Up", 1, "Volume_Down", 1, "Volume_Mute", 1)
     if (keyType == 1 || keyType == 3) {
         for key in KeyArr {
-            SendLogicKey(key, 1, tableItem, index)
+            if (SpecialKeyMap.Has(key))
+                SendNormalKey(key, 1, tableItem, index)
+            else {
+                SendLogicKey(key, 1, tableItem, index)
+            }
         }
     }
 
@@ -1289,7 +1295,11 @@ SendLogicKeyClick(KeyArrStr, holdTime, tableItem, index, keyType) {
 
     if (keyType == 2 || keyType == 3) {
         for key in KeyArr {
-            SendLogicKey(key, 0, tableItem, index)
+            if (SpecialKeyMap.Has(key))
+                SendNormalKey(key, 0, tableItem, index)
+            else {
+                SendLogicKey(key, 0, tableItem, index)
+            }
         }
     }
 }

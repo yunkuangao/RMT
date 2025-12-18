@@ -45,18 +45,6 @@ IbSendInit(send_type := "AnyDriver", mode := 1, args*) {
 
     SetWorkingDir(workding_dir)
 
-    ; if (result !== 0){
-    ;     error_text := [
-    ;         "InvalidArgument",
-    ;         "LibraryNotFound",
-    ;         "LibraryLoadFailed",
-    ;         "LibraryError",
-    ;         "DeviceCreateFailed",
-    ;         "DeviceNotFound",
-    ;         "DeviceOpenFailed"
-    ;     ]
-    ;     throw error_text[result]
-    ; }
     if (result != 0 && send_type == "LogitechGHubNew") {
         MsgBox("使用罗技按键类型，需要下载安装G HUB")
         Run("https://www.logitechg.com/en-my/innovation/g-hub.html")

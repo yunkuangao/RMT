@@ -660,11 +660,6 @@ class KeyGui {
             this.ConMap.Set("Ctrl", con)
 
             PosX += 75
-            con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "Win")
-            con.OnEvent("Click", (*) => this.OnCheckedKey("Win"))
-            this.ConMap.Set("Win", con)
-
-            PosX += 75
             con := MyGui.Add("Checkbox", Format("x{} y{} h{}", PosX, PosY, 20), "Shift")
             con.OnEvent("Click", (*) => this.OnCheckedKey("Shift"))
             this.ConMap.Set("Shift", con)
