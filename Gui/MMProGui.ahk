@@ -1,4 +1,5 @@
 #Requires AutoHotkey v2.0
+#Include WinRuleGui.ahk
 
 class MMProGui {
     __new() {
@@ -9,6 +10,7 @@ class MMProGui {
         this.FocusCon := ""
         this.RemarkCon := ""
         this.Data := ""
+        this.ConfigDLCon := ""
         this.PosAction := () => this.RefreshMousePos()
 
         this.PosVarXCon := ""
@@ -19,6 +21,8 @@ class MMProGui {
         this.SpeedCon := ""
         this.CountCon := ""
         this.IntervalCon := ""
+
+        this.ConfigDLArr := []
     }
 
     ShowGui(cmd) {
@@ -66,13 +70,23 @@ class MMProGui {
 
         PosX := 10
         PosY += 30
-        this.MousePosCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 380, 20), GetLang("当前鼠标位置:0,0"))
+        this.MousePosCon := MyGui.Add("Text", Format("x{} y{} w{} h{}", PosX, PosY, 180, 20), GetLang("当前鼠标位置:0,0"))
 
-        PosY += 20
         PosX := 10
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("游戏视角：调整原神等游戏视角"))
-
         PosY += 30
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 100), GetLang("屏幕规格:"))
+        PosX += 80
+        this.ConfigDLCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 3, 220), [])
+        this.ConfigDLCon.OnEvent("Change", (*) => this.OnChangeConfig())
+        PosX += 230
+        con := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 3, 25, 25), "+")
+        con.OnEvent("Click", (*) => this.OnAddConfig())
+        PosX += 30
+        con := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 3, 25, 25), "-")
+        con.OnEvent("Click", (*) => this.OnRemoveConfig())
+
+        PosY += 35
+        PosX := 10
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 80), GetLang("坐标位置X:"))
         PosX += 80
         this.PosVarXCon := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 5, 100), [])
@@ -115,13 +129,17 @@ class MMProGui {
         this.IsGameViewCon := MyGui.Add("Checkbox", Format("x{} y{} w{} h{}", PosX, PosY, 100, 20), GetLang("游戏视角"))
         this.isGameViewCon.OnEvent("Click", (*) => this.OnTypeChange())
 
-        PosY += 35
+        PosX := 10
+        PosY += 30
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("游戏视角：调整原神等第一人称，第三人称游戏视角"))
+
+        PosY += 30
         PosX := 190
         btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY, 100, 40), GetLang("确定"))
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
         MyGui.OnEvent("Close", (*) => this.ToggleFunc(false))
-        MyGui.Show(Format("w{} h{}", 480, 315))
+        MyGui.Show(Format("w{} h{}", 480, 340))
     }
 
     Init(cmd) {
@@ -130,6 +148,7 @@ class MMProGui {
         this.Data := this.GetMMProData(this.SerialStr)
         this.RemarkCon.Value := cmdArr.Length >= 3 ? cmdArr[3] : ""
 
+        this.RefreshConfigDLArr()
         this.PosVarXCon.Delete()
         this.PosVarXCon.Add(RemoveInVariable(this.VariableObjArr))
         this.PosVarXCon.Text := GetLang(this.Data.PosVarX)
@@ -172,6 +191,122 @@ class MMProGui {
             CommandStr .= "_" Remark
         }
         return CommandStr
+    }
+
+    RefreshConfigDLArr() {
+        Arr := []
+        Arr.Push(this.Data.ConfigName)
+        loop this.Data.ConfigArr.Length {
+            CurConfigData := this.Data.ConfigArr[A_Index]
+            if (ObjHasOwnProp(CurConfigData, "ConfigName"))
+                Arr.Push(CurConfigData.ConfigName)
+        }
+        this.ConfigDLArr := Arr
+
+        this.ConfigDLCon.Delete()
+        this.ConfigDLCon.Add(this.ConfigDLArr)
+        this.ConfigDLCon.Text := this.Data.ConfigName
+    }
+
+    OnAddConfig() {
+        if (!ObjHasOwnProp(this, "WinRuleGui")) {
+            this.WinRuleGui := WinRuleGui()
+        }
+        SureAction(width, height, remark) {
+            ConfigName := Format("{}*{}", width, height)
+            if (remark != "")
+                ConfigName := Format("{}*{}_{}", width, height, remark)
+            loop this.ConfigDLArr.Length {
+                if (this.ConfigDLArr[A_Index] == ConfigName) {
+                    MsgBox(Format("{} 配置已存在，无法重复添加", ConfigName))
+                    return
+                }
+            }
+
+            LastConfig := Object()
+            LastConfig.ConfigName := this.Data.ConfigName
+            LastConfig.PosVarX := GetLangKey(this.PosVarXCon.Text)
+            LastConfig.PosVarY := GetLangKey(this.PosVarYCon.Text)
+            LastConfig.ActionType := this.ActionTypeCon.Value
+            LastConfig.IsRelative := this.IsRelativeCon.Value
+            LastConfig.IsGameView := this.isGameViewCon.Value
+            LastConfig.Speed := this.SpeedCon.Value
+            LastConfig.Count := this.CountCon.Value
+            LastConfig.Interval := this.IntervalCon.Value
+            this.Data.ConfigArr.Push(LastConfig)
+
+            this.Data.ConfigName := ConfigName
+            this.RefreshConfigDLArr()
+            saveStr := JSON.stringify(this.Data, 0)
+            IniWrite(saveStr, MMPROFile, IniSection, this.Data.SerialStr)
+            MsgBox(Format("{} 配置添加成功", ConfigName))
+        }
+        this.WinRuleGui.SureAction := SureAction
+        this.WinRuleGui.ShowGui()
+    }
+
+    OnRemoveConfig() {
+        if (this.ConfigDLArr.Length <= 1) {
+            MsgBox("最后选项不可删除！！！")
+            return
+        }
+
+        result := MsgBox(Format(GetLang("是否删除 {} 配置"), this.ConfigDLCon.Text), GetLang("提示"), 1)
+        if (result == "Cancel")
+            return
+
+        ConfigData := this.Data.ConfigArr[1]
+        this.Data.ConfigArr.RemoveAt(1)
+        this.Data.ConfigName := ConfigData.ConfigName
+        this.Data.PosVarX := ConfigData.PosVarX
+        this.Data.PosVarY := ConfigData.PosVarY
+        this.Data.ActionType := ConfigData.ActionType
+        this.Data.IsRelative := ConfigData.IsRelative
+        this.Data.IsGameView := ConfigData.IsGameView
+        this.Data.Speed := ConfigData.Speed
+        this.Data.Count := ConfigData.Count
+        this.Data.Interval := ConfigData.Interval
+        saveStr := JSON.stringify(this.Data, 0)
+        IniWrite(saveStr, MMPROFile, IniSection, this.Data.SerialStr)
+
+        CMDStr := this.GetCommandStr()
+        this.Init(CMDStr)
+    }
+
+    OnChangeConfig() {
+        LastConfig := Object()
+        LastConfig.ConfigName := this.Data.ConfigName
+        LastConfig.PosVarX := GetLangKey(this.PosVarXCon.Text)
+        LastConfig.PosVarY := GetLangKey(this.PosVarYCon.Text)
+        LastConfig.ActionType := this.ActionTypeCon.Value
+        LastConfig.IsRelative := this.IsRelativeCon.Value
+        LastConfig.IsGameView := this.isGameViewCon.Value
+        LastConfig.Speed := this.SpeedCon.Value
+        LastConfig.Count := this.CountCon.Value
+        LastConfig.Interval := this.IntervalCon.Value
+        this.Data.ConfigArr.Push(LastConfig)
+
+        ConfigData := ""
+        loop this.ConfigDLArr.Length {
+            if (this.ConfigDLCon.Text == this.Data.ConfigArr[A_Index].ConfigName) {
+                ConfigData := this.Data.ConfigArr.RemoveAt(A_Index)
+                break
+            }
+        }
+
+        this.Data.ConfigName := ConfigData.ConfigName
+        this.Data.PosVarX := ConfigData.PosVarX
+        this.Data.PosVarY := ConfigData.PosVarY
+        this.Data.ActionType := ConfigData.ActionType
+        this.Data.IsRelative := ConfigData.IsRelative
+        this.Data.IsGameView := ConfigData.IsGameView
+        this.Data.Speed := ConfigData.Speed
+        this.Data.Count := ConfigData.Count
+        this.Data.Interval := ConfigData.Interval
+        saveStr := JSON.stringify(this.Data, 0)
+        IniWrite(saveStr, MMPROFile, IniSection, this.Data.SerialStr)
+        CMDStr := this.GetCommandStr()
+        this.Init(CMDStr)
     }
 
     CheckIfValid() {

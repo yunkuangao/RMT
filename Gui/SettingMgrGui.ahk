@@ -147,8 +147,8 @@ class SettingMgrGui {
         MySoftData.CurSettingName := newFileName.Value
         IniWrite(MySoftData.CurSettingName, IniFile, IniSection, "CurSettingName")
 
-        RepairPath(MySoftData.CurSettingName, SearchFile, 1)
-        RepairPath(MySoftData.CurSettingName, SearchProFile, 1)
+        SettingDir := A_WorkingDir "\Setting\" MySoftData.CurSettingName
+        this.OnRepairSetting(SettingDir)
         MsgBox(GetLang("重命名成功"))
         Reload()
     }
@@ -377,8 +377,7 @@ class SettingMgrGui {
         SourcePath := A_WorkingDir "\Setting\" MySoftData.CurSettingName
         DestPath := A_WorkingDir "\Setting\" newFileName.Value
         DirCopy(SourcePath, DestPath, 1)
-        RepairPath(newFileName.Value, SearchFile, 1)
-        RepairPath(newFileName.Value, SearchProFile, 1)
+        this.OnRepairSetting(DestPath)
         MsgBox(Format(GetLang("成功复制<{}>配置到<{}>中"), MySoftData.CurSettingName, newFileName.Value))
 
         MySoftData.CurSettingName := newFileName.Value
@@ -389,12 +388,14 @@ class SettingMgrGui {
     OnRepairSetting(SettringDir) {
         SplitPath SettringDir, &fileName, , &fileExt, &fileNameNoExt
         hasWork := false
-        hasWork := RepairPath(fileNameNoExt, SearchFile, 1) || hasWork
-        hasWork := RepairPath(fileNameNoExt, SearchProFile, 1) || hasWork
+        hasWork := RepairPath(fileNameNoExt, SettringDir "\SearchFile.ini", 1) || hasWork
+        hasWork := RepairPath(fileNameNoExt, SettringDir "\SearchProFile.ini", 1) || hasWork
         hasWork := Compat1_0_8F7MMPro(SettringDir "\MMProFile.ini") || hasWork
         hasWork := Compat1_0_9F1MacroInsert(SettringDir "\SubMacroFile.ini") || hasWork
         hasWork := Compat1_0_9F4Search(SettringDir "\SearchProFile.ini") || hasWork
         hasWork := Compat1_0_9F4SearchAutoSelect(SettringDir "\SearchProFile.ini") || hasWork
+        hasWork := Compat1_0_9F4MMPro(SettringDir "\MMProFile.ini") || hasWork
+        hasWork := Compat1_0_9F4MMProAutoSelect(SettringDir "\MMProFile.ini") || hasWork
         return hasWork
     }
 

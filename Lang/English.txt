@@ -254,7 +254,7 @@ keybd_event：调用 Win 系统接口模拟按键，适用比较旧的软件或�
 F1:选取当前坐标=F1:Current Pos
 定位取色器=Color Picker
 当前鼠标位置:0,0=Mouse Pos: 0,0
-游戏视角：调整原神等游戏视角=Game View: For games like Genshin Impact
+游戏视角：调整原神等第一人称，第三人称游戏视角=Game View: Adjust camera for first- and third-person games (e.g. Genshin).
 坐标位置X:=X Pos:
 坐标位置Y:=Y Pos:
 移动速度:=Move Speed:
@@ -743,6 +743,6 @@ RMT默认初始化配置=RMT Default Setting
 屏幕规格:=Dimensions:
 屏幕规格编辑器=Dimensions Edit
 屏幕宽高需要输入数字=Enter screen width and height. Numbers only.
-{}配置已存在，无法重复添加={} already exists. Cannot add again.
+{} 配置已存在，无法重复添加={} already exists. Cannot add again.
 最后选项不可删除！！！=The last option cannot be deleted!
 {} 配置添加成功={} added successfully.

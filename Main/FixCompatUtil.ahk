@@ -166,7 +166,7 @@ Compat1_0_9F4SearchAutoSelect(filePath) {
         ;没有配置就不用切换了
         if (Data.ConfigArr.Length == 0)
             continue
-        CurConfigRuleStr := StrSplit(Data.ConfigName, "_")[0]
+        CurConfigRuleStr := StrSplit(Data.ConfigName, "_")[1]
         CurScreenRuleStr := Format("{}*{}", A_ScreenWidth, A_ScreenHeight)
         ;默认就是这个配置就不用更换了
         if (CurConfigRuleStr == CurScreenRuleStr)
@@ -174,7 +174,7 @@ Compat1_0_9F4SearchAutoSelect(filePath) {
 
         ConfigData := ""
         loop Data.ConfigArr.Length {
-            ConfigRuleStr := StrSplit(Data.ConfigArr[A_Index].ConfigName, "_")[0]
+            ConfigRuleStr := StrSplit(Data.ConfigArr[A_Index].ConfigName, "_")[1]
             if (ConfigRuleStr == CurScreenRuleStr) {
                 ConfigData := Data.ConfigArr.RemoveAt(A_Index)
                 break
@@ -219,6 +219,106 @@ Compat1_0_9F4SearchAutoSelect(filePath) {
             Data.MouseActionType := ConfigData.MouseActionType
             Data.Speed := ConfigData.Speed
             Data.ClickCount := ConfigData.ClickCount
+        }
+        
+        hasFix := true
+        saveStr := JSON.stringify(Data, 0)
+        IniWrite(saveStr, filePath, IniSection, Data.SerialStr)
+    }
+    return hasFix
+}
+
+
+;1.0.9F4 新增窗口分辨率映射不同的配置
+Compat1_0_9F4MMPro(filePath) {
+    hasFix := false
+    if (!FileExist(FilePath))
+        return hasFix
+
+    Symbol := "MMPro"
+    loop read, filePath {
+        LineStr := A_LoopReadLine
+        if (SubStr(LineStr, 1, StrLen(Symbol)) != Symbol)
+            continue
+
+        SerialStr := SubStr(LineStr, 1, StrLen(Symbol) + 7)
+        saveStr := IniRead(FilePath, IniSection, SerialStr, "")
+        Data := JSON.parse(saveStr, , false)
+
+        if (saveStr == "")
+            continue
+
+        ;如果有了，那就说明是新版本，不需要兼容处理
+        if (ObjHasOwnProp(Data, "ConfigName"))
+            continue
+
+        Data.ConfigName := "默认"
+        Data.ConfigArr := []
+        hasFix := true
+        saveStr := JSON.stringify(Data, 0)
+        IniWrite(saveStr, filePath, IniSection, Data.SerialStr)
+    }
+    return hasFix
+}
+
+;自动选择对应的窗口规则配置如果有的话
+Compat1_0_9F4MMProAutoSelect(filePath) {
+    hasFix := false
+    if (!FileExist(FilePath))
+        return hasFix
+
+    Symbol := "MMPro"
+    loop read, filePath {
+        LineStr := A_LoopReadLine
+        if (SubStr(LineStr, 1, StrLen(Symbol)) != Symbol)
+            continue
+
+        SerialStr := SubStr(LineStr, 1, StrLen(Symbol) + 7)
+        saveStr := IniRead(FilePath, IniSection, SerialStr, "")
+        Data := JSON.parse(saveStr, , false)
+        if (saveStr == "")
+            continue
+
+        ;没有配置就不用切换了
+        if (Data.ConfigArr.Length == 0)
+            continue
+        CurConfigRuleStr := StrSplit(Data.ConfigName, "_")[1]
+        CurScreenRuleStr := Format("{}*{}", A_ScreenWidth, A_ScreenHeight)
+        ;默认就是这个配置就不用更换了
+        if (CurConfigRuleStr == CurScreenRuleStr)
+            continue
+
+        ConfigData := ""
+        loop Data.ConfigArr.Length {
+            ConfigRuleStr := StrSplit(Data.ConfigArr[A_Index].ConfigName, "_")[1]
+            if (ConfigRuleStr == CurScreenRuleStr) {
+                ConfigData := Data.ConfigArr.RemoveAt(A_Index)
+                break
+            }
+        }
+        ;匹配上了，交换内容
+        if (ConfigData != "") {
+            LastConfig := Object()
+            LastConfig.ConfigName := Data.ConfigName
+            LastConfig.PosVarX := Data.PosVarX
+            LastConfig.PosVarY := Data.PosVarY
+            LastConfig.ActionType := Data.ActionType
+            LastConfig.IsRelative := Data.IsRelative
+            LastConfig.IsGameView := Data.IsGameView
+            LastConfig.Speed := Data.Speed
+            LastConfig.Count := Data.Count
+            LastConfig.Interval := Data.Interval
+            Data.ConfigArr.Push(LastConfig)
+    
+            Data.ConfigName := ConfigData.ConfigName
+            Data.PosVarX := ConfigData.PosVarX
+            Data.PosVarY := ConfigData.PosVarY
+            Data.ActionType := ConfigData.ActionType
+            Data.IsRelative := ConfigData.IsRelative
+            Data.IsGameView := ConfigData.IsGameView
+            Data.Speed := ConfigData.Speed
+            Data.Count := ConfigData.Count
+            Data.Interval := ConfigData.Interval
         }
         
         hasFix := true

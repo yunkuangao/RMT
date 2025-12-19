@@ -427,7 +427,7 @@ class SearchProGui {
                 ConfigName := Format("{}*{}_{}", width, height, remark)
             loop this.ConfigDLArr.Length {
                 if (this.ConfigDLArr[A_Index] == ConfigName) {
-                    MsgBox(Format("{}配置已存在，无法重复添加", ConfigName))
+                    MsgBox(Format("{} 配置已存在，无法重复添加", ConfigName))
                     return
                 }
             }

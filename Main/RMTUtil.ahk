@@ -689,7 +689,7 @@ RepairPath(SettingName, FilePath, DataType) {
             if (FileExist(NewPath)) {
                 Data.SearchImagePath := NewPath
                 saveStr := JSON.stringify(Data, 0)
-                IniWrite(saveStr, SearchProFile, IniSection, Data.SerialStr)
+                IniWrite(saveStr, FilePath, IniSection, Data.SerialStr)
                 if (MySoftData.DataCacheMap.Has(Data.SerialStr)) {
                     MySoftData.DataCacheMap.Delete(Data.SerialStr)
                 }

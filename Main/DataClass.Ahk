@@ -417,6 +417,8 @@ class CompareProData {
 class MMProData {
     __New() {
         this.SerialStr := ""
+        this.ConfigName := Format("{}*{}_{}", A_ScreenWidth, A_ScreenHeight, GetLang("全屏"))
+        this.ConfigArr := []
         this.PosVarX := 100
         this.PosVarY := 100
         this.ActionType := 1          ;鼠标动作 1移动 2移动点击1次 3移动点击2次
