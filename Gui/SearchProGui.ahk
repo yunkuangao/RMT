@@ -1,5 +1,6 @@
 #Requires AutoHotkey v2.0
 #Include MacroEditGui.ahk
+#Include WinRuleGui.ahk
 
 class SearchProGui {
     __new() {
@@ -13,6 +14,7 @@ class SearchProGui {
         this.CheckClipboardAction := () => this.CheckClipboard()
         this.SelectToggleCon := ""
         this.Data := ""
+        this.ConfigDLCon := ""
         this.MousePosCon := ""
         this.MouseColorCon := ""
         this.MouseColorTipCon := ""
@@ -51,6 +53,7 @@ class SearchProGui {
         this.CoordYNameCon := ""
         this.MacroGui := ""
 
+        this.ConfigDLArr := []
         this.CountTogArr := []
         this.MouseTogArr := []
         this.ResultTogArr := []
@@ -128,11 +131,16 @@ class SearchProGui {
         this.MouseColorTipCon := MyGui.Add("Text", Format("x{} y{} w{} Background{}", PosX, PosY, 20, "FF0000"), "")
         PosX := 10
         PosY += 30
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 100), GetLang("搜索范围:"))
-        PosX := 150
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("相似度(%):"))
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 100), GetLang("窗口规格:"))
         PosX += 75
-        this.SimilarCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 55))
+        this.ConfigDLCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 3, 130), [])
+        this.ConfigDLCon.OnEvent("Change", (*) => this.OnChangeConfig())
+        PosX += 140
+        con := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 3, 25, 25), "+")
+        con.OnEvent("Click", (*) => this.OnAddConfig())
+        PosX += 30
+        con := MyGui.Add("Button", Format("x{} y{} w{} h{}", PosX, PosY - 3, 25, 25), "-")
+        con.OnEvent("Click", (*) => this.OnRemoveConfig())
 
         PosX := 330
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 80), GetLang("搜索类型:"))
@@ -145,6 +153,13 @@ class SearchProGui {
         PosY += 30
         PosX := 10
         SplitPosY := PosY
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 100), GetLang("搜索范围:"))
+        PosX := 150
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("相似度(%):"))
+        PosX += 75
+        this.SimilarCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 55))
+        PosY += 30
+        PosX := 10
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("起始坐标X:"))
         PosX += 75
         this.StartPosXCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 55))
@@ -184,16 +199,15 @@ class SearchProGui {
         this.MouseActionTypeCon.OnEvent("Change", this.OnChangeType.Bind(this))
         PosY += 30
         PosX := 10
-        con := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 120), GetLang("移动速度(0~100):"))
+        con := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 120), GetLang("移动速度:"))
         this.MouseTogArr.Push(con)
-        PosX += 120
+        PosX += 75
         con := this.SpeedCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 55), "90")
         this.MouseTogArr.Push(con)
-        PosY += 30
-        PosX := 10
-        con := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 120), GetLang("鼠标点击次数:"))
+        PosX := 150
+        con := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 120), GetLang("点击次数:"))
         this.MouseTogArr.Push(con)
-        PosX += 120
+        PosX += 75
         con := this.ClickCountCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 55), "1")
         this.MouseTogArr.Push(con)
 
@@ -326,7 +340,7 @@ class SearchProGui {
         this.Data := this.GetSearchData(this.SerialStr)
         if (!this.CheckIfDataValid())
             return
-
+        this.RefreshConfigDLArr()
         this.SearchTypeCon.Value := this.Data.SearchType
         this.SimilarCon.Value := this.Data.Similar
         this.OCRTypeCon.Value := this.Data.OCRType
@@ -386,6 +400,154 @@ class SearchProGui {
 
         data := JSON.parse(saveStr, , false)
         return data
+    }
+
+    RefreshConfigDLArr() {
+        Arr := []
+        Arr.Push(this.Data.ConfigName)
+        loop this.Data.ConfigArr.Length {
+            CurConfigData := this.Data.ConfigArr[A_Index]
+            if (ObjHasOwnProp(CurConfigData, "ConfigName"))
+                Arr.Push(CurConfigData.ConfigName)
+        }
+        this.ConfigDLArr := Arr
+
+        this.ConfigDLCon.Delete()
+        this.ConfigDLCon.Add(this.ConfigDLArr)
+        this.ConfigDLCon.Text := this.Data.ConfigName
+    }
+
+    OnAddConfig() {
+        if (!ObjHasOwnProp(this, "WinRuleGui")) {
+            this.WinRuleGui := WinRuleGui()
+        }
+        SureAction(width, height, remark) {
+            ConfigName := Format("{}*{}", width, height)
+            if (remark != "")
+                ConfigName := Format("{}*{}_{}", width, height, remark)
+            loop this.ConfigDLArr.Length {
+                if (this.ConfigDLArr[A_Index] == ConfigName) {
+                    MsgBox(Format("{}配置已存在，无法重复添加", ConfigName))
+                    return
+                }
+            }
+
+            LastConfig := Object()
+            LastConfig.ConfigName := this.Data.ConfigName
+            LastConfig.SearchType := this.SearchTypeCon.Value
+            LastConfig.SearchColor := this.HexColorCon.Value
+            LastConfig.SearchText := this.TextCon.Text
+            LastConfig.SearchImagePath := this.Data.SearchImagePath
+            LastConfig.Similar := this.SimilarCon.Value
+            LastConfig.OCRType := this.OCRTypeCon.Value
+            LastConfig.SearchImageType := this.ImageTypeCon.Value
+            LastConfig.StartPosX := this.StartPosXCon.Value
+            LastConfig.StartPosY := this.StartPosYCon.Value
+            LastConfig.EndPosX := this.EndPosXCon.Value
+            LastConfig.EndPosY := this.EndPosYCon.Value
+            LastConfig.SearchCount := this.SearchCountCon.Text == GetLang("无限") ? -1 : this.SearchCountCon.Text
+            LastConfig.SearchInterval := this.SearchIntervalCon.Value
+            LastConfig.MouseActionType := this.MouseActionTypeCon.Value
+            LastConfig.Speed := this.SpeedCon.Value
+            LastConfig.ClickCount := this.ClickCountCon.Value
+            this.Data.ConfigArr.Push(LastConfig)
+
+            this.Data.ConfigName := ConfigName
+            this.RefreshConfigDLArr()
+            saveStr := JSON.stringify(this.Data, 0)
+            IniWrite(saveStr, SearchProFile, IniSection, this.Data.SerialStr)
+            MsgBox(Format("{} 配置添加成功", ConfigName))
+        }
+        this.WinRuleGui.SureAction := SureAction
+        this.WinRuleGui.ShowGui()
+    }
+
+    OnRemoveConfig() {
+        if (this.ConfigDLArr.Length <= 1) {
+            MsgBox("最后选项不可删除！！！")
+            return
+        }
+
+        result := MsgBox(Format(GetLang("是否删除 {} 配置"), this.ConfigDLCon.Text), GetLang("提示"), 1)
+        if (result == "Cancel")
+            return
+
+        ConfigData := this.Data.ConfigArr[1]
+        this.Data.ConfigArr.RemoveAt(1)
+        this.Data.ConfigName := ConfigData.ConfigName
+        this.Data.SearchType := ConfigData.SearchType
+        this.Data.SearchColor := ConfigData.SearchColor
+        this.Data.SearchText := ConfigData.SearchText
+        this.Data.SearchImagePath := ConfigData.SearchImagePath
+        this.Data.Similar := ConfigData.Similar
+        this.Data.OCRType := ConfigData.OCRType
+        this.Data.SearchImageType := ConfigData.SearchImageType
+        this.Data.StartPosX := ConfigData.StartPosX
+        this.Data.StartPosY := ConfigData.StartPosY
+        this.Data.EndPosX := ConfigData.EndPosX
+        this.Data.EndPosY := ConfigData.EndPosY
+        this.Data.SearchCount := ConfigData.SearchCount
+        this.Data.SearchInterval := ConfigData.SearchInterval
+        this.Data.MouseActionType := ConfigData.MouseActionType
+        this.Data.Speed := ConfigData.Speed
+        this.Data.ClickCount := ConfigData.ClickCount
+        saveStr := JSON.stringify(this.Data, 0)
+        IniWrite(saveStr, SearchProFile, IniSection, this.Data.SerialStr)
+
+        CMDStr := this.GetCommandStr()
+        this.Init(CMDStr)
+    }
+
+    OnChangeConfig() {
+        LastConfig := Object()
+        LastConfig.ConfigName := this.Data.ConfigName
+        LastConfig.SearchType := this.SearchTypeCon.Value
+        LastConfig.SearchColor := this.HexColorCon.Value
+        LastConfig.SearchText := this.TextCon.Text
+        LastConfig.SearchImagePath := this.Data.SearchImagePath
+        LastConfig.Similar := this.SimilarCon.Value
+        LastConfig.OCRType := this.OCRTypeCon.Value
+        LastConfig.SearchImageType := this.ImageTypeCon.Value
+        LastConfig.StartPosX := this.StartPosXCon.Value
+        LastConfig.StartPosY := this.StartPosYCon.Value
+        LastConfig.EndPosX := this.EndPosXCon.Value
+        LastConfig.EndPosY := this.EndPosYCon.Value
+        LastConfig.SearchCount := this.SearchCountCon.Text == GetLang("无限") ? -1 : this.SearchCountCon.Text
+        LastConfig.SearchInterval := this.SearchIntervalCon.Value
+        LastConfig.MouseActionType := this.MouseActionTypeCon.Value
+        LastConfig.Speed := this.SpeedCon.Value
+        LastConfig.ClickCount := this.ClickCountCon.Value
+        this.Data.ConfigArr.Push(LastConfig)
+
+        ConfigData := ""
+        loop this.ConfigDLArr.Length {
+            if (this.ConfigDLCon.Text == this.Data.ConfigArr[A_Index].ConfigName) {
+                ConfigData := this.Data.ConfigArr.RemoveAt(A_Index)
+                break
+            }
+        }
+
+        this.Data.ConfigName := ConfigData.ConfigName
+        this.Data.SearchType := ConfigData.SearchType
+        this.Data.SearchColor := ConfigData.SearchColor
+        this.Data.SearchText := ConfigData.SearchText
+        this.Data.SearchImagePath := ConfigData.SearchImagePath
+        this.Data.Similar := ConfigData.Similar
+        this.Data.OCRType := ConfigData.OCRType
+        this.Data.SearchImageType := ConfigData.SearchImageType
+        this.Data.StartPosX := ConfigData.StartPosX
+        this.Data.StartPosY := ConfigData.StartPosY
+        this.Data.EndPosX := ConfigData.EndPosX
+        this.Data.EndPosY := ConfigData.EndPosY
+        this.Data.SearchCount := ConfigData.SearchCount
+        this.Data.SearchInterval := ConfigData.SearchInterval
+        this.Data.MouseActionType := ConfigData.MouseActionType
+        this.Data.Speed := ConfigData.Speed
+        this.Data.ClickCount := ConfigData.ClickCount
+        saveStr := JSON.stringify(this.Data, 0)
+        IniWrite(saveStr, SearchProFile, IniSection, this.Data.SerialStr)
+        CMDStr := this.GetCommandStr()
+        this.Init(CMDStr)
     }
 
     CheckIfDataValid() {

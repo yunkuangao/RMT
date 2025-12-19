@@ -332,6 +332,7 @@ class MoveData {
 class SearchData {
     __New() {
         this.SerialStr := ""
+        this.ConfigName := Format("{}*{}_{}", A_ScreenWidth, A_ScreenHeight, GetLang("全屏"))
         this.SearchType := 1       ;1 图片  2 颜色  3 文本
         this.SearchColor := "FFFFFF"
         this.SearchText := GetLang("检索文本")
@@ -346,8 +347,9 @@ class SearchData {
         this.SearchCount := 1
         this.SearchInterval := 1000
         this.MouseActionType := 1   ;   1无动作 2移动到目标 3移动到目标点击
-        this.ClickCount := 1
         this.Speed := 90
+        this.ClickCount := 1
+        this.ConfigArr := []    ;配置数组，不同的分辨率
         this.TrueMacro := ""
         this.FalseMacro := ""
         this.ResultToggle := 0

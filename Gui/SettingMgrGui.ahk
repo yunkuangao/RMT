@@ -393,6 +393,8 @@ class SettingMgrGui {
         hasWork := RepairPath(fileNameNoExt, SearchProFile, 1) || hasWork
         hasWork := Compat1_0_8F7MMPro(SettringDir "\MMProFile.ini") || hasWork
         hasWork := Compat1_0_9F1MacroInsert(SettringDir "\SubMacroFile.ini") || hasWork
+        hasWork := Compat1_0_9F4Search(SettringDir "\SearchProFile.ini") || hasWork
+        hasWork := Compat1_0_9F4SearchAutoSelect(SettringDir "\SearchProFile.ini") || hasWork
         return hasWork
     }
 
