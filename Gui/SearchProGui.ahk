@@ -131,7 +131,7 @@ class SearchProGui {
         this.MouseColorTipCon := MyGui.Add("Text", Format("x{} y{} w{} Background{}", PosX, PosY, 20, "FF0000"), "")
         PosX := 10
         PosY += 30
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 100), GetLang("窗口规格:"))
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 100), GetLang("屏幕规格:"))
         PosX += 75
         this.ConfigDLCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 3, 130), [])
         this.ConfigDLCon.OnEvent("Change", (*) => this.OnChangeConfig())
