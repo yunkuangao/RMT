@@ -22,6 +22,7 @@ class ExVariableGui {
         this.SearchCountCon := ""
         this.SearchIntervalCon := ""
         this.OCRTypeCon := ""
+        this.ProgressBarTipCon := ""
         this.Data := ""
     }
 
@@ -123,8 +124,14 @@ class ExVariableGui {
         this.ExtractStrCon := MyGui.Add("Edit", Format("x{} y{} w{}", PosX + 75, PosY - 5, 250), "")
         this.ExtractTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX + 345, PosY - 5, 80), GetLangArr([
             "屏幕",
-            "剪切板"]))
+            "剪切板",
+            "进度条"]))
         this.ExtractTypeCon.Value := 1
+        this.ExtractTypeCon.OnEvent("Change", (*) => this.OnExtractTypeChange())
+
+        ; 添加进度条提示文本
+        PosY += 25
+        this.ProgressBarTipCon := MyGui.Add("Text", Format("x{} y{} w{} cRed", PosX, PosY, 550), "")
 
         PosX := 20
         PosY += 30
@@ -184,7 +191,7 @@ class ExVariableGui {
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
         MyGui.OnEvent("Close", (*) => this.ToggleFunc(false))
-        MyGui.Show(Format("w{} h{}", 600, 425))
+        MyGui.Show(Format("w{} h{}", 600, 460))
     }
 
     Init(cmd) {
@@ -211,6 +218,9 @@ class ExVariableGui {
         this.SearchCountCon.Add([GetLang("无限")])
         this.SearchCountCon.Text := this.Data.SearchCount == -1 ? GetLang("无限") : this.Data.SearchCount
         this.SearchIntervalCon.Value := this.Data.SearchInterval
+        
+        ; 初始化进度条提示状态
+        this.OnExtractTypeChange()
     }
 
     ToggleFunc(state) {
@@ -300,6 +310,16 @@ class ExVariableGui {
             TextObjs := GetScreenTextObjArr(X1, Y1, X2, Y2, Data.OCRType)
             TextObjs := TextObjs == "" ? [] : TextObjs
         }
+        else if (Data.ExtractType == 3) {
+            ; 进度条分析
+            TextObjs := []
+            progressResult := this.ExtractProgressBar(X1, Y1, X2, Y2)
+            if (progressResult.percentage >= 0) {
+                obj := Object()
+                obj.Text := progressResult.percentage
+                TextObjs.Push(obj)
+            }
+        }
         else {
             TextObjs := []
             if (!IsClipboardText())
@@ -338,6 +358,9 @@ class ExVariableGui {
             MsgBox(GetLang("变量提取失败"))
         }
         else {
+            ; 保存变量到全局变量系统
+            MySetGlobalVariable(NameArr, ValueArr, Data.IsIgnoreExist)
+            
             tipStr := GetLang("已提取以下变量") "`n"
             loop NameArr.Length {
                 tipStr .= NameArr[A_Index] " = " ValueArr[A_Index] "`n"
@@ -436,5 +459,60 @@ class ExVariableGui {
         if (variTip)
             ShowNoVariableTip(variableName)
         return false
+    }
+
+    ; 提取类型变化事件处理
+    OnExtractTypeChange() {
+        extractType := this.ExtractTypeCon.Value
+        
+        if (extractType == 3) {
+            ; 进度条模式，显示提示
+            this.ProgressBarTipCon.Value := "进度条：尽量框选最小范围，最好是确定像素，值为0-100"
+            ; 禁用OCR选择（进度条不需要OCR）
+            this.OCRTypeCon.Enabled := false
+            ; 清空提取文本（进度条不需要提取规则）
+            this.ExtractStrCon.Value := ""
+        } else {
+            ; 其他模式，隐藏提示
+            this.ProgressBarTipCon.Value := ""
+            ; 启用OCR选择
+            this.OCRTypeCon.Enabled := true
+        }
+    }
+
+    ; 进度条提取方法
+    ExtractProgressBar(X1, Y1, X2, Y2) {
+        try {
+            ; 使用全局GDI+实例（已由RMTUtil.ahk初始化）
+            
+            ; 获取屏幕截图
+            hdc := DllCall("GetDC", "Ptr", 0, "Ptr")
+            hbm := CreateDIBSection(X2-X1, Y2-Y1, hdc)
+            hdcBitmap := DllCall("CreateCompatibleDC", "Ptr", hdc, "Ptr")
+            obm := DllCall("SelectObject", "Ptr", hdcBitmap, "Ptr", hbm, "Ptr")
+            DllCall("BitBlt", "Ptr", hdcBitmap, "Int", 0, "Int", 0, "Int", X2-X1, "Int", Y2-Y1, "Ptr", hdc, "Int", X1, "Int", Y1, "UInt", 0x00CC0020)
+            bitmap := Gdip_CreateBitmapFromHBITMAP(hbm)
+            
+            ; 清理资源
+            DllCall("SelectObject", "Ptr", hdcBitmap, "Ptr", obm)
+            DllCall("DeleteObject", "Ptr", hbm)
+            DllCall("DeleteDC", "Ptr", hdcBitmap)
+            DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdc)
+            
+            if (!bitmap) {
+                return {percentage: -1, error: "无法创建位图"}
+            }
+            
+            ; 调用进度条分析（因为ProgressBarAnalyzer已经在RMT.ahk中包含）
+            result := AnalyzeProgressBar(bitmap)
+            
+            ; 清理位图
+            Gdip_DisposeImage(bitmap)
+            
+            return result
+            
+        } catch as e {
+            return {percentage: -1, error: "进度条分析失败: " e.Message}
+        }
     }
 }

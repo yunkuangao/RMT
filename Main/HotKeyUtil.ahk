@@ -768,6 +768,16 @@ OnExVariableOnce(tableItem, index, Data) {
         TextObjs := GetScreenTextObjArr(X1, Y1, X2, Y2, Data.OCRType)
         TextObjs := TextObjs == "" ? [] : TextObjs
     }
+    else if (Data.ExtractType == 3) {
+        ; 进度条分析
+        TextObjs := []
+        progressResult := ExtractProgressBarFromScreen(X1, Y1, X2, Y2)
+        if (progressResult.percentage >= 0) {
+            obj := Object()
+            obj.Text := progressResult.percentage
+            TextObjs.Push(obj)
+        }
+    }
     else {
         TextObjs := []
         if (!IsClipboardText())
@@ -804,6 +814,42 @@ OnExVariableOnce(tableItem, index, Data) {
     }
 
     return isOk
+}
+
+; 从屏幕提取进度条的函数
+ExtractProgressBarFromScreen(X1, Y1, X2, Y2) {
+    try {
+        ; 使用全局GDI+实例（已由RMTUtil.ahk初始化）
+        
+        ; 获取屏幕截图
+        hdc := DllCall("GetDC", "Ptr", 0, "Ptr")
+        hbm := CreateDIBSection(X2-X1, Y2-Y1, hdc)
+        hdcBitmap := DllCall("CreateCompatibleDC", "Ptr", hdc, "Ptr")
+        obm := DllCall("SelectObject", "Ptr", hdcBitmap, "Ptr", hbm, "Ptr")
+        DllCall("BitBlt", "Ptr", hdcBitmap, "Int", 0, "Int", 0, "Int", X2-X1, "Int", Y2-Y1, "Ptr", hdc, "Int", X1, "Int", Y1, "UInt", 0x00CC0020)
+        bitmap := Gdip_CreateBitmapFromHBITMAP(hbm)
+        
+        ; 清理资源
+        DllCall("SelectObject", "Ptr", hdcBitmap, "Ptr", obm)
+        DllCall("DeleteObject", "Ptr", hbm)
+        DllCall("DeleteDC", "Ptr", hdcBitmap)
+        DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdc)
+        
+        if (!bitmap) {
+            return {percentage: -1, error: "无法创建位图"}
+        }
+        
+        ; 调用进度条分析器
+        result := AnalyzeProgressBar(bitmap)
+        
+        ; 清理位图
+        Gdip_DisposeImage(bitmap)
+        
+        return result
+        
+    } catch as e {
+        return {percentage: -1, error: "进度条分析失败: " e.Message}
+    }
 }
 
 OnOperation(tableItem, cmd, index) {

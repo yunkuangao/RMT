@@ -26,6 +26,7 @@
 #Include Gui\CMDTipSettingGui.ahk
 #Include Gui\CustomMsgBoxGui.ahk
 #Include Main\Gdip_All.ahk
+#Include Main\ProgressBarAnalyzer.ahk
 #Include Main\LineDrawer.ahk
 #Include Main\LineOverlay.ahk
 #Include Main\DataClass.ahk
