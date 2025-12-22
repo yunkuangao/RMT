@@ -504,7 +504,7 @@ class ExVariableGui {
             }
             
             ; 调用进度条分析（因为ProgressBarAnalyzer已经在RMT.ahk中包含）
-            result := AnalyzeProgressBar(bitmap)
+            result := MyAnalyzeProgressBar(bitmap)
             
             ; 清理位图
             Gdip_DisposeImage(bitmap)

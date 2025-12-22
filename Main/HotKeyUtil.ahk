@@ -840,7 +840,7 @@ ExtractProgressBarFromScreen(X1, Y1, X2, Y2) {
         }
         
         ; 调用进度条分析器
-        result := AnalyzeProgressBar(bitmap)
+        result := MyAnalyzeProgressBar(bitmap)
         
         ; 清理位图
         Gdip_DisposeImage(bitmap)

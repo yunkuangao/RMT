@@ -4,6 +4,7 @@
 #Include "..\Main\AssetUtil.ahk"
 #Include "..\Main\HotkeyUtil.ahk"
 #Include "..\Main\Gdip_All.ahk"
+#Include "..\Main\ProgressBarAnalyzer.ahk"
 #Include "..\Main\CompareUtil.ahk"
 #Include "..\Main\FixCompatUtil.ahk"
 #Include "..\Main\LangUtil.ahk"
@@ -49,6 +50,7 @@ global MySetItemPauseState := WorkSetItemPauseState
 global MyMsgBoxContent := WorkMsgBoxContent
 global MyToolTipContent := WorkToolTipContent
 global MyMacroCount := WorkMacroCount
+global MyAnalyzeProgressBar := AnalyzeProgressBar
 WorkOpenCVLoadDll()
 
 ; 注册消息

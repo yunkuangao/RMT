@@ -91,6 +91,7 @@ global MySetItemPauseState := SetItemPauseState
 global MyMsgBoxContent := MsgBoxContent
 global MyToolTipContent := ToolTipContent
 global MyMacroCount := MacroCount
+global MyAnalyzeProgressBar := AnalyzeProgressBar
 
 InitFilePath()          ;初始化文件路径
 LoadCurMacroSetting()   ;加载当前配置宏

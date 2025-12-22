@@ -47,12 +47,8 @@ AnalyzeProgressBar(bitmap) {
 ; OCR识别尝试
 TryOCRRecognition(bitmap) {
     try {
-        ; 尝试获取RapidOCR实例
-        if (!IsSet(MyRapidOcr)) {
-            MyRapidOcr := RapidOcr(A_WorkingDir, 1)
-        }
-        
-        ocr := MyRapidOcr
+        ; 使用全局OCR实例，优先使用中文OCR
+        ocr := IsSet(MyChineseOcr) ? MyChineseOcr : MyEnglishOcr
         if (!ocr || !ocr.ptr) {
             return {success: false}
         }
