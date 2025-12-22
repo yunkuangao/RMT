@@ -332,7 +332,7 @@ OnItemAddMacroBtnClick(tableItem, btn, *) {
     tableItem.RemarkArr.InsertAt(AddIndex, "")
     tableItem.LoopCountArr.InsertAt(AddIndex, "1")
     tableItem.HoldTimeArr.InsertAt(AddIndex, 500)
-    tableItem.SerialArr.InsertAt(AddIndex, FormatTime(, "HHmmss"))
+    tableItem.SerialArr.InsertAt(AddIndex, GetSerialStr(""))
     tableItem.TimingSerialArr.InsertAt(AddIndex, GetSerialStr("Timing"))
     tableItem.StartTipSoundArr.InsertAt(AddIndex, 1)
     tableItem.EndTipSoundArr.InsertAt(AddIndex, 1)
