@@ -47,7 +47,7 @@ class SettingMgrGui {
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("当前配置："))
 
         PosX += 70
-        this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 130), "")
+        this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 155), "")
 
         PosX := 245
         con := MyGui.Add("Button", Format("x{} y{} w80", PosX, PosY - 5), GetLang("重命名"))

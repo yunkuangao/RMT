@@ -10,7 +10,6 @@ class CMDTipSettingGui {
         this.PosYCon := ""
         this.WidthCon := ""
         this.HeightCon := ""
-        this.LineNumCon := ""
         this.BGColorCon := ""
         this.TransparencyCon := ""
         this.FontSizeCon := ""
@@ -38,7 +37,6 @@ class CMDTipSettingGui {
         this.TransparencyCon.Value := MySoftData.CMDTransparency
         this.FontSizeCon.Value := MySoftData.CMDFontSize
         this.FontColorCon.Value := MySoftData.CMDFontColor
-        this.LineNumCon.Value := MySoftData.CMDLineNum
 
         this.BGColorTipCon.Opt(Format("+Background0x{}", this.BGColorCon.Value))
         this.BGColorTipCon.Redraw()
@@ -125,9 +123,7 @@ class CMDTipSettingGui {
 
         PosX := 10
         PosY += 35
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("显示个数："))
         PosX += 90
-        this.LineNumCon := MyGui.Add("Edit", Format("x{} y{} w80", PosX, PosY - 3), "")
 
         PosX += 140
         PosX += 90
@@ -170,11 +166,6 @@ class CMDTipSettingGui {
             return false
         }
 
-        if (!IsNumber(this.LineNumCon.Value) && this.LineNumCon.Value <= 0) {
-            MsgBox(GetLang("显示个数：需要输入大于零的数字！！！"))
-            return false
-        }
-
         return true
     }
 
@@ -187,7 +178,6 @@ class CMDTipSettingGui {
         this.TransparencyCon.Value := 50
         this.FontSizeCon.Value := 12
         this.FontColorCon.Value := "000000"
-        this.LineNumCon.Value := 5
     }
 
     OnSureBtnClick() {
@@ -199,7 +189,6 @@ class CMDTipSettingGui {
         MySoftData.CMDPosY := this.PosYCon.Value
         MySoftData.CMDWidth := this.WidthCon.Value
         MySoftData.CMDHeight := this.HeightCon.Value
-        MySoftData.CMDLineNum := this.LineNumCon.Value
         MySoftData.CMDBGColor := this.BGColorCon.Value
         MySoftData.CMDTransparency := this.TransparencyCon.Value
         MySoftData.CMDFontSize := this.FontSizeCon.Value

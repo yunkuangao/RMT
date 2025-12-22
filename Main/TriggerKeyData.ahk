@@ -160,6 +160,8 @@ class TriggerKeyData {
             if (MyMouseInfo.CheckIfMatch("RMT-FreePaste⎖⎖")) {
                 MyFreePasteGui.OnScrollWheel(this.Key)
             }
+
+            MyCMDTipGui.OnScrollWheel(this.Key)
         }
 
         isArrowKey1 := this.Key == "left" || this.Key == "right"
@@ -179,19 +181,9 @@ class TriggerKeyData {
             }
         }
 
-        numberArr := ["1", "2", "3", "4", "5", "6", "7", "8"]
-        loop numberArr.Length {
-            if (this.Key == numberArr[A_Index]) {
-                index := Integer(this.Key)
-                if (!IsObject(MyMenuWheel.Gui))
-                    return
-
-                style := WinGetStyle(MyMenuWheel.Gui.Hwnd)
-                isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
-                if (isVisible)
-                    MyMenuWheel.OnBtnClick(index)
-            }
-        }
+        isMenuBtnHotKey := CheckIfMenuBtnHotKey(this.Key)
+        if (isMenuBtnHotKey)
+            MyMenuWheel.OnSoftKey(this.Key, true)
 
         if (this.Key == "f5" || this.Key == "f6" || this.Key == "delete" || this.Key == "numpaddot") {
             MySoftData.MacroEditGui.OnSoftKey(this.Key, true)

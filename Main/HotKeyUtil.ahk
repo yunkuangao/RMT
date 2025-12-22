@@ -1,18 +1,3 @@
-BindShortcut(triggerInfo, action) {
-    if (triggerInfo == "")
-        return
-
-    isString := SubStr(triggerInfo, 1, 1) == ":"
-
-    if (isString) {
-        Hotstring(triggerInfo, action)
-    }
-    else {
-        key := "$*~" triggerInfo
-        Hotkey(key, action)
-    }
-}
-
 ;按键宏命令
 OnTriggerMacroKeyAndInit(tableItem, macro, index) {
     MyMacroCount("Add")

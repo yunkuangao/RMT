@@ -373,13 +373,29 @@ class MacroEditGui {
         ExeMenu.Add(GetLang("终止"), this.MenuHandler.Bind(this))
 
         ; === 编辑菜单 ===
-        ToolMenu := Menu()
-        ToolMenu.Add(GetLang("变量监视"), this.MenuHandler.Bind(this))
-        ToolMenu.Add(GetLang("指令显示"), this.MenuHandler.Bind(this))
+        this.ToolMenu := Menu()
+        this.ToolMenu.Add(GetLang("变量监视"), this.MenuHandler.Bind(this))
+        this.ToolMenu.Add(GetLang("指令显示"), this.MenuHandler.Bind(this))
+        this.ToolMenu.Add(GetLang("窗口置顶"), this.MenuHandler.Bind(this))
 
         ; === 添加到菜单栏 ===
         MyMenuBar.Add(GetLang("调试"), ExeMenu)
-        MyMenuBar.Add(GetLang("工具"), ToolMenu)
+        MyMenuBar.Add(GetLang("工具"), this.ToolMenu)
+
+        if (MyVarListenGui.Gui != "") {
+            style := WinGetStyle(MyVarListenGui.Gui)
+            isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+            if (isVisible)
+                this.ToolMenu.Check(GetLang("变量监视"))
+        }
+
+        if (MyCMDTipGui.Gui != "") {
+            style := WinGetStyle(MyCMDTipGui.Gui)
+            isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+            if (isVisible)
+                this.ToolMenu.Check(GetLang("指令显示"))
+        }
+
         this.Gui.MenuBar := MyMenuBar
     }
 
@@ -624,13 +640,12 @@ class MacroEditGui {
                     style := WinGetStyle(MyVarListenGui.Gui)
                     isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
                     if (isVisible) {
+                        this.ToolMenu.Uncheck(GetLang("变量监视"))
                         MyVarListenGui.Gui.Hide()
+                        return
                     }
-                    else {
-                        MyVarListenGui.ShowGui()
-                    }
-                    return
                 }
+                this.ToolMenu.Check(GetLang("变量监视"))
                 MyVarListenGui.ShowGui()
             }
             case GetLang("指令显示"):
@@ -639,19 +654,28 @@ class MacroEditGui {
                     style := WinGetStyle(MyCMDTipGui.Gui)
                     isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
                     if (isVisible) {
+                        MySoftData.CMDTip := false
+                        SetCMDTipValue(false)
+                        this.ToolMenu.Uncheck(GetLang("指令显示"))
                         MyCMDTipGui.Gui.Hide()
+                        return
                     }
-                    else {
-                        MyCMDTipGui.ShowGui(GetLang("指令显示"))
-                    }
-                    return
                 }
-                MyCMDTipGui.ShowGui(GetLang("指令显示"))
+                MySoftData.CMDTip := true
+                SetCMDTipValue(true)
+                MyCMDTipGui.ShowGui(GetLang("开启指令显示"))
+                this.ToolMenu.Check(GetLang("指令显示"))
+            }
+            case GetLang("窗口置顶"):
+            {
+                WinSetAlwaysOnTop(-1, this.Gui)
+                this.ToolMenu.ToggleCheck(GetLang("窗口置顶"))
             }
             case GetLang("运行(F5)"):
             {
                 MacroStr := this.GetMacroStr()
                 OnTriggerSepcialItemMacro(MacroStr)
+                MsgBox(GetLang("调试运行结束"))
             }
             case GetLang("单步运行(F6)"):
             {

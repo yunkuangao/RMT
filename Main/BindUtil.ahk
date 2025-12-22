@@ -10,18 +10,25 @@ BindKey() {
     BindShortcut(ToolCheckInfo.FreePasteHotKey, OnToolFreePaste)
     BindShortcut(ToolCheckInfo.ToolRecordMacroHotKey, OnHotToolRecordMacro)
     InitTriggerKeyMap()
-    BindSoftHotKey()
     BindTabHotKey()
     BindMenuHotKey()
+    BindSoftHotKey()
     BindSave()
     OnExit(OnExitSoft)
 }
 
-OnScrollWheel(*) {
-    MyMouseInfo.UpdateInfo()
-    frontStr := "RMTv⎖⎖"
-    if (MyMouseInfo.CheckIfMatch(frontStr)) {
-        MySlider.OnScrollWheel(A_Args*)
+BindShortcut(triggerInfo, action) {
+    if (triggerInfo == "")
+        return
+
+    isString := SubStr(triggerInfo, 1, 1) == ":"
+
+    if (isString) {
+        Hotstring(triggerInfo, action)
+    }
+    else {
+        key := "$*~" triggerInfo
+        Hotkey(key, action)
     }
 }
 
@@ -404,6 +411,7 @@ BindMenuHotKey() {
 
 BindTabHotKey() {
     tableIndex := 0
+    MyJoyMacro.MacroMap := Map()
     loop MySoftData.TabNameArr.Length {
         tableItem := MySoftData.TableInfo[A_Index]
         tableIndex := A_Index
@@ -551,11 +559,15 @@ OnTriggerKeyUp(tableIndex, itemIndex, *) {
 
 BindSoftHotKey() {
     for index, value in MySoftData.SoftHotKeyArr {
+        isMenuBtnHotKey := CheckIfMenuBtnHotKey(value)
+        isForbid := isMenuBtnHotKey && MySoftData.CurMenuWheelIndex == -1 ;菜单按钮快捷键，没打开菜单忽略
+
         key := "$*" value
         actionDown := OnBindKeyDown.Bind(value)
         actionUp := OnBindKeyUp.Bind(value)
-        Hotkey(key, actionDown)
-        Hotkey(key " up", actionUp)
+        Symbol := isForbid ? "Off" : "On"
+        Hotkey(key, actionDown, Symbol)
+        Hotkey(key " up", actionUp, Symbol)
     }
 }
 

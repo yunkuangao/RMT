@@ -74,12 +74,6 @@ class VerticalSlider {
         if (!this.ShowSlider)
             return
 
-        ;主界面评论范围不能滑动
-        ; WinPosArr := GetWinPos()
-        ; if (WinPosArr[1] >= 300 && WinPosArr[1] <= 600)
-        ;     if (WinPosArr[2] >= 35 && WinPosArr[2] <= 525)
-        ;         return
-
         isDown := InStr(key, "Down", "Off") ? true : false
         value := 80
         if ((value / this.BarMaxPosY) * (this.ContentHeight - this.AeraHeight - 2 * this.Vindent) >= 420) {
