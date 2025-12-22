@@ -161,12 +161,12 @@ class SettingMgrGui {
         if SelectedFolder == ""  ; 用户取消了选择
             return
         SplitPath SelectedFolder, &name, &dir, &ext, &name_no_ext, &drive
-        if (name != "Setting" || name_no_ext != "Setting") {
+        if (!InStr(name, "Setting") || name == "SettingOld") {
             MsgBox(GetLang("需要选择若梦兔软件下的Setting文件"))
             return
         }
         CurSettingDir := A_WorkingDir "\Setting"
-        OldSettingDir := A_WorkingDir "\SettingOld"
+        OldSettingDir := A_WorkingDir "\SettingOld\Setting" FormatTime(, "MM月dd日HH-mm-ss")
         if (DirExist(OldSettingDir))
             DirDelete(OldSettingDir, true)
         DirCopy(CurSettingDir, OldSettingDir, 1)
