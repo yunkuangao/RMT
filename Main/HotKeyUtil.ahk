@@ -774,7 +774,9 @@ OnExVariableOnce(tableItem, index, Data) {
         progressResult := ExtractProgressBarFromScreen(X1, Y1, X2, Y2)
         if (progressResult.percentage >= 0) {
             obj := Object()
-            obj.Text := progressResult.percentage
+            ; 确保进度条返回的值与Variable/Pixel类型处理方式一致
+            ; 使用IsNumber检查并返回数字类型，与其他类型保持一致
+            obj.Text := IsNumber(progressResult.percentage) ? progressResult.percentage + 0 : progressResult.percentage
             TextObjs.Push(obj)
         }
     }
@@ -805,7 +807,20 @@ OnExVariableOnce(tableItem, index, Data) {
         loop VariableValueArr.Length {
             if (Data.ToggleArr[A_Index]) {
                 RealNameArr.Push(Data.VariableArr[A_Index])
-                RealValueArr.Push(VariableValueArr[A_Index])
+                ; 对于进度条类型，确保保存的是数字类型
+                valueToSave := VariableValueArr[A_Index]
+                if (Data.ExtractType == 3) {
+                    ; 先清理空白字符，再检查IsNumber
+                    if (Type(valueToSave) == "String") {
+                        valueToSave := Trim(valueToSave, "`n`r`t ")
+                        valueToSave := Trim(valueToSave)
+                    }
+                    
+                    if (IsNumber(valueToSave)) {
+                        valueToSave := valueToSave + 0
+                    }
+                }
+                RealValueArr.Push(valueToSave)
             }
         }
         MySetGlobalVariable(RealNameArr, RealValueArr, Data.IsIgnoreExist)
