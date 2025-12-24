@@ -1,54 +1,19 @@
-BindScrollHotkey(key, action) {
-    if (MySoftData.SB == "")
-        return
-
-    HotIfWinActive("RMTv")
-    Hotkey(key, action)
-    HotIfWinActive
-}
-
-BindShortcut(triggerInfo, action) {
-    if (triggerInfo == "")
-        return
-
-    isString := SubStr(triggerInfo, 1, 1) == ":"
-
-    if (isString) {
-        Hotstring(triggerInfo, action)
-    }
-    else {
-        key := "$*~" triggerInfo
-        Hotkey(key, action)
-    }
-}
-
-GetClosureActionNew(tableIndex, itemIndex, func) {
-    funcObj := func.Bind(tableIndex, itemIndex)
-    return (*) => funcObj()
-}
-
-GetClosureAction(tableItem, macro, index, func) {     ;获取闭包函数
-    funcObj := func.Bind(tableItem, macro, index)
-    return (*) => funcObj()
-}
-
 ;按键宏命令
 OnTriggerMacroKeyAndInit(tableItem, macro, index) {
-    tableItem.CmdActionArr[index] := []
+    MyMacroCount("Add")
     tableItem.KilledArr[index] := false
     tableItem.PauseArr[index] := false
     tableItem.ActionCount[index] := 0
-    tableItem.VariableMapArr[index]["当前循环次数"] := 1
+    tableItem.VariableMapArr[index]["宏循环次数"] := 1
+    tableItem.VariableMapArr[index]["指令循环次数"] := 0
     isContinue := tableItem.TKArr.Has(index) && MySoftData.ContinueKeyMap.Has(tableItem.TKArr[index]) && tableItem.LoopCountArr[
         index] == 1
     isLoop := tableItem.LoopCountArr[index] == -1
-    MySetTableItemState(tableItem.index, index, 1)
     loop {
-        isOver := tableItem.ActionCount[index] >= tableItem.LoopCountArr[index]
         isFirst := tableItem.ActionCount[index] == 0
-        isSecond := tableItem.ActionCount[index] == 1
-
-        WaitIfPaused(tableItem.index, index)
+        isLast := tableItem.ActionCount[index] == tableItem.LoopCountArr[index] - 1
+        isOver := tableItem.ActionCount[index] >= tableItem.LoopCountArr[index]
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             break
@@ -56,19 +21,20 @@ OnTriggerMacroKeyAndInit(tableItem, macro, index) {
         if (!isLoop && !isContinue && isOver)
             break
 
-        if (!isFirst && isContinue) {
+        if (!isFirst && isContinue && isOver) {
             key := MySoftData.ContinueKeyMap[tableItem.TKArr[index]]
-            interval := isSecond ? MySoftData.ContinueSecondIntervale : MySoftData.ContinueIntervale
-            Sleep(interval)
+            Sleep(MySoftData.ContinueIntervale)
 
             if (!GetKeyState(key, "P")) {
                 break
             }
         }
 
+        HandTipSound(tableItem, index, 1, isFirst, isLast)
         OnTriggerMacroOnce(tableItem, macro, index)
+        HandTipSound(tableItem, index, 2, isFirst, isLast)
         tableItem.ActionCount[index]++
-        tableItem.VariableMapArr[index]["当前循环次数"] += 1
+        tableItem.VariableMapArr[index]["宏循环次数"] += 1
     }
     OnFinishMacro(tableItem, macro, index)
 }
@@ -90,9 +56,10 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         if (tableItem.KilledArr[index])
             break
 
-        WaitIfPaused(tableItem.index, index)
-
+        WaitIfPaused(tableItem, index)
         paramArr := StrSplit(cmdArr[A_Index], "_")
+        if (SubStr(paramArr[1], 1, 2) == "🚫")
+            continue
         IsMouseMove := StrCompare(paramArr[1], "移动", false) == 0
         IsSearch := StrCompare(paramArr[1], "搜索", false) == 0
         IsSearchPro := StrCompare(paramArr[1], "搜索Pro", false) == 0
@@ -100,6 +67,7 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         IsInterval := StrCompare(paramArr[1], "间隔", false) == 0
         IsRun := StrCompare(paramArr[1], "运行", false) == 0
         IsIf := StrCompare(paramArr[1], "如果", false) == 0
+        IsIfPro := StrCompare(paramArr[1], "如果Pro", false) == 0
         IsMMPro := StrCompare(paramArr[1], "移动Pro", false) == 0
         IsOutput := StrCompare(paramArr[1], "输出", false) == 0
         IsVariable := StrCompare(paramArr[1], "变量", false) == 0
@@ -107,7 +75,9 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         IsSubMacro := StrCompare(paramArr[1], "宏操作", false) == 0
         IsOperation := StrCompare(paramArr[1], "运算", false) == 0
         IsBGMouse := StrCompare(paramArr[1], "后台鼠标", false) == 0
+        IsBGKey := StrCompare(paramArr[1], "后台按键", false) == 0
         IsRMT := StrCompare(paramArr[1], "RMT指令", false) == 0
+        IsLoop := StrCompare(paramArr[1], "循环", false) == 0
 
         if (MySoftData.CMDTip) {
             NoRemark := IsMouseMove || IsPressKey || IsInterval || IsRMT
@@ -140,6 +110,9 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         else if (IsIf) {
             OnCompare(tableItem, cmdArr[A_Index], index)
         }
+        else if (IsIfPro) {
+            OnComparePro(tableItem, cmdArr[A_Index], index)
+        }
         else if (IsOutput) {
             OnOutput(tableItem, cmdArr[A_Index], index)
         }
@@ -167,11 +140,16 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         else if (IsRMT) {
             OnRMTCMD(tableItem, cmdArr[A_Index], index)
         }
+        else if (IsBGKey) {
+            OnBGKey(tableItem, cmdArr[A_Index], index)
+        }
+        else if (IsLoop) {
+            OnLoop(tableItem, cmdArr[A_Index], index)
+        }
     }
 }
 
 OnSearch(tableItem, cmd, index) {
-
     paramArr := StrSplit(cmd, "_")
     dataFile := StrCompare(paramArr[1], "搜索", false) == 0 ? SearchFile : SearchProFile
     Data := GetMacroCMDData(dataFile, paramArr[2])
@@ -185,7 +163,7 @@ OnSearch(tableItem, cmd, index) {
     }
     else {
         loop Data.SearchCount {
-            WaitIfPaused(tableItem.index, index)
+            WaitIfPaused(tableItem, index)
 
             if (tableItem.KilledArr[index])
                 return
@@ -201,8 +179,7 @@ OnSearch(tableItem, cmd, index) {
         }
 
         if (Data.ResultToggle) {
-            VariableMap := tableItem.VariableMapArr[index]
-            VariableMap[Data.ResultSaveName] := Data.FalseValue
+            MySetGlobalVariable([Data.ResultSaveName], [Data.FalseValue], false)
         }
 
         if (Data.FalseMacro == "")
@@ -262,12 +239,12 @@ OnSearchOnce(tableItem, Data, index) {
         }
 
         if (Data.ResultToggle) {
-            VariableMap[Data.ResultSaveName] := Data.TrueValue
+            MySetGlobalVariable([Data.ResultSaveName], [Data.TrueValue], false)
         }
 
         if (Data.CoordToogle) {
-            VariableMap[Data.CoordXName] := Pos[1]
-            VariableMap[Data.CoordYName] := Pos[2]
+            MySetGlobalVariable([Data.CoordXName], [Pos[1]], false)
+            MySetGlobalVariable([Data.CoordYName], [Pos[2]], false)
         }
 
         Pos[1] := GetFloatValue(Pos[1], MySoftData.CoordXFloat)
@@ -323,12 +300,20 @@ OnCompare(tableItem, cmd, index) {
         }
         else {
             hasValue := TryGetVariableValue(&Value, tableItem, index, Data.NameArr[A_Index])
-            hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, Data.VariableArr[A_Index])
-            if (!hasValue || !hasOtherValue) {
+            if (!hasValue)
                 return
+            if (Data.CompareTypeArr[A_Index] == 6) {  ;字符包含的时候可以直接使用字符
+                hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, Data.VariableArr[A_Index], false)
+                OtherValue := hasOtherValue ? OtherValue : Data.VariableArr[A_Index]
+                hasOtherValue := true
+            }
+            else {
+                hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, Data.VariableArr[A_Index])
             }
 
-            currentComparison := false
+            if (!hasOtherValue)
+                return
+
             switch Data.CompareTypeArr[A_Index] {
                 case 1: currentComparison := Value > OtherValue
                 case 2: currentComparison := Value >= OtherValue
@@ -352,14 +337,7 @@ OnCompare(tableItem, cmd, index) {
 
     if (Data.SaveToggle) {
         SaveValue := result ? Data.TrueValue : Data.FalseValue
-        if (Data.IsGlobal) {
-            MySetGlobalVariable(Data.SaveName, SaveValue, Data.IsIgnoreExist)
-        }
-        else {
-            LocalVariableMap := tableItem.VariableMapArr[index]
-            if (!Data.IsIgnoreExist || !LocalVariableMap.Has(Data.SaveName))
-                LocalVariableMap[Data.SaveName] := SaveValue
-        }
+        MySetGlobalVariable([Data.SaveName], [SaveValue], Data.IsIgnoreExist)
     }
 
     macro := ""
@@ -371,13 +349,75 @@ OnCompare(tableItem, cmd, index) {
     OnTriggerMacroOnce(tableItem, macro, index)
 }
 
+OnComparePro(tableItem, cmd, index) {
+    paramArr := StrSplit(cmd, "_")
+    Data := GetMacroCMDData(CompareProFile, paramArr[2])
+
+    loop Data.VariNameArr.Length {
+        NameArr := Data.VariNameArr[A_Index]
+        CompareTypeArr := Data.CompareTypeArr[A_Index]
+        VariableArr := Data.VariableArr[A_Index]
+        LogicType := Data.LogicTypeArr[A_Index]
+        Macro := Data.MacroArr[A_Index]
+        result := LogicType == 1 ? true : false
+        loop NameArr.Length {
+            if (CompareTypeArr[A_Index] == 7) {
+                hasValue := TryGetVariableValue(&Value, tableItem, index, NameArr[A_Index], false)
+                currentComparison := hasValue
+            }
+            else {
+                hasValue := TryGetVariableValue(&Value, tableItem, index, NameArr[A_Index])
+                if (CompareTypeArr[A_Index] == 6) {  ;字符包含的时候可以直接使用字符
+                    hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, VariableArr[A_Index],
+                        false)
+                    OtherValue := hasOtherValue ? OtherValue : VariableArr[A_Index]
+                    hasOtherValue := true
+                }
+                else {
+                    hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, VariableArr[A_Index])
+                }
+
+                if (!hasValue || !hasOtherValue) {
+                    return
+                }
+
+                switch CompareTypeArr[A_Index] {
+                    case 1: currentComparison := Value > OtherValue
+                    case 2: currentComparison := Value >= OtherValue
+                    case 3: currentComparison := Value == OtherValue
+                    case 4: currentComparison := Value <= OtherValue
+                    case 5: currentComparison := Value < OtherValue
+                    case 6: currentComparison := CheckContainText(Value, OtherValue)
+                }
+            }
+
+            if (LogicType == 1) {
+                result := result && currentComparison
+                if (!result)
+                    break
+            } else {
+                result := result || currentComparison
+                if (result)
+                    break
+            }
+        }
+
+        if (result) {
+            if (Macro != "")
+                OnTriggerMacroOnce(tableItem, Macro, index)
+            return
+        }
+    }
+    OnTriggerMacroOnce(tableItem, Data.DefaultMacro, index)
+}
+
 OnMMPro(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
     Data := GetMacroCMDData(MMProFile, paramArr[2])
 
     LastSumTime := 0
     loop Data.Count {
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             return
@@ -402,59 +442,173 @@ OnMMProOnce(tableItem, index, Data) {
 
     PosX := GetFloatValue(PosX, MySoftData.CoordXFloat)
     PosY := GetFloatValue(PosY, MySoftData.CoordYFloat)
+    ClickCount := Data.ActionType == 2 ? 1 : 2
     if (Data.IsGameView) {
         MOUSEEVENTF_MOVE := 0x0001
         DllCall("mouse_event", "UInt", MOUSEEVENTF_MOVE, "UInt", PosX, "UInt", PosY, "UInt", 0, "UInt", 0)
     }
-    else if (Data.IsRelative) {
-        MouseMove(PosX, PosY, Speed, "R")
+    else if (Data.ActionType == 1) {
+        if (Data.IsRelative) {
+            MouseMove(PosX, PosY, Speed, "R")
+        }
+        else
+            MouseMove(PosX, PosY, Speed)
     }
-    else
-        MouseMove(PosX, PosY, Speed)
+    else if (Data.ActionType == 2 || Data.ActionType == 3) {
+        SetDefaultMouseSpeed(Speed)
+        if (Data.IsRelative) {
+            Click(Format("{} {} {} Relative"), PosX, PosY, ClickCount)
+        }
+        else {
+            Click(Format("{} {} {}"), PosX, PosY, ClickCount)
+        }
+    }
 }
 
 OnOutput(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
     Data := GetMacroCMDData(OutputFile, paramArr[2])
-    Content := ""
-    if (Data.ContentType == 1)
-        Content := GetOutPutContent(tableItem, index, Data.Text)
-    else if (Data.ContentType == 2) {
-        hasValue := TryGetVariableValue(&Content, tableItem, index, Data.VariName)
-        if (!hasValue)
-            return
-    }
-    else if (Data.ContentType == 3) {
-        Content := GetOutPutContent(tableItem, index, Data.Text)
-        hasValue := TryGetVariableValue(&VariValue, tableItem, index, Data.VariName, false)
-        if (hasValue)
-            Content := Content "" VariValue
-    }
+    Content := GetReplaceVarText(tableItem, index, Data.Text)
 
     if (Data.OutputType == 1) {     ;send
         SendText(Content)
     }
-    else if (Data.OutputType == 2) {    ;粘贴
+    else if (Data.OutputType == 2) {    ;粘贴文本
         A_Clipboard := Content
         Send "{Blind}^v"
     }
-    else if (Data.OutputType == 3) {    ;粘贴
-        A_Clipboard := Content
-        MyWinClip.Paste(A_Clipboard)
-    }
-    else if (Data.OutputType == 4) {    ;提示
+    else if (Data.OutputType == 3) {    ;提示
         MyToolTipContent(Content)
     }
-    else if (Data.OutputType == 5) {    ;剪切板
-        A_Clipboard := Content
+    else if (Data.OutputType == 4) {    ;指令窗口
+        MyCMDReportAciton(Content)
     }
-    else if (Data.OutputType == 6) {    ;弹窗
+    else if (Data.OutputType == 5) {    ;弹窗
         MyMsgBoxContent(Content)
     }
-    else if (Data.OutputType == 7) {    ;语音
+    else if (Data.OutputType == 6) {    ;语音
         spovice := ComObject("sapi.spvoice")
         spovice.Speak(Content)
     }
+    else if (Data.OutputType == 7) {    ;剪切板
+        A_Clipboard := Content
+    }
+    else if (Data.OutputType == 8) {    ;文本文件
+        FileObj := FileOpen(Data.FilePath, "a")
+        FileObj.WriteLine(Content)
+        FileObj.Close()
+    }
+    else if (Data.OutputType == 9) {    ;Excel
+        hasRowValue := TryGetVariableValue(&RowValue, tableItem, index, Data.RowVar)
+        hasColValue := TryGetVariableValue(&ColValue, tableItem, index, Data.ColVar)
+        if (Data.ExcelType == 1) {
+            if (hasRowValue && hasColValue)
+                ExcelCellToWrite(Data.FilePath, Data.NameOrSerial, RowValue, ColValue, Content)
+        }
+        else if (Data.ExcelType == 2) {
+            if (hasColValue)
+                ExcelRowToWrite(Data.FilePath, Data.NameOrSerial, ColValue, Content)
+        }
+        else if (Data.ExcelType == 3) {
+            if (hasRowValue)
+                ExcelColToWrite(Data.FilePath, Data.NameOrSerial, RowValue, Content)
+        }
+    }
+}
+
+OnLoop(tableItem, cmd, index) {
+    paramArr := StrSplit(cmd, "_")
+    Data := GetMacroCMDData(LoopFile, paramArr[2])
+
+    if (Data.LoopCount == -1) {
+        loop {
+            tableItem.VariableMapArr[index]["指令循环次数"] := A_Index
+            if (!GetLoopState(tableItem, cmd, index, Data))
+                break
+
+            if (tableItem.KilledArr[index])
+                break
+
+            WaitIfPaused(tableItem, index)
+
+            OnTriggerMacroOnce(tableItem, Data.LoopBody, index)
+        }
+    }
+    else {
+        hasValue := TryGetVariableValue(&Value, tableItem, index, Data.LoopCount)
+        if (!hasValue)
+            return
+
+        loop Value {
+            tableItem.VariableMapArr[index]["指令循环次数"] := A_Index
+            if (!GetLoopState(tableItem, cmd, index, Data))
+                break
+
+            if (tableItem.KilledArr[index])
+                break
+
+            WaitIfPaused(tableItem, index)
+
+            OnTriggerMacroOnce(tableItem, Data.LoopBody, index)
+        }
+    }
+}
+
+GetLoopState(tableItem, cmd, index, Data) {
+    if (Data.CondiType == 1)
+        return true
+
+    result := Data.LogicType == 1 ? true : false
+    loop 4 {
+        if (!Data.ToggleArr[A_Index])
+            continue
+
+        if (Data.CompareTypeArr[A_Index] == 7) {        ;变量是否存在
+            hasValue := TryGetVariableValue(&Value, tableItem, index, Data.NameArr[A_Index], false)
+            currentComparison := hasValue
+        }
+        else {
+            hasValue := TryGetVariableValue(&Value, tableItem, index, Data.NameArr[A_Index])
+            if (Data.CompareTypeArr[A_Index] == 6) {  ;字符包含的时候可以直接使用字符
+                hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, Data.VariableArr[A_Index], false)
+                OtherValue := hasOtherValue ? OtherValue : Data.VariableArr[A_Index]
+                hasOtherValue := true
+            }
+            else {
+                hasOtherValue := TryGetVariableValue(&OtherValue, tableItem, index, Data.VariableArr[A_Index])
+            }
+
+            if (!hasValue || !hasOtherValue) {
+                result := false
+                break
+            }
+
+            switch Data.CompareTypeArr[A_Index] {
+                case 1: currentComparison := Value > OtherValue
+                case 2: currentComparison := Value >= OtherValue
+                case 3: currentComparison := Value == OtherValue
+                case 4: currentComparison := Value <= OtherValue
+                case 5: currentComparison := Value < OtherValue
+                case 6: currentComparison := CheckContainText(Value, OtherValue)
+            }
+        }
+
+        if (Data.LogicType == 1) {
+            result := result && currentComparison
+            if (!result)
+                break
+        } else {
+            result := result || currentComparison
+            if (result)
+                break
+        }
+    }
+
+    if (Data.CondiType == 2)
+        return result
+
+    if (Data.CondiType == 3)
+        return !result
 }
 
 OnSubMacro(tableItem, cmd, index) {
@@ -465,8 +619,9 @@ OnSubMacro(tableItem, cmd, index) {
     macroTableIndex := Data.MacroType == 1 ? tableItem.Index : Data.MacroType - 1
     macroItem := Data.MacroType == 1 ? tableItem : MySoftData.TableInfo[macroTableIndex]
 
-    redirect := macroItem.SerialArr.Length < Data.Index || macroItem.SerialArr[Data.Index] != Data.MacroSerial
-    if (Data.MacroType != 1 && redirect) {
+    redirect := Data.MacroType != 1 && (macroItem.SerialArr.Length < Data.Index || macroItem.SerialArr[Data.Index] !=
+        Data.MacroSerial)
+    if (redirect) {
         loop macroItem.ModeArr.Length {
             if (Data.MacroSerial == macroItem.SerialArr[A_Index]) {
                 macroIndex := A_Index
@@ -478,14 +633,10 @@ OnSubMacro(tableItem, cmd, index) {
     if (Data.CallType == 1) {   ;插入
         macro := macroItem.MacroArr[macroIndex]
         resultMacro := macro
-        LoopCount := macroItem.LoopCountArr[macroIndex]
-        IsLoop := macroItem.LoopCountArr[macroIndex] == -1
-        if (!IsLoop) {
-            loop LoopCount {
-                if (A_Index == 1)
-                    continue
-                resultMacro .= "," macro
-            }
+        loop Data.InsertCount {
+            if (A_Index == 1)
+                continue
+            resultMacro .= "," macro
         }
         return SplitMacro(resultMacro)
     }
@@ -499,7 +650,7 @@ OnSubMacro(tableItem, cmd, index) {
         MySetItemPauseState(macroTableIndex, macroIndex, 0)
     }
     else if (Data.CallType == 5) {  ;终止
-        isWork := macroItem.IsWorkArr[macroIndex]
+        isWork := macroItem.IsWorkIndexArr[macroIndex]
         if (isWork || MySoftData.isWork) {
             MySubMacroStopAction(macroTableIndex, macroIndex)
             return
@@ -513,17 +664,15 @@ OnVariable(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
     Data := GetMacroCMDData(VariableFile, paramArr[2])
     LocalVariableMap := tableItem.VariableMapArr[index]
+    DeleteNameArr := []
+    VariableNameArr := []
+    ValueArr := []
     loop 4 {
         if (!Data.ToggleArr[A_Index])
             continue
         VariableName := Data.VariableArr[A_Index]
         if (Data.OperaTypeArr[A_Index] == 4) {  ;删除
-            if (Data.IsGlobal) {
-                MyDelGlobalVariable(VariableName)
-            }
-            else if (!Data.IsGlobal && LocalVariableMap.Has(VariableName))
-                LocalVariableMap.Delete(VariableName)
-
+            DeleteNameArr.Push(VariableName)
             continue
         }
 
@@ -544,14 +693,15 @@ OnVariable(tableItem, cmd, index) {
             Value := Data.CopyVariableArr[A_Index]
         }
 
-        if (Data.IsGlobal) {
-            MySetGlobalVariable(VariableName, Value, Data.IsIgnoreExist)
-        }
-        else {
-            if (!Data.IsIgnoreExist || !LocalVariableMap.Has(VariableName))
-                LocalVariableMap[VariableName] := Value
-        }
+        VariableNameArr.Push(VariableName)
+        ValueArr.Push(Value)
     }
+
+    if (DeleteNameArr.Length != 0)
+        MyDelGlobalVariable(DeleteNameArr)
+
+    if (VariableNameArr.Length != 0)
+        MySetGlobalVariable(VariableNameArr, ValueArr, Data.IsIgnoreExist)
 }
 
 OnExVariable(tableItem, cmd, index) {
@@ -560,12 +710,23 @@ OnExVariable(tableItem, cmd, index) {
     count := Data.SearchCount
     interval := Data.SearchInterval
 
+    ;变量初始化默认值0
+    NameArr := []
+    ValueArr := []
+    loop 4 {
+        if (Data.ToggleArr[A_Index]) {
+            NameArr.Push(Data.VariableArr[A_Index])
+            ValueArr.Push(0)
+        }
+    }
+    MySetGlobalVariable(NameArr, ValueArr, true)
+
     if (Data.SearchCount == -1) {
         return OnExVariableOnce(tableItem, index, Data)
     }
     else {
         loop Data.SearchCount {
-            WaitIfPaused(tableItem.index, index)
+            WaitIfPaused(tableItem, index)
 
             if (tableItem.KilledArr[index])
                 return
@@ -593,35 +754,36 @@ OnExVariableOnce(tableItem, index, Data) {
         TextObjs := TextObjs == "" ? [] : TextObjs
     }
     else {
+        TextObjs := []
         if (!IsClipboardText())
             return
-        TextObjs := []
         obj := Object()
         obj.Text := A_Clipboard
         TextObjs.Push(obj)
     }
 
     isOk := false
+    allText := ""
     for _, value in TextObjs {
-        baseVariableArr := ExtractNumbers(value.Text, Data.ExtractStr)
-        if (baseVariableArr == "")
+        allText .= value.text "`n"
+    }
+    allText := Trim(allText)
+    ExtractStr := GetReplaceVarText(tableItem, index, Data.ExtractStr)
+    for _, value in TextObjs {
+        VariableValueArr := ExtractNumbers(value.Text, ExtractStr)
+        VariableValueArr := ExtractStr == "" && allText != "" ? [allText] : VariableValueArr
+        if (VariableValueArr == "")
             continue
 
-        loop baseVariableArr.Length {
+        RealNameArr := []
+        RealValueArr := []
+        loop VariableValueArr.Length {
             if (Data.ToggleArr[A_Index]) {
-                name := Data.VariableArr[A_Index]
-                value := baseVariableArr[A_Index]
-                if (Data.IsGlobal) {
-                    MySetGlobalVariable(name, Value, Data.IsIgnoreExist)
-                }
-                else {
-                    LocalVariableMap := tableItem.VariableMapArr[index]
-                    if (!Data.IsIgnoreExist || !LocalVariableMap.Has(name))
-                        LocalVariableMap[name] := Value
-                }
+                RealNameArr.Push(Data.VariableArr[A_Index])
+                RealValueArr.Push(VariableValueArr[A_Index])
             }
         }
-
+        MySetGlobalVariable(RealNameArr, RealValueArr, Data.IsIgnoreExist)
         isOk := true
         break
     }
@@ -640,14 +802,7 @@ OnOperation(tableItem, cmd, index) {
         ValueArr := Data.ValueGroups[A_Index]
         Value := GetVariableOperationResult(tableItem, index, Name, SymbolArr, ValueArr)
 
-        if (Data.IsGlobal) {
-            MySetGlobalVariable(Data.UpdateNameArr[A_Index], Value, Data.IsIgnoreExist)
-        }
-        else {
-            LocalVariableMap := tableItem.VariableMapArr[index]
-            if (!Data.IsIgnoreExist || !LocalVariableMap.Has(Data.UpdateNameArr[A_Index]))
-                LocalVariableMap[Data.UpdateNameArr[A_Index]] := Value
-        }
+        MySetGlobalVariable([Data.UpdateNameArr[A_Index]], [Value], Data.IsIgnoreExist)
     }
 }
 
@@ -666,7 +821,8 @@ OnBGMouse(tableItem, cmd, index) {
     PosX := GetFloatValue(PosX, MySoftData.CoordXFloat)
     PosY := GetFloatValue(PosY, MySoftData.CoordYFloat)
 
-    hwndList := WinGetList(Data.TargetTitle)
+    frontStr := GetParamsWinInfoStr(Data.TargetTitle)
+    hwndList := WinGetList(frontStr)
     loop hwndList.Length {
         hwnd := hwndList[A_Index]
         ; 点击位置（窗口客户区坐标）
@@ -703,6 +859,88 @@ OnBGMouse(tableItem, cmd, index) {
     }
 }
 
+OnBGKey(tableItem, cmd, index) {
+    paramArr := StrSplit(cmd, "_")
+    Data := GetMacroCMDData(BGKeyFile, paramArr[2])
+    loop Data.ClickCount {
+        WaitIfPaused(tableItem, index)
+
+        if (tableItem.KilledArr[index])
+            break
+
+        FloatHold := GetFloatTime(Data.ClickTime, MySoftData.HoldFloat)
+        FloatInterval := GetFloatTime(Data.ClickInterval, MySoftData.PreIntervalFloat)
+        SendBGKey(Data, tableItem, index)
+        if (Data.Type == 3 && A_Index != Data.ClickCount)
+            Sleep(FloatInterval)
+    }
+}
+
+SendBGKey(Data, tableItem, index) {
+    frontStr := GetParamsWinInfoStr(Data.FrontStr)
+    hwndList := WinGetList(frontStr)
+
+    if (Data.Type == 1 || Data.Type == 3) {
+        for hwnd in hwndList {
+            for key in Data.KeyArr {
+                SendBGKeyState(hwnd, key, 1, tableItem, index)
+            }
+        }
+
+    }
+
+    if (Data.Type == 3) {
+        Sleep(Data.ClickTime)
+    }
+
+    if (Data.Type == 2 || Data.Type == 3) {
+        for hwnd in hwndList {
+            for key in Data.KeyArr {
+                SendBGKeyState(hwnd, key, 0, tableItem, index)
+            }
+        }
+    }
+}
+
+SendBGKeyState(hwnd, Key, state, tableItem, index) {
+    if (Key == "逗号")
+        Key := ","
+    VKCode := GetKeyVK(Key)
+    VSCode := GetKeySC(Key)
+    lParamDown := (VSCode << 16) | 1
+    lParamUp := (VSCode << 16) | 0xC0000001
+
+    if (MySoftData.SpecialNumKeyMap.Has(Key)) {
+        if (state == 0)
+            return
+        try {
+            PostMessage 0x100, VKCode, lParamDown, , "ahk_id " hwnd
+        }
+
+        return
+    }
+
+    if (state == 1) {
+        try {
+            PostMessage 0x100, VKCode, lParamDown, , "ahk_id " hwnd
+        }
+    }
+    else {
+        try {
+            PostMessage 0x101, VKCode, lParamUp, , "ahk_id " hwnd
+        }
+    }
+
+    if (state == 1) {
+        tableItem.HoldKeyArr[index][Key] := "Normal"
+    }
+    else {
+        if (tableItem.HoldKeyArr[index].Has(Key)) {
+            tableItem.HoldKeyArr[index].Delete(Key)
+        }
+    }
+}
+
 OnMouseMove(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
     PosX := Integer(paramArr[2])
@@ -724,24 +962,32 @@ OnMouseMove(tableItem, cmd, index) {
 
 OnRMTCMD(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    MyExcuteRMTCMDAction(paramArr[2])
+    cmdStr := paramArr[2]
+    if (cmdStr == "启用键鼠") {
+        BlockInput false
+    }
+    else if (cmdStr == "禁用键鼠") {
+        BlockInput true
+    }
+    else {
+        MyExcuteRMTCMDAction(cmd)
+    }
 }
 
 OnInterval(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    if (paramArr.Length == 2) {
+    if (paramArr.Length >= 2) {
         interval := Integer(paramArr[2])
-    }
-    else {
-        hasInterval := TryGetVariableValue(&interval, tableItem, index, paramArr[3])
+        hasInterval := TryGetVariableValue(&interval, tableItem, index, paramArr[2])
         if (!hasInterval)
             return
     }
+
     FloatInterval := GetFloatTime(interval, MySoftData.IntervalFloat)
     curTime := 0
     clip := Min(500, FloatInterval)
     while (curTime < FloatInterval) {
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             break
@@ -755,7 +1001,8 @@ OnPressKey(tableItem, cmd, index) {
     paramArr := SplitKeyCommand(cmd)
     isJoyKey := SubStr(paramArr[2], 1, 3) == "Joy"
     isJoyAxis := StrCompare(SubStr(paramArr[2], 1, 7), "JoyAxis", false) == 0
-    action := tableItem.ModeArr[index] == 2 ? SendGameModeKeyClick : SendNormalKeyClick
+    actionMap := Map("1", SendNormalKeyClick, "2", SendGameModeKeyClick, "3", SendLogicKeyClick)
+    action := actionMap[tableItem.ModeArr[index]]
     action := isJoyKey ? SendJoyBtnClick : action
     action := isJoyAxis ? SendJoyAxisClick : action
 
@@ -765,7 +1012,7 @@ OnPressKey(tableItem, cmd, index) {
     IntervalTime := paramArr.Length >= 6 ? Integer(paramArr[6]) : 1000
 
     loop count {
-        WaitIfPaused(tableItem.index, index)
+        WaitIfPaused(tableItem, index)
 
         if (tableItem.KilledArr[index])
             break
@@ -779,7 +1026,7 @@ OnPressKey(tableItem, cmd, index) {
 }
 
 ;按键替换
-OnReplaceDownKey(tableItem, info, index) {
+OnReplaceDownKey(tableItem, info, index, *) {
     infos := StrSplit(info, ",")
     mode := tableItem.ModeArr[index]
 
@@ -795,7 +1042,7 @@ OnReplaceDownKey(tableItem, info, index) {
 
 }
 
-OnReplaceUpKey(tableItem, info, index) {
+OnReplaceUpKey(tableItem, info, index, *) {
     infos := StrSplit(info, ",")
     mode := tableItem.ModeArr[index]
 
@@ -819,12 +1066,13 @@ GetTableClosureAction(action, TableItem, index) {
 
 MenuReload(*) {
     IniWrite(MySoftData.TabCtrl.Value, IniFile, IniSection, "TableIndex")
+    IniWrite(true, IniFile, IniSection, "IsReload")
     Reload()
 }
 
 OnToolTextFilterSelectImage(*) {
     global ToolCheckInfo
-    path := FileSelect(, , "选择图片")
+    path := FileSelect(, , GetLang("选择图片"))
     if (path == "")
         return
     ocr := ToolCheckInfo.OCRTypeCtrl.Value == 1 ? MyChineseOcr : MyEnglishOcr
@@ -835,12 +1083,6 @@ OnToolTextFilterSelectImage(*) {
 
 OnClearToolText(*) {
     ToolCheckInfo.ToolTextCtrl.Value := ""
-}
-
-OnShowWinChanged(*) {
-    global MySoftData ; 访问全局变量
-    MySoftData.IsExecuteShow := !MySoftData.IsExecuteShow
-    IniWrite(MySoftData.IsExecuteShow, IniFile, IniSection, "IsExecuteShow")
 }
 
 OnBootStartChanged(*) {
@@ -857,9 +1099,15 @@ OnBootStartChanged(*) {
     IniWrite(MySoftData.BootStartCtrl.Value, IniFile, IniSection, "IsBootStart")
 }
 
+OnMenuWheelPosChanged(*) {
+    global MySoftData ; 访问全局变量
+    MySoftData.FixedMenuWheel := !MySoftData.FixedMenuWheel
+    IniWrite(MySoftData.FixedMenuWheel, IniFile, IniSection, "FixedMenuWheel")
+}
+
 ;按键模拟
-SendGameModeKeyClick(ComboKey, holdTime, tableItem, index, keyType) {
-    KeyArr := GetComboKeyArr(ComboKey)
+SendGameModeKeyClick(KeyArrStr, holdTime, tableItem, index, keyType) {
+    KeyArr := GetPressKeyArr(KeyArrStr)
     if (keyType == 1 || keyType == 3) {
         for key in KeyArr {
             SendGameModeKey(key, 1, tableItem, index)
@@ -961,11 +1209,11 @@ SendGameMouseKey(key, state, tableItem, index) {
     }
 }
 
-SendNormalKeyClick(ComboKey, holdTime, tableItem, index, keyType) {
-    KeyArr := GetComboKeyArr(ComboKey)
+SendNormalKeyClick(KeyArrStr, holdTime, tableItem, index, keyType) {
+    KeyArr := GetPressKeyArr(KeyArrStr)
     if (keyType == 1 || keyType == 3) {
-        for ComboKey in KeyArr {
-            SendNormalKey(ComboKey, 1, tableItem, index)
+        for key in KeyArr {
+            SendNormalKey(key, 1, tableItem, index)
         }
     }
 
@@ -974,8 +1222,8 @@ SendNormalKeyClick(ComboKey, holdTime, tableItem, index, keyType) {
     }
 
     if (keyType == 2 || keyType == 3) {
-        for ComboKey in KeyArr {
-            SendNormalKey(ComboKey, 0, tableItem, index)
+        for key in KeyArr {
+            SendNormalKey(key, 0, tableItem, index)
         }
     }
 }
@@ -1009,14 +1257,20 @@ SendNormalKey(Key, state, tableItem, index) {
     }
 }
 
-SendJoyBtnClick(key, holdTime, tableItem, index, keyType) {
-    if (!CheckIfInstallVjoy()) {
-        MsgBox("使用手柄功能前,请先安装Joy目录下的vJoy驱动!")
+SendLogicKeyClick(KeyArrStr, holdTime, tableItem, index, keyType) {
+    if (!InitLogitechGHubNew())
         return
-    }
-
+    KeyArr := GetPressKeyArr(KeyArrStr)
+    ;罗技部分按键没有，就降级为AHK_Send把
+    SpecialKeyMap := Map("Volume_Up", 1, "Volume_Down", 1, "Volume_Mute", 1)
     if (keyType == 1 || keyType == 3) {
-        SendJoyBtnKey(key, 1, tableItem, index)
+        for key in KeyArr {
+            if (SpecialKeyMap.Has(key))
+                SendNormalKey(key, 1, tableItem, index)
+            else {
+                SendLogicKey(key, 1, tableItem, index)
+            }
+        }
     }
 
     if (keyType == 3) {
@@ -1024,7 +1278,71 @@ SendJoyBtnClick(key, holdTime, tableItem, index, keyType) {
     }
 
     if (keyType == 2 || keyType == 3) {
-        SendJoyBtnKey(key, 0, tableItem, index)
+        for key in KeyArr {
+            if (SpecialKeyMap.Has(key))
+                SendNormalKey(key, 0, tableItem, index)
+            else {
+                SendLogicKey(key, 0, tableItem, index)
+            }
+        }
+    }
+}
+
+SendLogicKey(Key, state, tableItem, index) {
+    if (Key == "逗号")
+        Key := ","
+    if (MySoftData.SpecialNumKeyMap.Has(Key)) {
+        if (state == 0)
+            return
+        keySymbol := "{Blind}{" Key " 1}"
+        IbSend(keySymbol)
+        return
+    }
+
+    if (state == 1) {
+        keySymbol := "{Blind}{" Key " down}"
+    }
+    else {
+        keySymbol := "{Blind}{" Key " up}"
+    }
+
+    IbSend(keySymbol)
+    if (state == 1) {
+        tableItem.HoldKeyArr[index][Key] := "Logic"
+    }
+    else {
+        if (tableItem.HoldKeyArr[index].Has(Key)) {
+            tableItem.HoldKeyArr[index].Delete(Key)
+        }
+    }
+}
+
+SendJoyBtnClick(KeyArrStr, holdTime, tableItem, index, keyType) {
+    if (!CheckIfInstallVjoy()) {
+        MsgBox(GetLang("使用手柄功能前,请先安装Joy目录下的vJoy驱动!"))
+        return
+    }
+
+    if (Type(MyvJoy) == "String") {
+        MsgBox(GetLang("vjoy加载失败，请安装或卸载后重新安装vjoy，然后尝试使用手柄功能"))
+        return
+    }
+
+    KeyArr := GetPressKeyArr(KeyArrStr)
+    if (keyType == 1 || keyType == 3) {
+        for key in KeyArr {
+            SendJoyBtnKey(key, 1, tableItem, index)
+        }
+    }
+
+    if (keyType == 3) {
+        Sleep(holdTime)
+    }
+
+    if (keyType == 2 || keyType == 3) {
+        for key in KeyArr {
+            SendJoyBtnKey(key, 0, tableItem, index)
+        }
     }
 }
 
@@ -1042,14 +1360,22 @@ SendJoyBtnKey(key, state, tableItem, index) {
     }
 }
 
-SendJoyAxisClick(key, holdTime, tableItem, index, keyType) {
+SendJoyAxisClick(KeyArrStr, holdTime, tableItem, index, keyType) {
     if (!CheckIfInstallVjoy()) {
-        MsgBox("使用手柄功能前,请先安装Joy目录下的vJoy驱动!")
+        MsgBox(GetLang("使用手柄功能前,请先安装Joy目录下的vJoy驱动!"))
         return
     }
 
+    if (Type(MyvJoy) == "String") {
+        MsgBox(GetLang("vjoy加载失败，请安装或卸载后重新安装vjoy，然后尝试使用手柄功能"))
+        return
+    }
+
+    KeyArr := GetPressKeyArr(KeyArrStr)
     if (keyType == 1 || keyType == 3) {
-        SendJoyAxisKey(key, 1, tableItem, index)
+        for key in KeyArr {
+            SendJoyAxisKey(key, 1, tableItem, index)
+        }
     }
 
     if (keyType == 3) {
@@ -1057,7 +1383,9 @@ SendJoyAxisClick(key, holdTime, tableItem, index, keyType) {
     }
 
     if (keyType == 2 || keyType == 3) {
-        SendJoyAxisKey(key, 0, tableItem, index)
+        for key in KeyArr {
+            SendJoyAxisKey(key, 0, tableItem, index)
+        }
     }
 }
 

@@ -9,13 +9,27 @@ BindKey() {
     BindShortcut(ToolCheckInfo.ScreenShotHotKey, OnToolScreenShot)
     BindShortcut(ToolCheckInfo.FreePasteHotKey, OnToolFreePaste)
     BindShortcut(ToolCheckInfo.ToolRecordMacroHotKey, OnHotToolRecordMacro)
-    BindScrollHotkey("~WheelUp", OnChangeSrollValue)
-    BindScrollHotkey("~WheelDown", OnChangeSrollValue)
-    BindScrollHotkey("~+WheelUp", OnChangeSrollValue)
-    BindScrollHotkey("~+WheelDown", OnChangeSrollValue)
+    InitTriggerKeyMap()
     BindTabHotKey()
+    BindMenuHotKey()
+    BindSoftHotKey()
     BindSave()
     OnExit(OnExitSoft)
+}
+
+BindShortcut(triggerInfo, action) {
+    if (triggerInfo == "")
+        return
+
+    isString := SubStr(triggerInfo, 1, 1) == ":"
+
+    if (isString) {
+        Hotstring(triggerInfo, action)
+    }
+    else {
+        key := "$*~" triggerInfo
+        Hotkey(key, action)
+    }
 }
 
 BindSuspendHotkey() {
@@ -40,6 +54,10 @@ OnSuspendHotkey(*) {
         TraySetIcon("Images\Soft\rabit.ico")
     }
 
+    tipStr := MySoftData.IsSuspend ? GetLang("软件休眠") : GetLang("取消软件休眠")
+    if (MySoftData.CMDTip)
+        MyCMDReportAciton(tipStr)
+
     Suspend(MySoftData.IsSuspend)
 }
 
@@ -54,7 +72,25 @@ OnPauseHotKey(*) {
         }
     }
 
+    tipStr := MySoftData.IsPause ? GetLang("暂停所有宏") : GetLang("取消所有暂停")
+    if (MySoftData.CMDTip)
+        MyCMDReportAciton(tipStr)
+
     MySoftData.SpecialTableItem.PauseArr[1] := MySoftData.IsPause
+}
+
+SetPauseState(state) {
+    MySoftData.PauseToggleCtrl.Value := state
+    MySoftData.IsPause := state
+
+    loop MySoftData.TableInfo.Length {
+        tableItem := MySoftData.TableInfo[A_Index]
+        for index, value in tableItem.ModeArr {
+            SetItemPauseState(tableItem.index, index, state)
+        }
+    }
+
+    MySoftData.SpecialTableItem.PauseArr[1] := state
 }
 
 OnKillAllMacro(*) {
@@ -64,16 +100,19 @@ OnKillAllMacro(*) {
         tableItem := MySoftData.TableInfo[A_Index]
         KillSingleTableMacro(tableItem)
         for index, value in tableItem.ModeArr {
-            isWork := tableItem.IsWorkArr[index]
+            isWork := tableItem.IsWorkIndexArr[index]
             if (isWork) {
-                workPath := MyWorkPool.GetWorkPath(tableItem.IsWorkArr[index])
+                workPath := MyWorkPool.GetWorkPath(tableItem.IsWorkIndexArr[index])
                 MyWorkPool.PostMessage(WM_STOP_MACRO, workPath, 0, 0)
-                return
             }
         }
     }
 
     KillSingleTableMacro(MySoftData.SpecialTableItem)
+
+    tipStr := GetLang("终止所有宏")
+    if (MySoftData.CMDTip)
+        MyCMDReportAciton(tipStr)
 }
 
 OnToolCheckHotkey(*) {
@@ -89,6 +128,25 @@ OnToolCheckHotkey(*) {
         ToolCheckInfo.MouseInfoTimer := ""
 }
 
+SetToolCheckInfo() {
+    global ToolCheckInfo
+    CoordMode("Mouse", "Screen")
+    MouseGetPos &mouseX, &mouseY, &winId
+    try {
+        ToolCheckInfo.PosStr := mouseX . "," . mouseY
+        ToolCheckInfo.ProcessName := WinGetProcessName(winId)
+        ToolCheckInfo.ProcessTile := WinGetTitle(winId)
+        ToolCheckInfo.ProcessPid := WinGetPID(winId)
+        ToolCheckInfo.ProcessClass := WinGetClass(winId)
+        ToolCheckInfo.ProcessId := winId
+        ToolCheckInfo.Color := StrReplace(PixelGetColor(mouseX, mouseY, "Slow"), "0x", "")
+
+        WinPosArr := GetWinPos()
+        ToolCheckInfo.WinPosStr := WinPosArr[1] . "," . WinPosArr[2]
+        RefreshToolUI()
+    }
+}
+
 OnClickToolRecordSettingBtn(*) {
     MyToolRecordSettingGui.ShowGui()
 }
@@ -100,7 +158,7 @@ OnToolTextFilterScreenShot(*) {
         SetTimer(OnToolTextCheckScreenShot, 500)  ; 每 500 毫秒检查一次剪贴板
     }
     else {
-        EnableSelectAerea(OnToolTextFilterGetArea)
+        TogSelectArea(true, OnToolTextFilterGetArea)
     }
 }
 
@@ -109,7 +167,7 @@ OnToolScreenShot(*) {
         Run("ms-screenclip:")
     }
     else {
-        EnableSelectAerea(OnToolScreenShotGetArea)
+        TogSelectArea(true, OnToolScreenShotGetArea)
     }
 }
 
@@ -175,6 +233,7 @@ OnToolRecordMacro(isHotkey, *) {
     }
 
     if (state) {
+        MySoftData.IsTogStartRecord := isHotkey == ""
         if (ToolCheckInfo.RecordJoy)
             RecordJoy()
 
@@ -182,6 +241,7 @@ OnToolRecordMacro(isHotkey, *) {
             RecordMouseTrail
     }
     else {
+        MySoftData.IsTogEndRecord := isHotkey == ""
         OnFinishRecordMacro()
     }
 }
@@ -208,12 +268,12 @@ RecordMouseTrail() {
             targetX := mouseX - ToolCheckInfo.RecordLastMousePos[1]
             targetY := mouseY - ToolCheckInfo.RecordLastMousePos[2]
         }
-        ToolCheckInfo.RecordMacroStr .= "移动_" targetX "_" targetY symbol ","
+        ToolCheckInfo.RecordMacroStr .= GetLang("移动") "_" targetX "_" targetY symbol ","
         ToolCheckInfo.RecordLastMousePos := [mouseX, mouseY]
 
         span := GetCurMSec() - ToolCheckInfo.RecordLastTime
         ToolCheckInfo.RecordLastTime := GetCurMSec()
-        ToolCheckInfo.RecordMacroStr .= "间隔_" span ","
+        ToolCheckInfo.RecordMacroStr .= GetLang("间隔") "_" span ","
     }
     SetTimer(RecordMouseTrail, -ToolCheckInfo.RecordMouseTrailInterval)
 }
@@ -259,9 +319,9 @@ OnRecordAddMacroStr(keyName, isDown) {
     IsKeyboard := !IsMouse && !IsJoy
 
     if (IsJoy || (IsKeyboard && ToolCheckInfo.RecordKeyboard)) {
-        keyName := keyName == "," ? "逗号" : keyName
-        ToolCheckInfo.RecordMacroStr .= "间隔_" span ","
-        ToolCheckInfo.RecordMacroStr .= "按键_" keyName "_" keySymbol ","
+        keyName := keyName == "," ? GetLang("逗号") : keyName
+        ToolCheckInfo.RecordMacroStr .= Format("{}_{},", GetLang("间隔"), span)
+        ToolCheckInfo.RecordMacroStr .= Format("{}_{}_{},", GetLang("按键"), keyName, keySymbol)
     }
 
     if (IsMouse && ToolCheckInfo.RecordMouse) {
@@ -278,70 +338,112 @@ OnRecordAddMacroStr(keyName, isDown) {
                 targetX := mouseX - ToolCheckInfo.RecordLastMousePos[1]
                 targetY := mouseY - ToolCheckInfo.RecordLastMousePos[2]
             }
-            ToolCheckInfo.RecordMacroStr .= "移动_" targetX "_" targetY symbol ","
+            ToolCheckInfo.RecordMacroStr .= GetLang("移动") "_" targetX "_" targetY symbol ","
             ToolCheckInfo.RecordLastMousePos := [mouseX, mouseY]
         }
-        ToolCheckInfo.RecordMacroStr .= "间隔_" span ","
-        ToolCheckInfo.RecordMacroStr .= "按键_" keyName "_" keySymbol ","
+        ToolCheckInfo.RecordMacroStr .= GetLang("间隔") "_" span ","
+        ToolCheckInfo.RecordMacroStr .= GetLang("按键") "_" keyName "_" keySymbol ","
     }
 }
 
 OnFinishRecordMacro() {
     if (ToolCheckInfo.RecordAutoLoosen) {
         for Key, Value in ToolCheckInfo.RecordHoldKeyMap {
-            keyName := Key == "," ? "逗号" : Key
-            ToolCheckInfo.RecordMacroStr .= "按键_" keyName "_2,"
+            keyName := Key == "," ? GetLang("逗号") : Key
+            ToolCheckInfo.RecordMacroStr .= GetLang("按键") "_" keyName "_2,"
         }
     }
+    macroStr := Trim(ToolCheckInfo.RecordMacroStr, ",")
+    macroStr := SimpleRecordMacroStr(macroStr)
+    macroStr := DiscardRecordTriggerKey(macroStr, true)
+    macroStr := DiscardRecordTriggerKey(macroStr, false)
 
-    macro := Trim(ToolCheckInfo.RecordMacroStr, ",")
     if (MySoftData.MacroEditGui != "") {
-        MySoftData.MacroEditGui.InitTreeView(macro)
+        MySoftData.MacroEditGui.InitTreeView(macroStr)
     }
-    ToolCheckInfo.ToolTextCtrl.Value := macro
-    A_Clipboard := macro
-}
-
-OnChangeSrollValue(*) {
-    wParam := InStr(A_ThisHotkey, "Down") ? 1 : 0
-    lParam := 0
-    msg := GetKeyState("Shift") ? 0x114 : 0x115
-    MySoftData.SB.ScrollMsg(wParam, lParam, msg, MySoftData.MyGui.Hwnd)
+    macroLineStr := StrReplace(macroStr, ",", "`n")
+    ToolCheckInfo.ToolTextCtrl.Value := macroLineStr
+    A_Clipboard := macroLineStr
 }
 
 ;绑定热键
 OnExitSoft(*) {
     global MyPToken, MyChineseOcr
     Gdip_Shutdown(MyPToken)
+    IbSendDestroy()
     MyChineseOcr := ""
     MyEnglishOcr := ""
     MyWorkPool.Clear()
+
+    IniWrite(MySoftData.MacroTotalCount, IniFile, IniSection, "MacroTotalCount")
+}
+
+BindMenuHotKey() {
+    FoldInfo := MySoftData.TableInfo[3].FoldInfo
+    for Index, IndexSpanStr in FoldInfo.IndexSpanArr {
+        if (FoldInfo.ForbidStateArr[Index] || FoldInfo.TKArr[index] == "")
+            continue
+
+        oriKey := FoldInfo.TKArr[index]
+        key := "$*" oriKey
+        actionArr := GetBindMacroAction(oriKey)
+        isJoyKey := RegExMatch(oriKey, "Joy")
+        frontInfo := FoldInfo.FrontInfoArr[index]
+
+        if (frontInfo != "") {
+            HotIfWinActive(GetParamsWinInfoStr(frontInfo))
+        }
+
+        if (isJoyKey) {
+            MyJoyMacro.AddMacro(oriKey, actionArr[1], frontInfo)
+        }
+        else {
+            if (actionArr[1] != "")
+                Hotkey(key, actionArr[1])
+
+            if (actionArr[2] != "")
+                Hotkey(key " up", actionArr[2])
+        }
+
+        if (frontInfo != "") {
+            HotIfWinActive
+        }
+    }
 }
 
 BindTabHotKey() {
     tableIndex := 0
+    MyJoyMacro.MacroMap := Map()
     loop MySoftData.TabNameArr.Length {
         tableItem := MySoftData.TableInfo[A_Index]
         tableIndex := A_Index
+        canBind := tableIndex == 1 || tableIndex == 2 || tableIndex == 6
+        if (!canBind)
+            continue
+
         for index, value in tableItem.ModeArr {
-            if (tableItem.TKArr.Length < index || tableItem.TKArr[index] == "" || (Integer)(tableItem.ForbidArr[index]))
+            if (GetItemFoldForbidState(tableItem, index))
                 continue
 
-            if (tableItem.MacroArr.Length < index || tableItem.MacroArr[index] == "")
+            if (tableItem.TKArr[index] == "" || tableItem.ForbidArr[index])
+                continue
+
+            if (tableItem.MacroArr[index] == "")
                 continue
 
             key := "$*" tableItem.TKArr[index]
             actionArr := GetMacroAction(tableIndex, index)
             isJoyKey := RegExMatch(tableItem.TKArr[index], "Joy")
             isHotstring := SubStr(tableItem.TKArr[index], 1, 1) == ":"
-            curProcessName := tableItem.ProcessNameArr.Length >= index ? tableItem.ProcessNameArr[index] : ""
+            frontInfo := GetItemFrontInfo(tableItem, index)
+            realFrontStr := GetParamsWinInfoStr(frontInfo)
 
-            if (curProcessName != "") {
-                HotIfWinActive(GetParamsWinInfoStr(curProcessName))
+            if (realFrontStr != "") {
+                HotIfWinActive(realFrontStr)
             }
 
             if (isJoyKey) {
-                MyJoyMacro.AddMacro(tableItem.TKArr[index], actionArr[1], curProcessName)
+                MyJoyMacro.AddMacro(tableItem.TKArr[index], actionArr[1], frontInfo)
             }
             else if (isHotstring) {
                 Hotstring(tableItem.TKArr[index], actionArr[1])
@@ -354,9 +456,60 @@ BindTabHotKey() {
                     Hotkey(key " up", actionArr[2])
             }
 
-            if (curProcessName != "") {
+            if (frontInfo != "") {
                 HotIfWinActive
             }
+        }
+    }
+}
+
+InitTriggerKeyMap() {
+    MySoftData.TriggerKeyMap := Map()
+    tableItem := MySoftData.TableInfo[1]
+    for index, value in tableItem.ModeArr {
+        if (GetItemFoldForbidState(tableItem, index))
+            continue
+
+        if (tableItem.TKArr[index] == "" || tableItem.ForbidArr[index])
+            continue
+
+        if (tableItem.MacroArr[index] == "")
+            continue
+
+        key := LTrim(tableItem.TKArr[index], "~")
+        key := StrLower(key)
+        if (!MySoftData.TriggerKeyMap.Has(key)) {
+            MySoftData.TriggerKeyMap[key] := TriggerKeyData(key)
+        }
+        info := TriggerKeyInfo()
+        info.macroType := 1
+        info.tableIndex := tableItem.Index
+        info.itemIndex := index
+        MySoftData.TriggerKeyMap[key].AddData(info)
+    }
+
+    tableItem := MySoftData.TableInfo[3]
+    FoldInfo := tableItem.FoldInfo
+    for index, IndexSpanStr in FoldInfo.IndexSpanArr {
+        if (FoldInfo.ForbidStateArr[index] || FoldInfo.TKArr[index] == "")
+            continue
+        key := LTrim(FoldInfo.TKArr[index], "~")
+        key := StrLower(key)
+        if (!MySoftData.TriggerKeyMap.Has(key)) {
+            MySoftData.TriggerKeyMap[key] := TriggerKeyData(key)
+        }
+        info := TriggerKeyInfo()
+        info.tableIndex := tableItem.Index
+        info.macroType := 2
+        info.foldIndex := index
+        MySoftData.TriggerKeyMap[key].AddData(info)
+    }
+
+    for index, value in MySoftData.SoftHotKeyArr {
+        key := LTrim(value, "~")
+        key := StrLower(key)
+        if (!MySoftData.TriggerKeyMap.Has(key)) {
+            MySoftData.TriggerKeyMap[key] := TriggerKeyData(key)
         }
     }
 }
@@ -369,74 +522,93 @@ GetMacroAction(tableIndex, index) {
     actionUp := ""
 
     if (tableSymbol == "Normal") {
-        actionDown := GetClosureActionNew(tableIndex, index, OnTriggerKeyDown)
-        actionUp := GetClosureActionNew(tableIndex, index, OnTriggerKeyUp)
+        actionDown := OnTriggerKeyDown.Bind(tableIndex, index)
+        actionUp := OnTriggerKeyUp.Bind(tableIndex, index)
     }
     else if (tableSymbol == "String") {
-        actionDown := GetClosureActionNew(tableIndex, index, TriggerMacroHandler)
+        actionDown := TriggerMacroHandler.Bind(tableIndex, index)
     }
     else if (tableSymbol == "Replace") {
-        actionDown := GetClosureAction(tableItem, macro, index, OnReplaceDownKey)
-        actionUp := GetClosureAction(tableItem, macro, index, OnReplaceUpKey)
+
+        actionDown := OnReplaceDownKey.Bind(tableItem, macro, index)
+        actionUp := OnReplaceUpKey.Bind(tableItem, macro, index)
     }
     return [actionDown, actionUp]
 }
 
-OnTriggerKeyDown(tableIndex, itemIndex) {
+OnTriggerKeyDown(tableIndex, itemIndex, *) {
     tableItem := MySoftData.TableInfo[tableIndex]
-    macro := tableItem.MacroArr[itemIndex]
+    key := LTrim(tableItem.TKArr[itemIndex], "~")
+    key := StrLower(key)
+    if (!MySoftData.TriggerKeyMap.Has(key))
+        return
 
-    if (tableItem.TriggerTypeArr[itemIndex] == 1) { ;按下触发
-        if (SubStr(tableItem.TKArr[itemIndex], 1, 1) != "~")
-            LoosenModifyKey(tableItem.TKArr[itemIndex])
-        TriggerMacroHandler(tableIndex, itemIndex)
-    }
-    else if (tableItem.TriggerTypeArr[itemIndex] == 3) { ;松开停止
-        TriggerMacroHandler(tableIndex, itemIndex)
-    }
-    else if (tableItem.TriggerTypeArr[itemIndex] == 4) {  ;开关
-        if (tableItem.IsWorkArr[itemIndex]) {       ;关闭开关
-            MySubMacroStopAction(tableIndex, itemIndex)
-            return
-        }
-        OnToggleTriggerMacro(tableIndex, itemIndex)
-    }
-    else if (tableItem.TriggerTypeArr[itemIndex] == 5) {    ;长按
-        Sleep(tableItem.HoldTimeArr[itemIndex])
-
-        keyCombo := LTrim(tableItem.TKArr[itemIndex], "~")
-        if (AreKeysPressed(keyCombo))
-            TriggerMacroHandler(tableIndex, itemIndex)
-    }
+    Data := MySoftData.TriggerKeyMap[key]
+    Data.OnTriggerKeyDown()
 }
 
 ;松开停止
-OnTriggerKeyUp(tableIndex, itemIndex) {
+OnTriggerKeyUp(tableIndex, itemIndex, *) {
     tableItem := MySoftData.TableInfo[tableIndex]
-    isWork := tableItem.IsWorkArr[itemIndex]
-    if (tableItem.TriggerTypeArr[itemIndex] == 2 && !isWork) { ;松开触发
-        TriggerMacroHandler(tableIndex, itemIndex)
-    }
-    else if (tableItem.TriggerTypeArr[itemIndex] == 3) {  ;松开停止
-        if (isWork) {
-            workPath := MyWorkPool.GetWorkPath(tableItem.IsWorkArr[itemIndex])
-            MyWorkPool.PostMessage(WM_STOP_MACRO, workPath, 0, 0)
-            return
-        }
+    key := LTrim(tableItem.TKArr[itemIndex], "~")
+    key := StrLower(key)
+    if (!MySoftData.TriggerKeyMap.Has(key))
+        return
 
-        KillTableItemMacro(tableItem, itemIndex)
+    Data := MySoftData.TriggerKeyMap[key]
+    Data.OnTriggerKeyUp()
+}
+
+BindSoftHotKey() {
+    for index, value in MySoftData.SoftHotKeyArr {
+        isMenuBtnHotKey := CheckIfMenuBtnHotKey(value)
+        isForbid := isMenuBtnHotKey && MySoftData.CurMenuWheelIndex == -1 ;菜单按钮快捷键，没打开菜单忽略
+
+        key := "$*" value
+        actionDown := OnBindKeyDown.Bind(value)
+        actionUp := OnBindKeyUp.Bind(value)
+        Symbol := isForbid ? "Off" : "On"
+        Hotkey(key, actionDown, Symbol)
+        Hotkey(key " up", actionUp, Symbol)
     }
+}
+
+GetBindMacroAction(key) {
+    actionDown := OnBindKeyDown.Bind(key)
+    actionUp := OnBindKeyUp.Bind(key)
+    return [actionDown, actionUp]
+}
+
+OnBindKeyDown(key, *) {
+    key := LTrim(key, "~")
+    key := StrLower(key)
+    if (!MySoftData.TriggerKeyMap.Has(key))
+        return
+
+    Data := MySoftData.TriggerKeyMap[key]
+    Data.OnTriggerKeyDown()
+}
+
+OnBindKeyUp(key, *) {
+    key := LTrim(key, "~")
+    key := StrLower(key)
+    if (!MySoftData.TriggerKeyMap.Has(key))
+        return
+
+    Data := MySoftData.TriggerKeyMap[key]
+    Data.OnTriggerKeyUp()
 }
 
 OnToggleTriggerMacro(tableIndex, itemIndex) {
     tableItem := MySoftData.TableInfo[tableIndex]
     macro := tableItem.MacroArr[itemIndex]
-    hasWork := MyWorkPool.CheckHasWork()
+    hasWork := MyWorkPool.CheckHasFreeWorker()
 
     if (hasWork) {
+        SetTableItemState(tableItem.index, itemIndex, 1)
         workPath := MyWorkPool.Get()
         workIndex := MyWorkPool.GetWorkIndex(workPath)
-        tableItem.IsWorkArr[itemIndex] := workIndex
+        tableItem.IsWorkIndexArr[itemIndex] := workIndex
         MyWorkPool.PostMessage(WM_TR_MACRO, workPath, tableIndex, itemIndex)
         return
     }
@@ -444,6 +616,7 @@ OnToggleTriggerMacro(tableIndex, itemIndex) {
     isTrigger := tableItem.ToggleStateArr[itemIndex]
     if (!isTrigger) {
         tableItem.ToggleStateArr[itemIndex] := true
+        SetTableItemState(tableItem.index, itemIndex, 1)
         action := OnTriggerMacroKeyAndInit.Bind(tableItem, macro, itemIndex)
         tableItem.ToggleActionArr[itemIndex] := action
         SetTimer(action, -1)
@@ -458,18 +631,19 @@ OnToggleTriggerMacro(tableIndex, itemIndex) {
     }
 }
 
-TriggerMacroHandler(tableIndex, itemIndex) {
+TriggerMacroHandler(tableIndex, itemIndex, *) {
     tableItem := MySoftData.TableInfo[tableIndex]
     macro := tableItem.MacroArr[itemIndex]
-    isWork := tableItem.IsWorkArr[itemIndex]
-    hasWork := MyWorkPool.CheckHasWork()
+    isWork := tableItem.IsWorkIndexArr[itemIndex]
+    hasWork := MyWorkPool.CheckHasFreeWorker()
     if (isWork)
         return
 
+    SetTableItemState(tableItem.index, itemIndex, 1)
     if (hasWork) {
         workPath := MyWorkPool.Get()
         workIndex := MyWorkPool.GetWorkIndex(workPath)
-        tableItem.IsWorkArr[itemIndex] := workIndex
+        tableItem.IsWorkIndexArr[itemIndex] := workIndex
         MyWorkPool.PostMessage(WM_TR_MACRO, workPath, tableIndex, itemIndex)
     }
     else {

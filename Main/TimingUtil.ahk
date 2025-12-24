@@ -7,6 +7,7 @@ TimingCheck() {
 
     tableItem := MySoftData.TableInfo[tableIndex]
     SetTimingNextTime(tableItem)
+    HandleOnSoftStart(tableItem)
     if (A_Sec == 0)
         InitTimingChecker()
     else {
@@ -49,13 +50,13 @@ SetTimingNextTime(tableItem) {
         CurTime := FormatTime(A_Now, "yyyyMMddHHmm")
         if (Data == "" || ObjOwnPropCount(Data) == 0)
             continue
-        if (Data.EndTime != "" && Data.EndTime >= CurTime)
+        if (Data.EndTime != "" && CurTime >= Data.EndTime)
             continue
 
         span := DateDiff(CurTime, Data.StartTime, "Minutes")
         if (Data.Type == 1)
             Data.NextTriggerTime := span < 0 ? Data.StartTime : ""
-        else if (Data.Type == 2 || Data.Type == 3 || Data.Type == 4 || Data.Type == 6) {
+        else if (Data.Type == 2 || Data.Type == 3 || Data.Type == 4 || Data.Type == 7) {
             interval := GetTimingInterval(Data)
             if (span < 0)  ;时间还没到
                 Data.NextTriggerTime := Data.StartTime
@@ -65,7 +66,7 @@ SetTimingNextTime(tableItem) {
                 Data.NextTriggerTime := newTime
             }
         }
-        else {
+        else if (Data.Type == 5) {
             if (span < 0)  ;时间还没到
                 Data.NextTriggerTime := Data.StartTime
             else {
@@ -107,28 +108,26 @@ TimingChecker() {
         if (Data.NextTriggerTime == "" || CurTime < Data.NextTriggerTime)
             continue
 
-        ProcessName := tableItem.ProcessNameArr.Length >= index ? tableItem.ProcessNameArr[index] : ""
-        if (ProcessName != "") {
-            MouseGetPos &mouseX, &mouseY, &winId
-            curProcessName := WinGetProcessName(winId)
-            if (ProcessName != curProcessName)
+        frontInfo := GetItemFrontInfo(tableItem, index)
+        if (frontInfo != "") {
+            if (!MyMouseInfo.CheckIfMatch(frontInfo, true))
                 return
         }
 
         UpdateTimingNextTime(Data)
-        TriggerSubMacro(tableIndex, index)
+        TriggerMacroHandler(tableIndex, index)
     }
 }
 
 UpdateTimingNextTime(Data) {
     if (Data.Type == 1)
         Data.NextTriggerTime := ""
-    else if (Data.Type == 2 || Data.Type == 3 || Data.Type == 4 || Data.Type == 6) {
+    else if (Data.Type == 2 || Data.Type == 3 || Data.Type == 4 || Data.Type == 7) {
         interval := GetTimingInterval(Data)
         newTime := FormatTime(DateAdd(Data.NextTriggerTime, interval, "Minutes"), "yyyyMMddHHmm")
         Data.NextTriggerTime := newTime
     }
-    else {
+    else if (Data.Type == 5) {
         year := FormatTime(Data.NextTriggerTime, "yyyy")
         month := FormatTime(Data.NextTriggerTime, "MM")
         newMonth := Format("{:02}", month + 1)
@@ -139,6 +138,9 @@ UpdateTimingNextTime(Data) {
             Data.NextTriggerTime := newYear newMonth SubStr(Data.StartTime, 7)
         }
     }
+
+    if (Data.EndTime != "" && Data.NextTriggerTime >= Data.EndTime)
+        Data.NextTriggerTime := ""
 }
 
 GetTimingInterval(Data) {
@@ -150,4 +152,22 @@ GetTimingInterval(Data) {
         return 60 * 24 * 7
 
     return Data.CustomInterval
+}
+
+HandleOnSoftStart(tableItem) {
+    if (MySoftData.IsReload)
+        return
+
+    for index, value in tableItem.ModeArr {
+        if ((Integer)(tableItem.ForbidArr[index]))
+            continue
+
+        if (tableItem.MacroArr.Length < index || tableItem.MacroArr[index] == "")
+            continue
+
+        Data := GetMacroCMDData(TimingFile, tableItem.TimingSerialArr[index])
+        if (Data.Type != 6)
+            return
+        TriggerMacroHandler(tableItem.Index, index)
+    }
 }

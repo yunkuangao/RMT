@@ -3,60 +3,84 @@
 #Include Joy\SuperCvJoyInterface.ahk
 #Include Joy\JoyMacro.ahk
 #Include Plugins\RapidOcr\RapidOcr.ahk
-#Include Plugins\WinClipAPI.ahk
-#Include Plugins\WinClip.ahk
+#Include Plugins\CLR.ahk
+#Include Plugins\IbInputSimulator.ahk
 #Include Gui\TriggerKeyGui.ahk
 #Include Gui\TriggerStrGui.ahk
 #Include Gui\TimingGui.ahk
+#Include Gui\MacroSettingGui.ahk
+#Include Gui\VerticalSlider.ahk
 #Include Gui\SettingMgrGui.ahk
 #Include Gui\EditHotkeyGui.ahk
 #Include Gui\FreePasteGui.ahk
 #Include Gui\MacroEditGui.ahk
+#Include Gui\MenuWheelGui.ahk
 #Include Gui\ReplaceKeyGui.ahk
+#Include Gui\UseExplainGui.ahk
+#Include Gui\LoopGui.ahk
+#Include Gui\TargetGui.ahk
 #Include Gui\ToolRecordSettingGui.ahk
+#Include Gui\VariableListenGui.ahk
 #Include Gui\CMDTipGui.ahk
 #Include Gui\FrontInfoGui.ahk
 #Include Gui\CMDTipSettingGui.ahk
-#Include Gui\ScrollBar.ahk
+#Include Gui\CustomMsgBoxGui.ahk
 #Include Main\Gdip_All.ahk
+#Include Main\LineDrawer.ahk
+#Include Main\LineOverlay.ahk
 #Include Main\DataClass.ahk
 #Include Main\AssetUtil.ahk
 #Include Main\RecordJoyUtil.ahk
+#Include Main\ThankUIUtil.ahk
 #Include Main\HotkeyUtil.ahk
 #Include Main\RMTUtil.ahk
 #Include Main\WorkPool.ahk
+#Include Main\TabItemUIUtil.ahk
 #Include Main\UIUtil.ahk
 #Include Main\JsonUtil.ahk
 #Include Main\CompareUtil.ahk
 #Include Main\TimingUtil.ahk
 #Include Main\BindUtil.ahk
 #Include Main\VariableUtil.ahk
+#Include Main\FixCompatUtil.ahk
+#Include Main\LangUtil.ahk
+#Include Main\TriggerKeyData.ahk
+#Include Main\FolderPackager.ahk
 SetWorkingDir A_ScriptDir
 DetectHiddenWindows true
 Persistent
+A_MaxHotkeysPerInterval := 400
 
-if (CheckIfInstallVjoy()) {
-    global MyvJoy := SuperCvJoyInterface().GetMyvJoy()
-}
+global MyvJoy := SuperCvJoyInterface().GetMyvJoy()
+global MyJoyMacro := JoyMacro()
+global MyMouseInfo := MouseWinData()
 global MySoftData := SoftData()
 global ToolCheckInfo := ToolCheck()
-global MyJoyMacro := JoyMacro()
-global MyWinClip := WinClip()
+global IniFile := A_WorkingDir "\Setting\MainSettings.ini"
+global LangDir := A_WorkingDir "\Lang"
+LoadMainSetting()       ;加载配置
+
 global MyTriggerKeyGui := TriggerKeyGui()
 global MyTriggerStrGui := TriggerStrGui()
 global MyEditHotkeyGui := EditHotkeyGui()
+global MyMacroSettingGui := MacroSettingGui()
+global MyVarListenGui := VariableListenGui()
 global MyMacroGui := MacroEditGui()
+global MyMenuWheel := MenuWheelGui()
 global MyReplaceKeyGui := ReplaceKeyGui()
 global MyFreePasteGui := FreePasteGui()
 global MySettingMgrGui := SettingMgrGui()
 global MyFrontInfoGui := FrontInfoGui()
 global MyCMDTipGui := CMDTipGui()
 global MyTimingGui := TimingGui()
+global MySlider := VerticalSlider()
+global MyTargetGui := TargetGui()
+global MyMsgboxGui := CustomMsgBoxGui()
 global MyCMDTipSettingGui := CMDTipSettingGui()
 global MyToolRecordSettingGui := ToolRecordSettingGui()
-global IniFile := A_WorkingDir "\Setting\MainSettings.ini"
+global MyUseExplainGui := UseExplainGui()
 global MySubMacroStopAction := SubMacroStopAction
-global MyTriggerSubMacro := TriggerSubMacro
+global MyTriggerSubMacro := TriggerMacroHandler
 global MySetGlobalVariable := SetGlobalVariable
 global MyDelGlobalVariable := DelGlobalVariable
 global MyCMDReportAciton := CMDReport
@@ -65,8 +89,8 @@ global MySetTableItemState := SetTableItemState
 global MySetItemPauseState := SetItemPauseState
 global MyMsgBoxContent := MsgBoxContent
 global MyToolTipContent := ToolTipContent
+global MyMacroCount := MacroCount
 
-LoadMainSetting()       ;加载配置
 InitFilePath()          ;初始化文件路径
 LoadCurMacroSetting()   ;加载当前配置宏
 EditListen()        ;右键编辑数据监听

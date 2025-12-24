@@ -48,83 +48,83 @@ class ToolRecordSettingGui {
     }
 
     AddGui() {
-        MyGui := Gui(, "录制选项编辑器")
+        MyGui := Gui(, GetLang("录制选项编辑器"))
         this.Gui := MyGui
         MyGui.SetFont("S11 W550 Q2", MySoftData.FontType)
 
         PosX := 5
         PosY := 10
-        MyGui.Add("GroupBox", Format("x{} y{} w510 h315", PosX, PosY), "通用选项")
+        MyGui.Add("GroupBox", Format("x{} y{} w510 h315", PosX, PosY), GetLang("通用选项"))
 
         PosX := 20
         PosY += 25
-        this.AutoLoosenCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "结束自动添加松开指令")
+        this.AutoLoosenCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("结束自动添加松开指令"))
 
         PosX += 245
-        this.HoldMutiCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "长按多次录制")
+        this.HoldMutiCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("长按多次录制"))
 
         PosX := 10
         PosY += 35
-        MyGui.Add("GroupBox", Format("x{} y{} w500 h50", PosX, PosY), "键盘选项")
+        MyGui.Add("GroupBox", Format("x{} y{} w500 h50", PosX, PosY), GetLang("键盘选项"))
 
         PosX += 10
         PosY += 25
-        this.KeyboardTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "录制开关")
+        this.KeyboardTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("录制开关"))
 
         PosX := 10
         PosY += 40
-        MyGui.Add("GroupBox", Format("x{} y{} w500 h120", PosX, PosY), "鼠标选项")
+        MyGui.Add("GroupBox", Format("x{} y{} w500 h120", PosX, PosY), GetLang("鼠标选项"))
 
         PosX := 20
         PosY += 25
-        this.MouseTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "录制开关")
+        this.MouseTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("录制开关"))
         this.MouseTogCon.OnEvent("Click", (*) => this.OnTogClick())
 
         PosX += 245
-        this.MouseRelativeTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "相对位移")
+        this.MouseRelativeTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("相对位移"))
 
         PosX := 20
         PosY += 30
-        this.MouseTrailTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "鼠标轨迹")
+        this.MouseTrailTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("鼠标轨迹"))
         this.MouseTrailTogCon.OnEvent("Click", (*) => this.OnTogClick())
 
         PosX += 245
-        this.TrailTipCon1 := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "轨迹点间隔(ms)：")
+        this.TrailTipCon1 := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("轨迹点间隔(ms)："))
         PosX += 130
         this.MouseTrailIntervalCon := MyGui.Add("Edit", Format("x{} y{} w60 h25", PosX, PosY - 3), "300")
 
         PosX := 20
         PosY += 30
-        this.TrailTipCon2 := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "轨迹点距离(px)：")
+        this.TrailTipCon2 := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("轨迹点距离(px)："))
         PosX += 130
         this.MouseTrailLenCon := MyGui.Add("Edit", Format("x{} y{} w60 h25", PosX, PosY - 3), "100")
 
         PosX += 115
-        this.TrailTipCon3 := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "轨迹速度(0~100)：")
+        this.TrailTipCon3 := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("轨迹速度(0~100)："))
         PosX += 130
         this.MouseTrailSpeedCon := MyGui.Add("Edit", Format("x{} y{} w60 h25", PosX, PosY - 3), "95")
 
         PosX := 10
         PosY += 45
-        MyGui.Add("GroupBox", Format("x{} y{} w500 h55", PosX, PosY), "手柄选项")
+        MyGui.Add("GroupBox", Format("x{} y{} w500 h55", PosX, PosY), GetLang("手柄选项"))
 
         PosX += 10
         PosY += 25
-        this.JoyTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), "录制开关")
+        this.JoyTogCon := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("录制开关"))
         this.JoyTogCon.OnEvent("Click", (*) => this.OnTogClick())
 
         PosX += 245
-        this.JoyTipCon := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), "检测间隔(ms)：")
+        this.JoyTipCon := MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("检测间隔(ms)："))
         PosX += 130
         this.JoyIntervalCon := MyGui.Add("Edit", Format("x{} y{} w60 h25", PosX, PosY - 3), "50")
 
         PosX := 100
         PosY += 45
-        con := MyGui.Add("Button", Format("x{} y{} w100 h40", PosX, PosY), "恢复默认")
+        con := MyGui.Add("Button", Format("x{} y{} w100 h40", PosX, PosY), GetLang("恢复默认"))
         con.OnEvent("Click", (*) => this.OnRevertBtnClick())
 
         PosX := 300
-        con := MyGui.Add("Button", Format("x{} y{} w100 h40", PosX, PosY), "确定")
+        con := MyGui.Add("Button", Format("x{} y{} w100 h40", PosX, PosY), GetLang("确定"))
         con.OnEvent("Click", (*) => this.OnSureBtnClick())
 
         MyGui.Show(Format("w{} h{}", 525, 390))
