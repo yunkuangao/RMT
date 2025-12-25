@@ -1,4 +1,5 @@
 #Requires AutoHotkey v2.0
+#Include ItemUtil.ahk
 
 LoadItemFold(index) {
     tableItem := MySoftData.TableInfo[index]
@@ -25,7 +26,7 @@ LoadItemFold(index) {
 
         loop IndexSpan[2] - IndexSpan[1] + 1 {
             itemIndex := A_Index + IndexSpan[1] - 1
-            LoadTabItemUI(tableItem, itemIndex, foldIndex, CurUnderPosY)
+            ; LoadTabItemUI(tableItem, itemIndex, foldIndex, CurUnderPosY)
             CurUnderPosY += 40
             if (!FoldInfo.FoldStateArr[foldIndex])
                 UpdateUnderPosY(index, 40)
