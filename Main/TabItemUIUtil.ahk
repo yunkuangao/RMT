@@ -99,7 +99,7 @@ LoadItemFoldTitle(tableItem, foldIndex, PosY) {
     tableItem.AllConArr.Push(conInfo)
     tableItem.ConIndexMap[con] := MacroItemInfo(-10000, conInfo)
 
-    con := MyGui.Add("Button", Format("x{} y{} h29", MySoftData.TabPosX + 645, posY - 1), GetLang("删除该模块"))
+    con := MyGui.Add("Button", Format("x{} y{} h29", MySoftData.TabPosX + 645, posY - 1), GetLang("删除模块"))
     con.OnEvent("Click", OnItemDelFoldBtnClick.Bind(tableItem))
     conInfo := ItemConInfo(con, tableItem, foldIndex)
     conInfo.IsTitle := true
