@@ -412,6 +412,10 @@ class MacroEditGui {
         this.SaveBtnCtrl.Visible := this.ShowSaveBtn
         this.InitTreeView(MacroStr)
         this.InitMacroText(MacroStr)
+
+        firstItem := this.MacroTreeViewCon.GetNext(0)
+        this.MacroTreeViewCon.Focus()
+        this.MacroTreeViewCon.Modify(firstItem, "Check")
     }
 
     Backspace() {
@@ -680,8 +684,9 @@ class MacroEditGui {
             case GetLang("运行(F5)"):
             {
                 MacroStr := this.GetMacroStr()
+                MyCMDTipGui.Clear()
                 OnTriggerSepcialItemMacro(MacroStr)
-                MsgBox(GetLang("调试运行结束"))
+                MsgBox(GetLang("调试运行结束"), "Tip", this.Gui.Hwnd)
             }
             case GetLang("单步运行(F6)"):
             {
@@ -689,10 +694,13 @@ class MacroEditGui {
                 if (tableItem.ColorStateArr[1] == 1) {
                     return
                 }
+
+                this.DebugStepNum++
+                if (this.DebugStepNum == 1)
+                    MyCMDTipGui.Clear()
+
                 MacroStr := this.GetMacroStr()
                 cmdArr := SplitMacro(MacroStr)
-                this.DebugStepNum++
-
                 if (cmdArr.Length >= this.DebugStepNum) {
                     CurCMD := cmdArr[this.DebugStepNum]
                     this.DebugItemID := this.MacroTreeViewCon.GetNext(this.DebugItemID)
@@ -701,7 +709,7 @@ class MacroEditGui {
                 }
 
                 if (this.DebugStepNum >= cmdArr.Length) {
-                    MsgBox(GetLang("单步运行结束"))
+                    MsgBox(GetLang("单步运行结束"), "Tip", this.Gui.Hwnd)
                     this.DebugStepNum := 0
                     this.DebugItemID := 0
                     return
@@ -712,6 +720,7 @@ class MacroEditGui {
                 this.DebugStepNum := 0
                 this.DebugItemID := 0
                 KillSingleTableMacro(MySoftData.SpecialTableItem)
+                MyCMDTipGui.AddCMD(GetLang("终止"))
             }
         }
     }

@@ -182,7 +182,7 @@ class SettingMgrGui {
             MsgBox(GetLang("迁移失败: ") e.Message, GetLang("错误"), 0x10)
             return
         }
-
+        MySoftData.MacroTotalCount := IniRead(IniFile, "UserSettings", "MacroTotalCount", 0)
         IniWrite(true, IniFile, IniSection, "IsReload")
         MsgBox(GetLang("配置迁移成功"))
         Reload()

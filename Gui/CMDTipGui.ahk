@@ -71,6 +71,14 @@ class CMDTipGui {
         SendMessage(0xB6, 0, this.ShowCount, this.ContentCon)
     }
 
+    Clear() {
+        if (this.Gui == "")
+            return
+
+        this.ShowCount := 0
+        this.ContentCon.Value := ""
+    }
+
     OnScrollWheel(key) {
         if (this.Gui == "")
             return
