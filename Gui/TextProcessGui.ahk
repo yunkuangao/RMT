@@ -20,7 +20,8 @@ class TextProcessGui {
         this.ResultActionCon := ""
         this.SplitParamCon := ""
         this.MaxSplitCountCon := ""
-        this.Data := ""
+        this.Data := TextProcessData()
+        this.DateFormatSubGui := ""
     }
 
     ShowGui(cmd) {
@@ -71,17 +72,12 @@ class TextProcessGui {
             "Base64编解码",
             "文本统计",
             "固定长度分割",
-            "多字符分割",
-            "行过滤",
-            "去重处理",
-            "排序处理",
-            "随机文本",
-            "日期时间"]))
+            "去重处理"]))
         this.ProcessTypeCon.OnEvent("Change", (*) => this.OnProcessTypeChange())
 
         PosY += 40
         PosX := 10
-        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 550, 220), GetLang("处理参数"))
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 630, 220), GetLang("处理参数"))
 
         ; 第一行：文本来源
         PosY += 25
@@ -95,7 +91,7 @@ class TextProcessGui {
         PosX := 20
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("分割符号:"))
         PosX += 75
-        this.SplitDelimiterCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 120), ",")
+        this.SplitDelimiterCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 150), ",")
 
         ; 第三行放置查找文本和替换文本
         PosY += 30
@@ -112,42 +108,32 @@ class TextProcessGui {
         ; 第四行：分割参数（用于多字符分割、固定长度分割等）
         PosY += 30
         PosX := 20
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("分割参数:"))
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("处理参数:"))
         PosX += 75
-        this.SplitParamCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 120), "")
+        this.SplitParamCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 180), [])
+        this.SplitParamCon.OnEvent("Change", (*) => this.OnSplitParamChange())
 
-        PosX += 140
+        PosX += 240
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("最大分割数:"))
         PosX += 75
-        this.MaxSplitCountCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 60), "")
+        this.MaxSplitCountCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 80), "")
 
-        ; 第四行：高级选项
+        ; 第四行：处理选项
         PosY += 30
         PosX := 20
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("处理选项:"))
         PosX += 75
-        this.CaseSensitiveCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 80), GetLang("大小写敏感"))
+        this.CaseSensitiveCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 100), GetLang("大小写敏感"))
         
-        PosX += 90
-        this.RegexCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 80), GetLang("正则表达式"))
+        PosX += 110
+        this.RegexCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 100), GetLang("正则表达式"))
         
-        PosX += 90
-        this.ReverseCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 80), GetLang("反向处理"))
+        PosX += 110
+        this.ReverseCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 100), GetLang("反向处理"))
 
-        ; 第六行：处理选项
-        PosY += 25
-        PosX := 20
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("处理选项:"))
-        PosX += 75
-        this.CaseSensitiveCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 80), GetLang("大小写敏感"))
-        
-        PosX += 90
-        this.RegexCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 80), GetLang("正则表达式"))
-        
-        PosX += 90
-        this.ReverseCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 80), GetLang("反向处理"))
 
-        ; 第七行：结果处理
+
+        ; 第五行：结果处理
         PosY += 25
         PosX := 20
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("结果处理:"))
@@ -171,17 +157,17 @@ class TextProcessGui {
         this.ToggleConArr.Push(con)
 
         PosX += 35
-        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
+        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 120), [])
         this.VariableConArr.Push(con)
 
-        PosX += 200
+        PosX += 240
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY + 3), "2.")
         PosX += 20
         con := MyGui.Add("Checkbox", Format("x{} y{} w{} h{} Center", PosX, PosY + 3, 30, 20), "")
         this.ToggleConArr.Push(con)
 
         PosX += 35
-        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
+        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 120), [])
         this.VariableConArr.Push(con)
 
         PosX := 20
@@ -192,17 +178,17 @@ class TextProcessGui {
         this.ToggleConArr.Push(con)
 
         PosX += 35
-        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
+        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 120), [])
         this.VariableConArr.Push(con)
 
-        PosX += 200
+        PosX += 240
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY + 3), "4.")
         PosX += 20
         con := MyGui.Add("Checkbox", Format("x{} y{} w{} h{} Center", PosX, PosY + 3, 30, 20), "")
         this.ToggleConArr.Push(con)
 
         PosX += 35
-        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
+        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 120), [])
         this.VariableConArr.Push(con)
 
         PosY += 40
@@ -211,7 +197,7 @@ class TextProcessGui {
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
 
         MyGui.OnEvent("Close", (*) => this.Gui.Hide())
-        MyGui.Show(Format("w{} h{}", 600, 550))
+        MyGui.Show(Format("w{} h{}", 680, 550))
 
         ; 初始化界面状态
         this.OnProcessTypeChange()
@@ -258,11 +244,13 @@ class TextProcessGui {
         this.RegexCon.Value := this.Data.UseRegex
         this.ReverseCon.Value := this.Data.ReverseProcess
         this.ResultActionCon.Value := this.Data.ResultAction
-        this.SplitParamCon.Value := this.Data.SplitParam
         this.MaxSplitCountCon.Value := this.Data.MaxSplitCount
 
-        ; 更新界面状态
+        ; 先更新界面状态，然后设置参数值
         this.OnProcessTypeChange()
+        
+        ; 设置保存的参数值
+        this.SplitParamCon.Value := this.Data.SplitParam
     }
 
     OnClickSureBtn() {
@@ -286,6 +274,12 @@ class TextProcessGui {
         this.SplitParamCon.Enabled := false
         this.MaxSplitCountCon.Enabled := false
         
+        ; 默认启用文本来源控件
+        this.SourceVariableCon.Enabled := true
+        
+        ; 根据处理类型设置参数选项
+        paramOptions := []
+        
         switch processType {
             case 1: ; 文本分割
                 this.SplitDelimiterCon.Enabled := true
@@ -295,26 +289,50 @@ class TextProcessGui {
             case 3, 4, 5: ; 数字提取、字母提取、中文提取
                 ; 无需额外参数
             case 6: ; 去空格处理
-                this.SplitParamCon.Enabled := true ; 去空格方式参数
+                this.SplitParamCon.Enabled := true
+                paramOptions := GetLangArr(["去除前后空格", "去除全部空格", "去除多余空格"])
             case 7: ; 大小写转换
-                this.SplitParamCon.Enabled := true ; 转换类型参数
+                this.SplitParamCon.Enabled := true
+                paramOptions := GetLangArr(["全部大写", "全部小写", "首字母大写", "标题格式"])
             case 8, 9: ; URL编解码、Base64编解码
-                this.SplitParamCon.Enabled := true ; 编码/解码类型
+                this.SplitParamCon.Enabled := true
+                if (processType == 8) {
+                    paramOptions := GetLangArr(["URL编码", "URL解码"])
+                } else {
+                    paramOptions := GetLangArr(["Base64编码", "Base64解码"])
+                }
             case 10: ; 文本统计
-                this.SplitParamCon.Enabled := true ; 统计类型
-            case 11, 12: ; 固定长度分割、多字符分割
+                this.SplitParamCon.Enabled := true
+                paramOptions := GetLangArr(["字符数", "单词数", "行数", "完整统计"])
+            case 11: ; 固定长度分割
                 this.SplitDelimiterCon.Enabled := false
                 this.SplitParamCon.Enabled := true
                 this.MaxSplitCountCon.Enabled := true
-            case 13: ; 行过滤
-                this.SearchTextCon.Enabled := true
-            case 14, 15: ; 去重处理、排序处理
+                paramOptions := GetLangArr(["10", "20", "50", "100"])
+            case 12: ; 去重处理
                 ; 无需额外参数
-            case 16: ; 随机文本
-                this.SplitParamCon.Enabled := true ; 随机文本长度
-            case 17: ; 日期时间
-                this.SplitParamCon.Enabled := true ; 日期格式
         }
+        
+        ; 更新参数下拉列表
+        this.SplitParamCon.Delete()
+        this.SplitParamCon.Add(paramOptions)
+        if (paramOptions.Length > 0) {
+            this.SplitParamCon.Value := 1 ; 默认选择第一个选项
+        }
+    }
+
+    OnSplitParamChange() {
+        ; 处理参数下拉列表变化时的逻辑
+        processType := this.ProcessTypeCon.Value
+        paramValue := this.SplitParamCon.Value
+        
+        ; 处理参数下拉列表变化时的逻辑
+        ; 去重处理无需额外参数处理
+    }
+    
+    OnDateFormatSelected(format) {
+        ; 保存自定义格式到当前数据
+        this.Data.SplitParamCustom := format
     }
 
     CheckIfValid() {
@@ -343,28 +361,14 @@ class TextProcessGui {
     }
 
     TestTextProcess(Data) {
-        ; 从指定的文本来源变量中获取源文本
-        sourceText := ""
-        sourceVariableName := Data.SourceVariable
-        
-        if (sourceVariableName == "") {
-            MsgBox(GetLang("文本处理失败：请指定文本来源变量"))
-            return
-        }
-        
-        if (!this.TryGetVariableValue(&sourceText, sourceVariableName, false)) {
-            errorText := GetLang("文本处理失败：源变量不存在：") . sourceVariableName
-            MsgBox(errorText)
-            return
-        }
-        
-        if (sourceText == "") {
-            MsgBox(GetLang("文本处理失败：源变量为空"))
-            return
-        }
-
         NameArr := []
         ValueArr := []
+
+        ; 获取源文本
+        sourceText := this.GetSourceText(Data)
+        if (sourceText == "" && Data.ProcessType != 13 && Data.ProcessType != 14) {
+            return
+        }
 
         ; 处理文本
         switch Data.ProcessType {
@@ -381,42 +385,44 @@ class TextProcessGui {
                 
             case 2: ; 文本替换
                 processedText := this.ProcessTextReplace(sourceText, Data.SearchText, Data.ReplaceText, Data.CaseSensitive, Data.UseRegex)
-                this.SaveSingleResult(Data, NameArr, ValueArr, processedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, processedText)
                 
             case 3: ; 数字提取
                 extractedText := this.ExtractDigits(sourceText)
-                this.SaveSingleResult(Data, NameArr, ValueArr, extractedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, extractedText)
                 
             case 4: ; 字母提取
                 extractedText := this.ExtractAlphabets(sourceText)
-                this.SaveSingleResult(Data, NameArr, ValueArr, extractedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, extractedText)
                 
             case 5: ; 中文提取
                 extractedText := this.ExtractChineseChars(sourceText)
-                this.SaveSingleResult(Data, NameArr, ValueArr, extractedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, extractedText)
                 
             case 6: ; 去空格处理
                 processedText := this.ProcessWhitespace(sourceText, Data.SplitParam)
-                this.SaveSingleResult(Data, NameArr, ValueArr, processedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, processedText)
                 
             case 7: ; 大小写转换
                 processedText := this.ProcessCaseConversion(sourceText, Data.SplitParam)
-                this.SaveSingleResult(Data, NameArr, ValueArr, processedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, processedText)
                 
             case 8: ; URL编解码
                 processedText := this.ProcessURLEncode(sourceText, Data.SplitParam)
-                this.SaveSingleResult(Data, NameArr, ValueArr, processedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, processedText)
                 
             case 9: ; Base64编解码
                 processedText := this.ProcessBase64(sourceText, Data.SplitParam)
-                this.SaveSingleResult(Data, NameArr, ValueArr, processedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, processedText)
                 
             case 10: ; 文本统计
                 statsText := this.GetTextStatistics(sourceText, Data.SplitParam)
-                this.SaveSingleResult(Data, NameArr, ValueArr, statsText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, statsText)
                 
             case 11: ; 固定长度分割
-                length := Data.SplitParam ? Integer(Data.SplitParam) : 10
+                ; 从下拉列表获取长度值
+                lengthOptions := [10, 20, 50, 100]
+                length := lengthOptions[Data.SplitParam] ? lengthOptions[Data.SplitParam] : 10
                 maxCount := Data.MaxSplitCount ? Integer(Data.MaxSplitCount) : 0
                 parts := this.SplitByLength(sourceText, length, maxCount)
                 partIndex := 1
@@ -428,40 +434,11 @@ class TextProcessGui {
                     }
                 }
                 
-            case 12: ; 多字符分割
-                delimiters := Data.SplitParam ? Data.SplitParam : ",|;"
-                maxCount := Data.MaxSplitCount ? Integer(Data.MaxSplitCount) : 0
-                parts := this.SplitByMultipleDelimiters(sourceText, delimiters, maxCount)
-                partIndex := 1
-                loop 4 {
-                    if (Data.ToggleArr[A_Index] && partIndex <= parts.Length) {
-                        NameArr.Push(Data.VariableArr[A_Index])
-                        ValueArr.Push(parts[partIndex])
-                        partIndex++
-                    }
-                }
-                
-            case 13: ; 行过滤
-                filteredText := this.FilterLines(sourceText, Data.SearchText)
-                this.SaveSingleResult(Data, NameArr, ValueArr, filteredText)
-                
-            case 14: ; 去重处理
+            case 12: ; 去重处理
                 processedText := this.RemoveDuplicates(sourceText)
-                this.SaveSingleResult(Data, NameArr, ValueArr, processedText)
+                this.SaveSingleResult(Data, &NameArr, &ValueArr, processedText)
                 
-            case 15: ; 排序处理
-                processedText := this.SortText(sourceText, Data.ReverseProcess)
-                this.SaveSingleResult(Data, NameArr, ValueArr, processedText)
-                
-            case 16: ; 随机文本
-                length := Data.SplitParam ? Integer(Data.SplitParam) : 10
-                randomText := this.GenerateRandomText(length)
-                this.SaveSingleResult(Data, NameArr, ValueArr, randomText)
-                
-            case 17: ; 日期时间
-                format := Data.SplitParam ? Data.SplitParam : "yyyy-MM-dd HH:mm:ss"
-                dateTimeText := this.GetDateTime(format)
-                this.SaveSingleResult(Data, NameArr, ValueArr, dateTimeText)
+
         }
 
         if (NameArr.Length == 0) {
@@ -683,7 +660,7 @@ class TextProcessGui {
         ; 提取所有数字
         numbers := ""
         for char in StrSplit(text, "") {
-            if (char >= "0" && char <= "9") {
+            if (RegExMatch(char, "^[0-9]$")) {
                 numbers .= char
             }
         }
@@ -694,7 +671,7 @@ class TextProcessGui {
         ; 提取所有字母
         letters := ""
         for char in StrSplit(text, "") {
-            if ((char >= "a" && char <= "z") || (char >= "A" && char <= "Z")) {
+            if (RegExMatch(char, "^[a-zA-Z]$")) {
                 letters .= char
             }
         }
@@ -721,11 +698,11 @@ class TextProcessGui {
     ProcessWhitespace(text, mode) {
         ; 处理空格
         switch mode {
-            case "1": ; 去除前后空格
+            case 1: ; 去除前后空格
                 return Trim(text)
-            case "2": ; 去除所有空格
+            case 2: ; 去除所有空格
                 return StrReplace(text, " ", "")
-            case "3": ; 去除多余空格
+            case 3: ; 去除多余空格
                 return RegExReplace(text, "\s+", " ")
             default:
                 return Trim(text)
@@ -735,12 +712,22 @@ class TextProcessGui {
     ProcessCaseConversion(text, mode) {
         ; 大小写转换
         switch mode {
-            case "1": ; 全部大写
+            case 1: ; 全部大写
                 return StrUpper(text)
-            case "2": ; 全部小写
+            case 2: ; 全部小写
                 return StrLower(text)
-            case "3": ; 首字母大写
+            case 3: ; 首字母大写
                 return StrUpper(SubStr(text, 1, 1)) . StrLower(SubStr(text, 2))
+            case 4: ; 标题格式
+                ; 将每个单词的首字母大写
+                words := StrSplit(text, " ")
+                result := ""
+                for word in words {
+                    if (word != "") {
+                        result .= (result ? " " : "") . StrUpper(SubStr(word, 1, 1)) . StrLower(SubStr(word, 2))
+                    }
+                }
+                return result
             default:
                 return text
         }
@@ -749,7 +736,7 @@ class TextProcessGui {
     ProcessURLEncode(text, mode) {
         ; URL编解码
         switch mode {
-            case "1": ; URL编码
+            case 1: ; URL编码
                 encoded := ""
                 for char in StrSplit(text, "") {
                     code := Ord(char)
@@ -760,7 +747,7 @@ class TextProcessGui {
                     }
                 }
                 return encoded
-            case "2": ; URL解码
+            case 2: ; URL解码
                 decoded := ""
                 i := 1
                 while (i <= StrLen(text)) {
@@ -781,11 +768,11 @@ class TextProcessGui {
     }
 
     ProcessBase64(text, mode) {
-        ; Base64编解码（简化实现）
+        ; Base64编解码
         switch mode {
-            case "1": ; Base64编码
+            case 1: ; Base64编码
                 return this.Base64Encode(text)
-            case "2": ; Base64解码
+            case 2: ; Base64解码
                 return this.Base64Decode(text)
             default:
                 return text
@@ -793,32 +780,69 @@ class TextProcessGui {
     }
 
     Base64Encode(text) {
-        ; 简化的Base64编码
+        ; 使用标准的Base64编码实现
+        return this.SimpleBase64Encode(text)
+    }
+
+    Base64Decode(encoded) {
+        ; 使用标准的Base64解码实现
+        return this.SimpleBase64Decode(encoded)
+    }
+
+    SimpleBase64Encode(text) {
+        ; 简化的Base64编码（备用实现）
         charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
         encoded := ""
+        
+        ; 处理空字符串
+        if (text == "") {
+            return ""
+        }
+        
+        ; 将文本转换为字节数组
+        bytes := []
+        for i in StrSplit(text, "") {
+            bytes.Push(Ord(i))
+        }
+        
         i := 1
-        while (i <= StrLen(text)) {
-            ; 每3个字符处理一次
-            b1 := Ord(SubStr(text, i, 1))
-            b2 := Ord(SubStr(text, i + 1, 1))
-            b3 := Ord(SubStr(text, i + 2, 1))
+        while (i <= bytes.Length) {
+            ; 处理3个字节
+            b1 := bytes[i]
+            b2 := (i + 1 <= bytes.Length) ? bytes[i + 1] : 0
+            b3 := (i + 2 <= bytes.Length) ? bytes[i + 2] : 0
             
             combined := (b1 << 16) | (b2 << 8) | b3
             
-            encoded .= SubStr(charset, (combined >> 18) & 0x3F + 1, 1)
-            encoded .= SubStr(charset, (combined >> 12) & 0x3F + 1, 1)
-            encoded .= (i + 1 <= StrLen(text)) ? SubStr(charset, (combined >> 6) & 0x3F + 1, 1) : "="
-            encoded .= (i + 2 <= StrLen(text)) ? SubStr(charset, combined & 0x3F + 1, 1) : "="
+            ; 获取4个6位值
+            encoded .= SubStr(charset, ((combined >> 18) & 0x3F) + 1, 1)
+            encoded .= SubStr(charset, ((combined >> 12) & 0x3F) + 1, 1)
+            encoded .= (i + 1 <= bytes.Length) ? SubStr(charset, ((combined >> 6) & 0x3F) + 1, 1) : "="
+            encoded .= (i + 2 <= bytes.Length) ? SubStr(charset, (combined & 0x3F) + 1, 1) : "="
             
             i += 3
         }
         return encoded
     }
 
-    Base64Decode(encoded) {
-        ; 简化的Base64解码
+    SimpleBase64Decode(encoded) {
+        ; 简化的Base64解码（备用实现）
         charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
         decoded := ""
+        
+        ; 处理空字符串
+        if (encoded == "") {
+            return ""
+        }
+        
+        ; 移除可能的换行符和空格
+        encoded := RegExReplace(encoded, "[\r\n\s]+", "")
+        
+        ; 检查Base64字符串长度是否为4的倍数
+        if (Mod(StrLen(encoded), 4) != 0) {
+            return ""  ; 无效的Base64字符串
+        }
+        
         i := 1
         while (i <= StrLen(encoded)) {
             char1 := SubStr(encoded, i, 1)
@@ -826,19 +850,29 @@ class TextProcessGui {
             char3 := SubStr(encoded, i + 2, 1)
             char4 := SubStr(encoded, i + 3, 1)
             
+            ; 获取每个字符的值
             v1 := InStr(charset, char1) - 1
             v2 := InStr(charset, char2) - 1
-            v3 := (char3 != "=") ? InStr(charset, char3) - 1 : 0
-            v4 := (char4 != "=") ? InStr(charset, char4) - 1 : 0
+            v3 := (char3 != "=" && char3 != "") ? InStr(charset, char3) - 1 : 0
+            v4 := (char4 != "=" && char4 != "") ? InStr(charset, char4) - 1 : 0
             
             combined := (v1 << 18) | (v2 << 12) | (v3 << 6) | v4
             
-            decoded .= Chr((combined >> 16) & 0xFF)
-            if (char3 != "=") {
-                decoded .= Chr((combined >> 8) & 0xFF)
-            }
-            if (char4 != "=") {
-                decoded .= Chr(combined & 0xFF)
+            ; 解码3个字节
+            byte1 := (combined >> 16) & 0xFF
+            byte2 := (combined >> 8) & 0xFF  
+            byte3 := combined & 0xFF
+            
+            ; 根据填充字符确定实际字节数
+            if (char4 == "=") {
+                ; 2个填充字符，只有1个有效字节
+                decoded .= Chr(byte1)
+            } else if (char3 == "=") {
+                ; 1个填充字符，有2个有效字节
+                decoded .= Chr(byte1) . Chr(byte2)
+            } else {
+                ; 没有填充字符，有3个有效字节
+                decoded .= Chr(byte1) . Chr(byte2) . Chr(byte3)
             }
             
             i += 4
@@ -849,9 +883,9 @@ class TextProcessGui {
     GetTextStatistics(text, mode) {
         ; 文本统计
         switch mode {
-            case "1": ; 字符数
+            case 1: ; 字符数
                 return StrLen(text)
-            case "2": ; 单词数
+            case 2: ; 单词数
                 words := StrSplit(text, [" ", "`t", "`n", "`r"])
                 count := 0
                 for word in words {
@@ -860,17 +894,30 @@ class TextProcessGui {
                     }
                 }
                 return count
-            case "3": ; 行数
+            case 3: ; 行数
                 lines := StrSplit(text, ["`n", "`r"])
                 return lines.Length
-            case "4": ; 中文字符数
-                count := 0
-                for char in StrSplit(text, "") {
-                    if (this.IsChineseChar(char)) {
-                        count++
+            case 4: ; 完整统计
+                charCount := StrLen(text)
+                words := StrSplit(text, [" ", "`t", "`n", "`r"])
+                wordCount := 0
+                for word in words {
+                    if (StrLen(word) > 0) {
+                        wordCount++
                     }
                 }
-                return count
+                lines := StrSplit(text, ["`n", "`r"])
+                lineCount := lines.Length
+                
+                chineseCount := 0
+                for char in StrSplit(text, "") {
+                    if (this.IsChineseChar(char)) {
+                        chineseCount++
+                    }
+                }
+                
+                stats := "字符数: " . charCount . "`n单词数: " . wordCount . "`n行数: " . lineCount . "`n中文字符数: " . chineseCount
+                return stats
             default:
                 return StrLen(text)
         }
@@ -1023,5 +1070,34 @@ class TextProcessGui {
         result := StrReplace(result, "ss", FormatTime(now, "ss"))
         
         return result
+    }
+
+    GetSourceText(Data) {
+        ; 获取源文本，对于需要输入的功能检查变量，对于生成类功能直接返回空字符串
+        switch Data.ProcessType {
+            case 13, 14: ; 随机文本、日期时间 - 不需要输入变量
+                return ""
+            default: ; 其他功能需要输入变量
+                sourceText := ""
+                sourceVariableName := Data.SourceVariable
+                
+                if (sourceVariableName == "") {
+                    MsgBox(GetLang("文本处理失败：请指定文本来源变量"))
+                    return ""
+                }
+                
+                if (!this.TryGetVariableValue(&sourceText, sourceVariableName, false)) {
+                    errorText := GetLang("文本处理失败：源变量不存在：") . sourceVariableName
+                    MsgBox(errorText)
+                    return ""
+                }
+                
+                if (sourceText == "") {
+                    MsgBox(GetLang("文本处理失败：源变量为空"))
+                    return ""
+                }
+                
+                return sourceText
+        }
     }
 }

@@ -614,8 +614,6 @@ class TextProcessData {
         this.CaseType := 1 ; 大小写转换类型
         this.EncodeType := 1 ; 编码类型
         this.StatType := 1 ; 统计类型
-        this.RandomLength := 10 ; 随机文本长度
-        this.DateTimeFormat := "" ; 日期时间格式
     }
 }
 
