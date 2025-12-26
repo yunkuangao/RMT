@@ -77,7 +77,7 @@ class TextProcessGui {
 
         PosY += 40
         PosX := 10
-        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 630, 220), GetLang("处理参数"))
+        MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 630, 150), GetLang("处理参数"))
 
         ; 第一行：文本来源
         PosY += 25
@@ -108,7 +108,7 @@ class TextProcessGui {
         ; 第四行：分割参数（用于多字符分割、固定长度分割等）
         PosY += 30
         PosX := 20
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("处理参数:"))
+        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("类型选项:"))
         PosX += 75
         this.SplitParamCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 180), [])
         this.SplitParamCon.OnEvent("Change", (*) => this.OnSplitParamChange())
@@ -118,32 +118,13 @@ class TextProcessGui {
         PosX += 75
         this.MaxSplitCountCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX, PosY - 5, 80), "")
 
-        ; 第四行：处理选项
-        PosY += 30
+        ; 在变量保存部分前添加"变量存在忽略操作"选项
+        PosY += 40
         PosX := 20
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("处理选项:"))
-        PosX += 75
-        this.CaseSensitiveCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 100), GetLang("大小写敏感"))
-        
-        PosX += 110
-        this.RegexCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 100), GetLang("正则表达式"))
-        
-        PosX += 110
-        this.ReverseCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY - 3, 100), GetLang("反向处理"))
+        this.IsIgnoreExistCon := MyGui.Add("Checkbox", Format("x{} y{} w{}", PosX, PosY, 150), GetLang("变量存在忽略操作"))
 
-
-
-        ; 第五行：结果处理
-        PosY += 25
-        PosX := 20
-        MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("结果处理:"))
-        PosX += 75
-        this.ResultActionCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 120), GetLangArr([
-            "覆盖变量",
-            "追加结果",
-            "前置结果"]))
-
-        PosY += 30
+        ; 变量保存部分
+        PosY += 40
         PosX := 20
         MyGui.Add("Text", Format("x{} y{} h{}", PosX, PosY, 20), GetLang("开关      变量名"))
         PosX += 260
@@ -157,17 +138,17 @@ class TextProcessGui {
         this.ToggleConArr.Push(con)
 
         PosX += 35
-        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 120), [])
+        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
         this.VariableConArr.Push(con)
 
-        PosX += 240
+        PosX += 200
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY + 3), "2.")
         PosX += 20
         con := MyGui.Add("Checkbox", Format("x{} y{} w{} h{} Center", PosX, PosY + 3, 30, 20), "")
         this.ToggleConArr.Push(con)
 
         PosX += 35
-        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 120), [])
+        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
         this.VariableConArr.Push(con)
 
         PosX := 20
@@ -178,17 +159,17 @@ class TextProcessGui {
         this.ToggleConArr.Push(con)
 
         PosX += 35
-        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 120), [])
+        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
         this.VariableConArr.Push(con)
 
-        PosX += 240
+        PosX += 200
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY + 3), "4.")
         PosX += 20
         con := MyGui.Add("Checkbox", Format("x{} y{} w{} h{} Center", PosX, PosY + 3, 30, 20), "")
         this.ToggleConArr.Push(con)
 
         PosX += 35
-        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 120), [])
+        con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
         this.VariableConArr.Push(con)
 
         PosY += 40
@@ -236,14 +217,11 @@ class TextProcessGui {
             this.VariableConArr[A_Index].Add(RemoveInVariable(this.VariableObjArr))
             this.VariableConArr[A_Index].Text := this.Data.VariableArr[A_Index]
         }
+        this.IsIgnoreExistCon.Value := this.Data.IsIgnoreExist
         this.ProcessTypeCon.Value := this.Data.ProcessType
         this.SplitDelimiterCon.Value := this.Data.SplitDelimiter
         this.SearchTextCon.Value := this.Data.SearchText
         this.ReplaceTextCon.Value := this.Data.ReplaceText
-        this.CaseSensitiveCon.Value := this.Data.CaseSensitive
-        this.RegexCon.Value := this.Data.UseRegex
-        this.ReverseCon.Value := this.Data.ReverseProcess
-        this.ResultActionCon.Value := this.Data.ResultAction
         this.MaxSplitCountCon.Value := this.Data.MaxSplitCount
 
         ; 先更新界面状态，然后设置参数值
@@ -384,7 +362,7 @@ class TextProcessGui {
                 }
                 
             case 2: ; 文本替换
-                processedText := this.ProcessTextReplace(sourceText, Data.SearchText, Data.ReplaceText, Data.CaseSensitive, Data.UseRegex)
+                processedText := this.ProcessTextReplace(sourceText, Data.SearchText, Data.ReplaceText)
                 this.SaveSingleResult(Data, &NameArr, &ValueArr, processedText)
                 
             case 3: ; 数字提取
@@ -490,12 +468,9 @@ class TextProcessGui {
         this.Data.SplitDelimiter := this.SplitDelimiterCon.Value
         this.Data.SearchText := this.SearchTextCon.Value
         this.Data.ReplaceText := this.ReplaceTextCon.Value
-        this.Data.CaseSensitive := this.CaseSensitiveCon.Value
-        this.Data.UseRegex := this.RegexCon.Value
-        this.Data.ReverseProcess := this.ReverseCon.Value
-        this.Data.ResultAction := this.ResultActionCon.Value
         this.Data.SplitParam := this.SplitParamCon.Value
         this.Data.MaxSplitCount := this.MaxSplitCountCon.Value
+        this.Data.IsIgnoreExist := this.IsIgnoreExistCon.Value
         loop 4 {
             this.Data.ToggleArr[A_Index] := this.ToggleConArr[A_Index].Value
             this.Data.VariableArr[A_Index] := this.VariableConArr[A_Index].Text
@@ -586,21 +561,9 @@ class TextProcessGui {
         return reversed
     }
 
-    ProcessTextReplace(sourceText, searchText, replaceText, caseSensitive, useRegex) {
-        ; 文本替换处理
-        if (useRegex) {
-            ; 正则表达式替换
-            flags := caseSensitive ? "" : "i"
-            return RegExReplace(sourceText, searchText, replaceText, 1, -1, flags)
-        } else {
-            ; 普通文本替换
-            if (caseSensitive) {
-                return StrReplace(sourceText, searchText, replaceText)
-            } else {
-                ; 大小写不敏感的替换
-                return RegExReplace(sourceText, "i)" . this.RegExEscape(searchText), replaceText)
-            }
-        }
+    ProcessTextReplace(sourceText, searchText, replaceText) {
+        ; 文本替换处理 - 简化为普通文本替换
+        return StrReplace(sourceText, searchText, replaceText)
     }
 
     RegExEscape(text) {
@@ -628,14 +591,11 @@ class TextProcessGui {
     }
 
     SaveSingleResult(Data, &NameArr, &ValueArr, result) {
-        ; 保存单个结果到第一个选中的变量
+        ; 保存单个结果到第一个选中的变量 - 简化为直接覆盖
         loop 4 {
             if (Data.ToggleArr[A_Index]) {
                 NameArr.Push(Data.VariableArr[A_Index])
-                originalValue := ""
-                this.TryGetVariableValue(&originalValue, Data.VariableArr[A_Index], false)
-                finalValue := this.ApplyResultAction(originalValue, result, Data.ResultAction)
-                ValueArr.Push(finalValue)
+                ValueArr.Push(result)
                 break
             }
         }
