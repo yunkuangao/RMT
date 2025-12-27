@@ -322,9 +322,6 @@ F1:选取当前坐标=F1:Current Pos
 当前配置无效,请浏览勾选规则后，检查配置,有异议请联系UP: 浮生若梦的兔子。=Config invalid, check rules.
 请从下面选框中勾选替换后的按键：=Select replacement key:
 按钮=Btn
-当前配置：无=Current: None
-清空选项=Clear
-确定选项=OK
 当前配置：=Current:
 截图=Screenshot
 截图提取文本=Text Capture
@@ -665,6 +662,7 @@ vjoy加载失败，请安装或卸载后重新安装vjoy，然后尝试使用手
 分割线=Divider
 拉=Drag
 下拉框选项=Dropdown
+语言：=Language:
 软件字体：=Font:
 软件截图方式：=Screenshot Method:
 微软截图=Win Snip
