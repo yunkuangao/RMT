@@ -717,7 +717,7 @@ OnExVariable(tableItem, cmd, index) {
     ;变量初始化默认值0
     NameArr := []
     ValueArr := []
-    loop 4 {
+    loop Data.ToggleArr.Length {
         if (Data.ToggleArr[A_Index]) {
             NameArr.Push(Data.VariableArr[A_Index])
             ValueArr.Push(0)
@@ -779,6 +779,9 @@ OnExVariableOnce(tableItem, index, Data) {
         if (VariableValueArr == "")
             continue
 
+        if (GetExVariableActiveLength(Data.ToggleArr) > VariableValueArr.Length)
+            continue
+    
         RealNameArr := []
         RealValueArr := []
         loop VariableValueArr.Length {

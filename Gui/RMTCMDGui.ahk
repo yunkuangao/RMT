@@ -56,7 +56,7 @@ class RMTCMDGui {
         PosY := 15
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("操作类型："))
         PosX += 80
-        this.OperTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w160 R5", PosX, PosY - 3), this.CmdStrArr)
+        this.OperTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w160 R10", PosX, PosY - 3), this.CmdStrArr)
         this.OperTypeCon.OnEvent("Change", this.OnChangeType.Bind(this))
 
         PosX := 15
