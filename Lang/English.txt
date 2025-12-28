@@ -662,7 +662,6 @@ vjoy加载失败，请安装或卸载后重新安装vjoy，然后尝试使用手
 分割线=Divider
 拉=Drag
 下拉框选项=Dropdown
-语言：=Language:
 软件字体：=Font:
 软件截图方式：=Screenshot Method:
 微软截图=Win Snip
@@ -754,3 +753,4 @@ RMT默认初始化配置=RMT Default Setting
 源文本内容：=Source Text:
 提取内容=Content
 未在源文本内容中出现，请修改=Not found in source text. Please revise.
+按键时间请输入大于0的整数=Hold time enter an integer greater than 0.
