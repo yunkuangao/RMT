@@ -702,7 +702,7 @@ AddSettingUI(index) {
     tableItem.AllConArr.Push(conInfo)
     tableItem.AllGroup.Push(con)
     posY += 30
-    con := MyGui.Add("Text", Format("x{} y{}", posX + 25, posY), "语言/Lang:")
+    con := MyGui.Add("Text", Format("x{} y{}", posX + 25, posY), GetLang("语言："))
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
     con := MyGui.Add("DropDownList", Format("x{} y{} w100", posX + 100, posY - 5), [])
