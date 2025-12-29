@@ -33,7 +33,7 @@ LoadItemFold(index) {
         }
         UpdateUnderPosY(index, 5)
     }
-
+    LoadTabItem(tableItem)
     UpdateItemConPos(tableItem, true)
 }
 
@@ -239,11 +239,9 @@ LoadTabItemUI(tableItem, itemIndex, foldIndex, PosY) {
     tableItem.ConIndexMap[TriggerTypeCon] := MacroItemInfo(ItemIndex, conInfo)
 
     ;循环次数
-    LoopCon := MyGui.Add("ComboBox", Format("x{} y{} w60 R5 center", TabPosX + 440,
-        posY),
-    ["无限"])
+    LoopCon := MyGui.Add("ComboBox", Format("x{} y{} w60 R5 center", TabPosX + 440, posY), GetLangArr(["无限"]))
     conValue := tableItem.LoopCountArr[ItemIndex]
-    conValue := conValue == "-1" ? "无限" : conValue
+    conValue := conValue == "-1" ? GetLang("无限") : conValue
     LoopCon.Text := conValue
     LoopCon.Enabled := isMacro
     conInfo := ItemConInfo(LoopCon, tableItem, foldIndex)
@@ -731,18 +729,14 @@ OnFlodTKEditClick(TKEditCon, tableItem, con, *) {
 
 ;刷新函数
 UpdateItemConPos(tableItem, isDown) {
-    if (isDown) {
-        for index, value in tableItem.AllConArr {
-            value.UpdatePos(tableItem.OffSetPosY)
-        }
+    loop tableItem.AllConArr.Length {
+        Index := isDown ? A_Index : tableItem.AllConArr.Length - A_Index + 1
+        ConInfo := tableItem.AllConArr[Index]
+        ConInfo.UpdatePos(tableItem.OffSetPosY)
     }
-    else {
-        loop tableItem.AllConArr.Length {
-            conInfo := tableItem.AllConArr[tableItem.AllConArr.Length - A_Index + 1]
-            conInfo.UpdatePos(tableItem.OffSetPosY)
-        }
-    }
+
     for index, value in tableItem.AllGroup {
+        RefreshGroupItem(tableItem, Index)
         value.Redraw()
     }
 }
