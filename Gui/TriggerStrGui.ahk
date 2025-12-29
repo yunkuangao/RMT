@@ -465,7 +465,7 @@ class TriggerStrGui {
         btnCon.OnEvent("Click", (*) => this.ClearStr())
 
         PosX += 240
-        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("确定选项"))
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 40, 100), GetLang("确定"))
         btnCon.OnEvent("Click", (*) => this.OnSureBtnClick())
 
         PosX += 240
