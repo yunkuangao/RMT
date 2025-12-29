@@ -213,7 +213,7 @@ class ExVariableGui {
         con := MyGui.Add("ComboBox", Format("x{} y{} w{} R5 Center", PosX, PosY - 2, 100), [])
         this.VariableConArr.Push(con)
 
-        PosY += 45
+        PosY +=45
         PosX := 210
         btnCon := MyGui.Add("Button", Format("x{} y{} w{} h{} Center", PosX, PosY, 100, 40), GetLang("确定"))
         btnCon.OnEvent("Click", (*) => this.OnClickSureBtn())
