@@ -227,8 +227,6 @@ class ExVariableGui {
         this.SerialStr := cmdArr.Length >= 2 ? cmdArr[2] : GetSerialStr("ExVariable")
         this.RemarkCon.Value := cmdArr.Length >= 3 ? cmdArr[3] : ""
         this.Data := this.GetExVariableData(this.SerialStr)
-    
-        if (this.Data.ToggleArr.Length )
 
         loop 6 {
             togState := this.Data.ToggleArr.Length >= A_Index ? this.Data.ToggleArr[A_Index] : false
