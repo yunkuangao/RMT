@@ -228,13 +228,18 @@ class ExVariableGui {
         this.RemarkCon.Value := cmdArr.Length >= 3 ? cmdArr[3] : ""
         this.Data := this.GetExVariableData(this.SerialStr)
 
-        loop 6 {
-            togState := this.Data.ToggleArr.Length >= A_Index ? this.Data.ToggleArr[A_Index] : false
-            VariableName := this.Data.VariableArr.Length >= A_Index ? this.Data.VariableArr[A_Index] : "Num" A_Index
-            this.ToggleConArr[A_Index].Value := togState
+        if (this.Data.ToggleArr.Length == 4) {
+            this.Data.ToggleArr.Push(false)
+            this.Data.ToggleArr.Push(false)
+            this.Data.VariableArr.Push("Num5")
+            this.Data.VariableArr.Push("Num6")
+        }
+
+        loop this.Data.ToggleArr.Length {
+            this.ToggleConArr[A_Index].Value := this.Data.ToggleArr[A_Index]
             this.VariableConArr[A_Index].Delete()
             this.VariableConArr[A_Index].Add(RemoveInVariable(this.VariableObjArr))
-            this.VariableConArr[A_Index].Text := VariableName
+            this.VariableConArr[A_Index].Text := this.Data.VariableArr[A_Index]
         }
         this.IsIgnoreExistCon.Value := this.Data.IsIgnoreExist
         this.ExtractStrCon.Value := this.Data.ExtractStr
@@ -276,7 +281,7 @@ class ExVariableGui {
 
     OnSureExtractAction(ExtractStr, VariNum) {
         this.ExtractStrCon.Value := ExtractStr
-        loop 6 {
+        loop this.ToggleConArr.Length {
             isTog := VariNum >= A_Index
             this.ToggleConArr[A_Index].Value := isTog
         }
@@ -324,7 +329,7 @@ class ExVariableGui {
         }
 
         ToggleArr := []
-        loop 6 {
+        loop this.ToggleConArr.Length {
             ToggleArr.Push(this.ToggleConArr[A_Index].Value)
             if (this.ToggleConArr[A_Index].Value) {
                 if (IsNumber(this.VariableConArr[A_Index].Text)) {
@@ -453,13 +458,13 @@ class ExVariableGui {
         this.Data.SearchCount := this.SearchCountCon.Text == GetLang("无限") ? -1 : this.SearchCountCon.Text
         this.Data.SearchInterval := this.SearchIntervalCon.Value
         this.Data.IsIgnoreExist := this.IsIgnoreExistCon.Value
-        loop 6 {
+        loop this.Data.ToggleArr.Length {
             this.Data.ToggleArr[A_Index] := this.ToggleConArr[A_Index].Value
             this.Data.VariableArr[A_Index] := this.VariableConArr[A_Index].Text
         }
 
         ; 添加全局变量，方便下拉选取
-        loop 6 {
+        loop this.Data.ToggleArr.Length {
             if (this.Data.ToggleArr[A_Index])
                 MySoftData.GlobalVariMap[this.Data.VariableArr[A_Index]] := true
         }
