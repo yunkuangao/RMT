@@ -1449,39 +1449,39 @@ OnTextProcess(tableItem, cmd, index) {
             
         case 2: ; 文本替换
             processedText := ProcessTextReplace(sourceText, Data.SearchText, Data.ReplaceText, Data.CaseSensitive, Data.UseRegex)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, processedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, processedText)
             
         case 3: ; 数字提取
             extractedText := ExtractDigits(sourceText)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, extractedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, extractedText)
             
         case 4: ; 字母提取
             extractedText := ExtractAlphabets(sourceText)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, extractedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, extractedText)
             
         case 5: ; 中文提取
             extractedText := ExtractChineseChars(sourceText)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, extractedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, extractedText)
             
         case 6: ; 去空格处理
             processedText := ProcessWhitespace(sourceText, Data.SplitParam)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, processedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, processedText)
             
         case 7: ; 大小写转换
             processedText := ProcessCaseConversion(sourceText, Data.SplitParam)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, processedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, processedText)
             
         case 8: ; URL编解码
             processedText := ProcessURLEncode(sourceText, Data.SplitParam)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, processedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, processedText)
             
         case 9: ; Base64编解码
             processedText := ProcessBase64(sourceText, Data.SplitParam)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, processedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, processedText)
             
         case 10: ; 文本统计
             statsText := GetTextStatistics(sourceText, Data.SplitParam)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, statsText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, statsText)
             
         case 11: ; 固定长度分割
             length := Data.SplitParam ? Integer(Data.SplitParam) : 10
@@ -1511,25 +1511,25 @@ OnTextProcess(tableItem, cmd, index) {
             
         case 13: ; 行过滤
             filteredText := FilterLines(sourceText, Data.SearchText)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, filteredText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, filteredText)
             
         case 14: ; 去重处理
             processedText := RemoveDuplicates(sourceText)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, processedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, processedText)
             
         case 15: ; 排序处理
             processedText := SortText(sourceText, Data.ReverseProcess)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, processedText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, processedText)
             
         case 16: ; 随机文本
             length := Data.SplitParam ? Integer(Data.SplitParam) : 10
             randomText := GenerateRandomText(length)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, randomText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, randomText)
             
         case 17: ; 日期时间
             format := Data.SplitParam ? Data.SplitParam : "yyyy-MM-dd HH:mm:ss"
             dateTimeText := GetDateTime(format)
-            SaveSingleResultMacro(Data, tableItem, index, NameArr, ValueArr, dateTimeText)
+            SaveSingleResultMacro(Data, tableItem, index, &NameArr, &ValueArr, dateTimeText)
     }
     
     ; 将结果保存到变量
@@ -1624,7 +1624,8 @@ ExtractDigits(text) {
     ; 提取所有数字
     numbers := ""
     for char in StrSplit(text, "") {
-        if (char >= "0" && char <= "9") {
+        charCode := Ord(char)
+        if (charCode >= Ord("0") && charCode <= Ord("9")) {
             numbers .= char
         }
     }
@@ -1635,7 +1636,8 @@ ExtractAlphabets(text) {
     ; 提取所有字母
     letters := ""
     for char in StrSplit(text, "") {
-        if ((char >= "a" && char <= "z") || (char >= "A" && char <= "Z")) {
+        charCode := Ord(char)
+        if ((charCode >= Ord("a") && charCode <= Ord("z")) || (charCode >= Ord("A") && charCode <= Ord("Z"))) {
             letters .= char
         }
     }

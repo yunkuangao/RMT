@@ -61,18 +61,18 @@ class TextProcessGui {
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("处理类型:"))
         PosX += 75
         this.ProcessTypeCon := MyGui.Add("DropDownList", Format("x{} y{} w{}", PosX, PosY - 5, 120), GetLangArr([
-            "文本分割",
-            "文本替换",
-            "数字提取",
-            "字母提取",
-            "中文提取",
-            "去空格处理",
-            "大小写转换",
-            "URL编解码",
-            "Base64编解码",
-            "文本统计",
-            "固定长度分割",
-            "去重处理"]))
+            GetLang("文本分割"),
+            GetLang("文本替换"),
+            GetLang("数字提取"),
+            GetLang("字母提取"),
+            GetLang("中文提取"),
+            GetLang("去空格处理"),
+            GetLang("大小写转换"),
+            GetLang("URL编解码"),
+            GetLang("Base64编解码"),
+            GetLang("文本统计"),
+            GetLang("固定长度分割"),
+            GetLang("去重处理")]))
         this.ProcessTypeCon.OnEvent("Change", (*) => this.OnProcessTypeChange())
 
         PosY += 40
@@ -202,9 +202,9 @@ class TextProcessGui {
             
             ; 如果仍然为空，添加一些默认变量
             if (this.VariableObjArr.Length == 0) {
-                this.VariableObjArr.Push("变量1")
-                this.VariableObjArr.Push("变量2")
-                this.VariableObjArr.Push("变量3")
+                this.VariableObjArr.Push(GetLang("变量1"))
+                this.VariableObjArr.Push(GetLang("变量2"))
+                this.VariableObjArr.Push(GetLang("变量3"))
             }
         }
         
@@ -268,20 +268,20 @@ class TextProcessGui {
                 ; 无需额外参数
             case 6: ; 去空格处理
                 this.SplitParamCon.Enabled := true
-                paramOptions := GetLangArr(["去除前后空格", "去除全部空格", "去除多余空格"])
+                paramOptions := GetLangArr([GetLang("去除前后空格"), GetLang("去除全部空格"), GetLang("去除多余空格")])
             case 7: ; 大小写转换
                 this.SplitParamCon.Enabled := true
-                paramOptions := GetLangArr(["全部大写", "全部小写", "首字母大写", "标题格式"])
+                paramOptions := GetLangArr([GetLang("全部大写"), GetLang("全部小写"), GetLang("首字母大写"), GetLang("标题格式")])
             case 8, 9: ; URL编解码、Base64编解码
                 this.SplitParamCon.Enabled := true
                 if (processType == 8) {
-                    paramOptions := GetLangArr(["URL编码", "URL解码"])
+                    paramOptions := GetLangArr([GetLang("URL编码"), GetLang("URL解码")])
                 } else {
-                    paramOptions := GetLangArr(["Base64编码", "Base64解码"])
+                    paramOptions := GetLangArr([GetLang("Base64编码"), GetLang("Base64解码")])
                 }
             case 10: ; 文本统计
                 this.SplitParamCon.Enabled := true
-                paramOptions := GetLangArr(["字符数", "单词数", "行数", "完整统计"])
+                paramOptions := GetLangArr([GetLang("字符数"), GetLang("单词数"), GetLang("行数"), GetLang("完整统计")])
             case 11: ; 固定长度分割
                 this.SplitDelimiterCon.Enabled := false
                 this.SplitParamCon.Enabled := true
@@ -876,7 +876,7 @@ class TextProcessGui {
                     }
                 }
                 
-                stats := "字符数: " . charCount . "`n单词数: " . wordCount . "`n行数: " . lineCount . "`n中文字符数: " . chineseCount
+                stats := GetLang("字符数") . ": " . charCount . "`n" . GetLang("单词数") . ": " . wordCount . "`n" . GetLang("行数") . ": " . lineCount . "`n" . GetLang("中文字符数") . ": " . chineseCount
                 return stats
             default:
                 return StrLen(text)
