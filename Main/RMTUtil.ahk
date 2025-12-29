@@ -60,7 +60,6 @@ OnSaveSetting(*) {
     MySoftData.CMDPosY := IniWrite(MySoftData.CMDPosY, IniFile, IniSection, "CMDPosY")
     MySoftData.CMDWidth := IniWrite(MySoftData.CMDWidth, IniFile, IniSection, "CMDWidth")
     MySoftData.CMDHeight := IniWrite(MySoftData.CMDHeight, IniFile, IniSection, "CMDHeight")
-    MySoftData.CMDLineNum := IniWrite(MySoftData.CMDLineNum, IniFile, IniSection, "CMDLineNum")
     MySoftData.CMDBGColor := IniWrite(MySoftData.CMDBGColor, IniFile, IniSection, "CMDBGColor")
     MySoftData.CMDTransparency := IniWrite(MySoftData.CMDTransparency, IniFile, IniSection, "CMDTransparency")
     MySoftData.CMDFontColor := IniWrite(MySoftData.CMDFontColor, IniFile, IniSection, "CMDFontColor")
@@ -887,6 +886,14 @@ FormatIntegerWithCommas(num) {
     return RegExReplace(num, "(\d)(?=(\d{3})+$)", "$1,")
 }
 
+CheckIfMenuBtnHotKey(key) {
+    key := Trim(key, "~")
+    if (IsNumber(key)) {
+        return Integer(key) >= 1 && Integer(key) <= 8
+    }
+    return false
+}
+
 OpenMenuWheel(MenuIndex, isTog) {
     if (MySoftData.CurMenuWheelIndex == MenuIndex) {
         if (isTog)
@@ -896,6 +903,11 @@ OpenMenuWheel(MenuIndex, isTog) {
 
     MySoftData.CurMenuWheelIndex := MenuIndex
     MyMenuWheel.ShowGui(MenuIndex)
+
+    ;重新绑定一下，让菜单按钮快捷键不会被输入
+    BindTabHotKey()
+    BindMenuHotKey()
+    BindSoftHotKey()
 }
 
 CloseMenuWheel() {
@@ -908,8 +920,12 @@ CloseMenuWheel() {
     if (isVisible) {
         MyMenuWheel.ToggleFunc(false)
         MyMenuWheel.Gui.Hide()
-    }
 
+        ;重新绑定一下，让菜单按钮快捷键不会被输入
+        BindTabHotKey()
+        BindMenuHotKey()
+        BindSoftHotKey()
+    }
 }
 
 IsBootStart() {

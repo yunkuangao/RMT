@@ -47,7 +47,7 @@ class SettingMgrGui {
         MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("当前配置："))
 
         PosX += 70
-        this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 130), "")
+        this.CurSettingCon := MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 155), "")
 
         PosX := 245
         con := MyGui.Add("Button", Format("x{} y{} w80", PosX, PosY - 5), GetLang("重命名"))
@@ -161,12 +161,12 @@ class SettingMgrGui {
         if SelectedFolder == ""  ; 用户取消了选择
             return
         SplitPath SelectedFolder, &name, &dir, &ext, &name_no_ext, &drive
-        if (name != "Setting" || name_no_ext != "Setting") {
+        if (!InStr(name, "Setting") || name == "SettingOld") {
             MsgBox(GetLang("需要选择若梦兔软件下的Setting文件"))
             return
         }
         CurSettingDir := A_WorkingDir "\Setting"
-        OldSettingDir := A_WorkingDir "\SettingOld"
+        OldSettingDir := A_WorkingDir "\SettingOld\Setting" FormatTime(, "MM月dd日HH-mm-ss")
         if (DirExist(OldSettingDir))
             DirDelete(OldSettingDir, true)
         DirCopy(CurSettingDir, OldSettingDir, 1)
@@ -182,7 +182,7 @@ class SettingMgrGui {
             MsgBox(GetLang("迁移失败: ") e.Message, GetLang("错误"), 0x10)
             return
         }
-
+        MySoftData.MacroTotalCount := IniRead(IniFile, "UserSettings", "MacroTotalCount", 0)
         IniWrite(true, IniFile, IniSection, "IsReload")
         MsgBox(GetLang("配置迁移成功"))
         Reload()

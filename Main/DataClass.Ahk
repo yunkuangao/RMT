@@ -270,15 +270,14 @@ class SoftData {
         this.CMDPosY := 0
         this.CMDWidth := 225
         this.CMDHeight := 120
-        this.CMDLineNum := 5
         this.CMDBGColor := "FFFFFF"
         this.CMDTransparency := 50
         this.CMDFontSize := "12"
         this.CMDFontColor := "000000"
 
         this.TriggerKeyMap := Map()     ;所有的按键宏，包括软件自身的快捷键
-        this.SoftHotKeyArr := ["~WheelUp", "~WheelDown", "~LButton", "~Left", "~Right", "~Up", "~Down", "~Enter", "~1",
-            "~2", "~3", "~4", "~5", "~6", "~7", "~8", "~F5", "~F6"]
+        this.SoftHotKeyArr := ["~WheelUp", "~WheelDown", "~LButton", "~Left", "~Right", "~Up", "~Down", "~Enter", "1",
+            "2", "3", "4", "5", "6", "7", "8", "~F5", "~F6", "~Delete", "~NumpadDot"]
 
         this.SelectAreaAction := "" ;左键框选范围回调   显示框选范围       正常
         this.GetAreaAction := ""    ;左键框选范围回调   不显示框选范围      系统截图获取截图范围
@@ -289,7 +288,7 @@ class SoftData {
         this.IsTogEndRecord := false    ;通过开关结束录制
         ;这些按键不会松开，特别处理
         this.SpecialNumKeyMap := Map("WheelDown", 0, "WheelUp", 0)
-
+        
         this.MacroTotalCount := 0   ;宏运行次数
         this.LastShowMonth := 0     ;上次显示月数
     }
@@ -519,8 +518,8 @@ class ExVariableData {
     __New() {
         this.SerialStr := ""
         this.IsIgnoreExist := 0
-        this.ToggleArr := [1, 0, 0, 0]
-        this.VariableArr := ["Num1", "Num2", "Num3", "Num4"]
+        this.ToggleArr := [1, 0, 0, 0, 0, 0]
+        this.VariableArr := ["Num1", "Num2", "Num3", "Num4", "Num5", "Num6"]
         this.ExtractStr := ""
         this.ExtractType := 1         ; 1屏幕 2剪切板 3进度条
         this.OCRType := 1

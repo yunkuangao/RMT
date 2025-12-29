@@ -6,8 +6,8 @@ class CMDTipGui {
         this.SureBtnAction := ""
         this.Data := ""
         this.isLoadParams := false
-        this.ShowCMDArr := []
-        this.TextCtrl := ""
+        this.ShowCount := 0
+        this.ContentCon := ""
     }
 
     ShowGui(CMDStr) {
@@ -38,7 +38,6 @@ class CMDTipGui {
         this.Transparency := (Integer)(MySoftData.CMDTransparency * 2.55)
         this.FontSize := MySoftData.CMDFontSize
         this.FontColor := MySoftData.CMDFontColor
-        this.LineNum := MySoftData.CMDLineNum
     }
 
     AddGui() {
@@ -50,22 +49,54 @@ class CMDTipGui {
         WinSetTransparent(this.Transparency, MyGui)  ; 设置透明度
 
         ; 添加文本控件（宽度和高度匹配窗口，自动换行）
-        this.TextCtrl := MyGui.Add("Text", Format("x5 y5 w{} h{} r{}", this.Width - 5, this.Height - 5, this.LineNum),
-        "")
+        this.ContentCon := MyGui.Add("Edit", Format("x0 y0 w{} h{}", this.Width, this.Height), "")
 
         ; 显示窗口（固定宽高）
         MyGui.Show(Format("NoActivate  x{} y{} w{} h{}", this.PosX, this.PosY, this.Width, this.Height))
     }
 
     AddCMD(CMDStr) {
-        if (this.ShowCMDArr.Length >= this.LineNum) {
-            this.ShowCMDArr.RemoveAt(1)
+        this.ShowCount++
+        if (this.ShowCount >= 100) {
+            this.ShowCount--
+            Pos := InStr(this.ContentCon.Value, "`n")
+            this.ContentCon.Value := SubStr(this.ContentCon.Value, Pos + 1)
         }
-        this.ShowCMDArr.Push(CMDStr)
-        CurContent := ""
-        loop this.ShowCMDArr.Length {
-            CurContent .= this.ShowCMDArr[A_Index] "`n"
-        }
-        this.TextCtrl.Value := CurContent
+
+        if (this.ContentCon.Value == "")
+            this.ContentCon.Value := CMDStr
+        else
+            this.ContentCon.Value .= Format("`n{}", CMDStr)
+
+        SendMessage(0xB6, 0, this.ShowCount, this.ContentCon)
+    }
+
+    Clear() {
+        if (this.Gui == "")
+            return
+
+        this.ShowCount := 0
+        this.ContentCon.Value := ""
+    }
+
+    OnScrollWheel(key) {
+        if (this.Gui == "")
+            return
+        style := WinGetStyle(this.Gui.Hwnd)
+        isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+        if (!isVisible)
+            return
+
+        ; 鼠标在窗口上才滑动
+        CoordMode("Mouse", "Screen")
+        MouseGetPos &mouseX, &mouseY
+        isOnWin := mouseX >= this.PosX && mouseY >= this.PosY
+        isOnWin := isOnWin && mouseX <= this.PosX + this.Width && mouseY <= this.PosY + this.Height
+        if (!isOnWin)
+            return
+
+        isDown := InStr(key, "Down", "Off") ? true : false
+        ChangeValue := isDown ? 2 : -2
+        SendMessage(0xB6, 0, ChangeValue, this.ContentCon) ; EM_LINESCROLL = 0xB6
     }
 }

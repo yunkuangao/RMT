@@ -151,7 +151,7 @@ class UseExplainGui {
         }
 
         FileCopy(path, newPath)
-        this.AllImagePathMap.Push(newPath, true)
+        this.AllImagePathMap.Set(newPath, true)
         this.ImagePathArr.Push(newPath)
         IL_Add(this.IL, newPath)
         this.LVCon.Add("Icon" . this.AllImagePathMap.Count)

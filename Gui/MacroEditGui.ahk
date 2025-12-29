@@ -373,13 +373,35 @@ class MacroEditGui {
         ExeMenu.Add(GetLang("终止"), this.MenuHandler.Bind(this))
 
         ; === 编辑菜单 ===
-        ToolMenu := Menu()
-        ToolMenu.Add(GetLang("变量监视"), this.MenuHandler.Bind(this))
-        ToolMenu.Add(GetLang("指令显示"), this.MenuHandler.Bind(this))
+        this.ToolMenu := Menu()
+        this.ToolMenu.Add(GetLang("变量监视"), this.MenuHandler.Bind(this))
+        this.ToolMenu.Add(GetLang("指令显示"), this.MenuHandler.Bind(this))
+        this.ToolMenu.Add(GetLang("窗口置顶"), this.MenuHandler.Bind(this))
 
         ; === 添加到菜单栏 ===
         MyMenuBar.Add(GetLang("调试"), ExeMenu)
-        MyMenuBar.Add(GetLang("工具"), ToolMenu)
+        MyMenuBar.Add(GetLang("工具"), this.ToolMenu)
+
+        if (MyVarListenGui.Gui != "") {
+            style := WinGetStyle(MyVarListenGui.Gui)
+            isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+            if (isVisible)
+                this.ToolMenu.Check(GetLang("变量监视"))
+        }
+
+        if (MyCMDTipGui.Gui != "") {
+            style := WinGetStyle(MyCMDTipGui.Gui)
+            isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+            if (isVisible)
+                this.ToolMenu.Check(GetLang("指令显示"))
+        }
+
+        exStyle := DllCall("GetWindowLongPtr", "Ptr", this.Gui.Hwnd, "Int", -20, "UInt") ; GWL_EXSTYLE = -20
+        isTop := (exStyle & 0x00000008)
+        if (isTop) {
+            this.ToolMenu.Check(GetLang("窗口置顶"))
+        }
+
         this.Gui.MenuBar := MyMenuBar
     }
 
@@ -390,6 +412,10 @@ class MacroEditGui {
         this.SaveBtnCtrl.Visible := this.ShowSaveBtn
         this.InitTreeView(MacroStr)
         this.InitMacroText(MacroStr)
+
+        firstItem := this.MacroTreeViewCon.GetNext(0)
+        this.MacroTreeViewCon.Focus()
+        this.MacroTreeViewCon.Modify(firstItem, "Check")
     }
 
     Backspace() {
@@ -549,6 +575,33 @@ class MacroEditGui {
         }
     }
 
+    OnSoftKey(key, isDown) {
+        if (!IsObject(this.Gui))
+            return
+
+        style := WinGetStyle(this.Gui.Hwnd)
+        isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+        if (!isVisible || !isDown)
+            return
+
+        if (key == "f5")
+            MyMacroGui.MenuHandler(GetLang("运行(F5)"))
+        if (key == "f6")
+            MyMacroGui.MenuHandler(GetLang("单步运行(F6)"))
+        if (key == "delete" || key == "numpaddot") {
+            try {
+                focusedHwnd := DllCall("GetFocus", "Ptr")
+                if (focusedHwnd = this.MacroTreeViewCon.hwnd) {
+                    selectedItem := this.MacroTreeViewCon.GetSelection()
+                    if (selectedItem != 0) {
+                        this.CurItemID := selectedItem
+                        this.OnDeleteCmd()
+                    }
+                }
+            }
+        }
+    }
+
     OnDoubleClick(ctrl, item) {
         if (item == 0)
             return
@@ -597,13 +650,12 @@ class MacroEditGui {
                     style := WinGetStyle(MyVarListenGui.Gui)
                     isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
                     if (isVisible) {
+                        this.ToolMenu.Uncheck(GetLang("变量监视"))
                         MyVarListenGui.Gui.Hide()
+                        return
                     }
-                    else {
-                        MyVarListenGui.ShowGui()
-                    }
-                    return
                 }
+                this.ToolMenu.Check(GetLang("变量监视"))
                 MyVarListenGui.ShowGui()
             }
             case GetLang("指令显示"):
@@ -612,19 +664,29 @@ class MacroEditGui {
                     style := WinGetStyle(MyCMDTipGui.Gui)
                     isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
                     if (isVisible) {
+                        MySoftData.CMDTip := false
+                        SetCMDTipValue(false)
+                        this.ToolMenu.Uncheck(GetLang("指令显示"))
                         MyCMDTipGui.Gui.Hide()
+                        return
                     }
-                    else {
-                        MyCMDTipGui.ShowGui(GetLang("指令显示"))
-                    }
-                    return
                 }
-                MyCMDTipGui.ShowGui(GetLang("指令显示"))
+                MySoftData.CMDTip := true
+                SetCMDTipValue(true)
+                MyCMDTipGui.ShowGui(GetLang("开启指令显示"))
+                this.ToolMenu.Check(GetLang("指令显示"))
+            }
+            case GetLang("窗口置顶"):
+            {
+                WinSetAlwaysOnTop(-1, this.Gui)
+                this.ToolMenu.ToggleCheck(GetLang("窗口置顶"))
             }
             case GetLang("运行(F5)"):
             {
                 MacroStr := this.GetMacroStr()
+                MyCMDTipGui.Clear()
                 OnTriggerSepcialItemMacro(MacroStr)
+                MsgBox(GetLang("调试运行结束"), "", "Owner" this.Gui.Hwnd)
             }
             case GetLang("单步运行(F6)"):
             {
@@ -632,10 +694,13 @@ class MacroEditGui {
                 if (tableItem.ColorStateArr[1] == 1) {
                     return
                 }
+
+                this.DebugStepNum++
+                if (this.DebugStepNum == 1)
+                    MyCMDTipGui.Clear()
+
                 MacroStr := this.GetMacroStr()
                 cmdArr := SplitMacro(MacroStr)
-                this.DebugStepNum++
-
                 if (cmdArr.Length >= this.DebugStepNum) {
                     CurCMD := cmdArr[this.DebugStepNum]
                     this.DebugItemID := this.MacroTreeViewCon.GetNext(this.DebugItemID)
@@ -644,7 +709,7 @@ class MacroEditGui {
                 }
 
                 if (this.DebugStepNum >= cmdArr.Length) {
-                    MsgBox(GetLang("单步运行结束"))
+                    MsgBox(GetLang("单步运行结束"), "","Owner" this.Gui.Hwnd)
                     this.DebugStepNum := 0
                     this.DebugItemID := 0
                     return
@@ -655,6 +720,7 @@ class MacroEditGui {
                 this.DebugStepNum := 0
                 this.DebugItemID := 0
                 KillSingleTableMacro(MySoftData.SpecialTableItem)
+                MyCMDTipGui.AddCMD(GetLang("终止"))
             }
         }
     }

@@ -130,13 +130,33 @@ class MenuWheelGui {
         return Format("x{} y{}", this.CurCenterPosX - offsetX, this.CurCenterPosY - offsetY)
     }
 
+    OnSoftKey(key, isDown) {
+        numberArr := ["1", "2", "3", "4", "5", "6", "7", "8"]
+        loop numberArr.Length {
+            if (key == numberArr[A_Index]) {
+                index := Integer(key)
+                if (!IsObject(MyMenuWheel.Gui))
+                    return
+
+                style := WinGetStyle(MyMenuWheel.Gui.Hwnd)
+                isVisible := (style & 0x10000000)  ; 0x10000000 = WS_VISIBLE
+                if (isVisible)
+                    MyMenuWheel.OnBtnClick(index)
+            }
+        }
+    }
+
     OnBtnClick(index) {
         MySoftData.CurMenuWheelIndex := -1
         this.FocusCon.Focus()
         this.ToggleFunc(false)
         this.Gui.Hide()
+
         macroIndex := (this.MenuIndex - 1) * 8 + index
         TriggerMacroHandler(3, macroIndex)
+        BindTabHotKey()
+        BindMenuHotKey()
+        BindSoftHotKey()
     }
 
     ToggleFunc(state) {

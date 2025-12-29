@@ -99,7 +99,7 @@ LoadItemFoldTitle(tableItem, foldIndex, PosY) {
     tableItem.AllConArr.Push(conInfo)
     tableItem.ConIndexMap[con] := MacroItemInfo(-10000, conInfo)
 
-    con := MyGui.Add("Button", Format("x{} y{} h29", MySoftData.TabPosX + 645, posY - 1), GetLang("删除该模块"))
+    con := MyGui.Add("Button", Format("x{} y{} h29", MySoftData.TabPosX + 645, posY - 1), GetLang("删除模块"))
     con.OnEvent("Click", OnItemDelFoldBtnClick.Bind(tableItem))
     conInfo := ItemConInfo(con, tableItem, foldIndex)
     conInfo.IsTitle := true
@@ -332,7 +332,7 @@ OnItemAddMacroBtnClick(tableItem, btn, *) {
     tableItem.RemarkArr.InsertAt(AddIndex, "")
     tableItem.LoopCountArr.InsertAt(AddIndex, "1")
     tableItem.HoldTimeArr.InsertAt(AddIndex, 500)
-    tableItem.SerialArr.InsertAt(AddIndex, FormatTime(, "HHmmss"))
+    tableItem.SerialArr.InsertAt(AddIndex, GetSerialStr(""))
     tableItem.TimingSerialArr.InsertAt(AddIndex, GetSerialStr("Timing"))
     tableItem.StartTipSoundArr.InsertAt(AddIndex, 1)
     tableItem.EndTipSoundArr.InsertAt(AddIndex, 1)
