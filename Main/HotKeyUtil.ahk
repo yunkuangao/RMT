@@ -781,7 +781,7 @@ OnExVariableOnce(tableItem, index, Data) {
 
         if (GetExVariableActiveLength(Data.ToggleArr) > VariableValueArr.Length)
             continue
-    
+
         RealNameArr := []
         RealValueArr := []
         loop VariableValueArr.Length {
@@ -983,8 +983,9 @@ OnRMTCMD(tableItem, cmd, index) {
 
 OnInterval(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    if (paramArr.Length >= 2) {
-        interval := Integer(paramArr[2])
+    isVar := !IsNumber(paramArr[2])
+    interval := isVar ? 0 : Integer(paramArr[2])
+    if (isVar) {
         hasInterval := TryGetVariableValue(&interval, tableItem, index, paramArr[2])
         if (!hasInterval)
             return

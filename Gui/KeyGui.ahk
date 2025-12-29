@@ -1169,6 +1169,13 @@ class KeyGui {
             return false
         }
 
+        if (this.KeyTypeCon.Value == 3) {
+            if (IsFloat(this.HoldTimeCon.Value) || this.HoldTimeCon.Value < 0) {
+                MsgBox(GetLang("按键时间请输入大于0的整数"))
+                return false
+            }
+        }
+
         return true
     }
 
