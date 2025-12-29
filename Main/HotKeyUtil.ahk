@@ -713,7 +713,7 @@ OnExVariable(tableItem, cmd, index) {
     ;变量初始化默认值0
     NameArr := []
     ValueArr := []
-    loop 4 {
+    loop Data.ToggleArr.Length {
         if (Data.ToggleArr[A_Index]) {
             NameArr.Push(Data.VariableArr[A_Index])
             ValueArr.Push(0)
@@ -773,6 +773,9 @@ OnExVariableOnce(tableItem, index, Data) {
         VariableValueArr := ExtractNumbers(value.Text, ExtractStr)
         VariableValueArr := ExtractStr == "" && allText != "" ? [allText] : VariableValueArr
         if (VariableValueArr == "")
+            continue
+
+        if (GetExVariableActiveLength(Data.ToggleArr) > VariableValueArr.Length)
             continue
 
         RealNameArr := []
@@ -976,8 +979,9 @@ OnRMTCMD(tableItem, cmd, index) {
 
 OnInterval(tableItem, cmd, index) {
     paramArr := StrSplit(cmd, "_")
-    if (paramArr.Length >= 2) {
-        interval := Integer(paramArr[2])
+    isVar := !IsNumber(paramArr[2])
+    interval := isVar ? 0 : Integer(paramArr[2])
+    if (isVar) {
         hasInterval := TryGetVariableValue(&interval, tableItem, index, paramArr[2])
         if (!hasInterval)
             return

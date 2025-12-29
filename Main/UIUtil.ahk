@@ -2,7 +2,7 @@
 InitUI() {
     global MySoftData
     MyGui := Gui()
-    MyGui.Title := "RMTv1.0.9BetaF6"
+    MyGui.Title := "RMTv1.0.9Beta"
     MyGui.SetFont("S10 W550 Q2", MySoftData.FontType)
     isValidCollor := RegExMatch(MySoftData.SoftBGColor, "^([0-9A-Fa-f]{6})$")
     BGColor := isValidCollor ? MySoftData.SoftBGColor : "f0f0f0"
@@ -701,6 +701,8 @@ AddSettingUI(index) {
     conInfo := ItemConInfo(con, tableItem, 1)
     tableItem.AllConArr.Push(conInfo)
     tableItem.AllGroup.Push(con)
+
+    ;语言/Lang: 如果外国人打开中文的话，或者中国人打开英语，方便都能找到调整的选项
     posY += 30
     con := MyGui.Add("Text", Format("x{} y{}", posX + 25, posY), "语言/Lang:")
     conInfo := ItemConInfo(con, tableItem, 1)
