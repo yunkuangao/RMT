@@ -88,12 +88,8 @@ class ExVariableGui {
         MyGui.Add("Text", Format("x{} y{} w{}", PosX, PosY, 75), GetLang("每次间隔:"))
         this.SearchIntervalCon := MyGui.Add("Edit", Format("x{} y{} w{} Center", PosX + 75, PosY - 5, 50))
 
-        ; 添加进度条提示文本
-        PosY += 25
-        this.ProgressBarTipCon := MyGui.Add("Text", Format("x{} y{} w{} cRed", 20, PosY, 550), "")
-
         PosX := 10
-        PosY += 10
+        PosY += 25
         con := MyGui.Add("GroupBox", Format("x{} y{} w{} h{}", PosX, PosY, 510, 95), GetLang("屏幕提取选项:"))
 
         PosX := 20
@@ -564,15 +560,11 @@ class ExVariableGui {
         extractType := this.ExtractTypeCon.Value
         
         if (extractType == 3) {
-            ; 进度条模式，显示提示
-            this.ProgressBarTipCon.Value := "进度条：尽量框选最小范围，最好是确定像素，值为0-100"
             ; 禁用OCR选择（进度条不需要OCR）
             this.OCRTypeCon.Enabled := false
             ; 清空提取文本（进度条不需要提取规则）
             this.ExtractStrCon.Value := ""
         } else {
-            ; 其他模式，隐藏提示
-            this.ProgressBarTipCon.Value := ""
             ; 启用OCR选择
             this.OCRTypeCon.Enabled := true
         }
