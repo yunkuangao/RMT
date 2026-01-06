@@ -17,18 +17,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 优化1: 使用缓存，避免重复下载 AutoHotkey
+      - name: Cache AutoHotkey
+        id: cache-ahk
+        uses: actions/cache@v4
+        with:
+          path: C:\Program Files\AutoHotkey
+          key: autohotkey-v2.0.18
+
+      # 优化2: 仅在缓存未命中时下载安装
       - name: Setup AutoHotkey v2
+        if: steps.cache-ahk.outputs.cache-hit != 'true'
         run: |
-          # Download AutoHotkey v2.0.18
           $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.18/AutoHotkey_2.0.18_setup.exe"
           $ahkPath = "$env:TEMP\AutoHotkey_2.0.18_setup.exe"
           Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkPath
-
-          # Silent install AutoHotkey
           Start-Process -FilePath $ahkPath -ArgumentList "/S" -Wait
-
-          # Set AHK path
-          echo "AHK_PATH=C:\Program Files\AutoHotkey" >> $env:GITHUB_ENV
 
       - name: Verify AutoHotkey installation
         run: |
@@ -40,57 +44,93 @@ jobs:
             exit 1
           }
 
-      - name: Compile 32-bit Work.ahk
-        run: |
-          $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
-          & $compiler /in "Thread\Work.ahk" /out "ReleaseX32\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
-
-      - name: Compile 64-bit Work.ahk
-        run: |
-          $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
-          & $compiler /in "Thread\Work.ahk" /out "ReleaseX64\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
-
-      - name: Compile 32-bit RMT.ahk
+      # 优化3: 并行编译32位和64位版本
+      - name: Compile Work.ahk (32-bit & 64-bit)
         run: |
           $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
           $iconPath = "${{ github.workspace }}\Images\Soft\rabit.ico"
-          & $compiler /in "RMT.ahk" /out "ReleaseX32\RMT.exe" /icon $iconPath /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
 
-      - name: Compile 64-bit RMT.ahk
+          # 并行编译
+          Start-Job -ScriptBlock {
+            param($c, $ws)
+            & $c /in "$ws\Thread\Work.ahk" /out "$ws\ReleaseX32\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
+          } -ArgumentList $compiler, "${{ github.workspace }}" | Out-Null
+
+          Start-Job -ScriptBlock {
+            param($c, $ws)
+            & $c /in "$ws\Thread\Work.ahk" /out "$ws\ReleaseX64\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
+          } -ArgumentList $compiler, "${{ github.workspace }}" | Out-Null
+
+          # 等待所有编译完成
+          Get-Job | Wait-Job | Receive-Job
+          Remove-Job *
+
+      # 优化4: 并行编译 RMT 主程序
+      - name: Compile RMT.ahk (32-bit & 64-bit)
         run: |
           $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
           $iconPath = "${{ github.workspace }}\Images\Soft\rabit.ico"
-          & $compiler /in "RMT.ahk" /out "ReleaseX64\RMT.exe" /icon $iconPath /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
 
-      - name: Copy dependencies to ReleaseX32
-        run: |
-          Copy-Item -Path "Audio\*.wav" -Destination "ReleaseX32\Audio\" -Force
-          Copy-Item -Path "Joy\*.png" -Destination "ReleaseX32\Joy\" -Force
-          Copy-Item -Path "Lang\*.txt" -Destination "ReleaseX32\Lang\" -Force
-          Copy-Item -Path "VBS\*.vbs" -Destination "ReleaseX32\VBS\" -Force
-          Copy-Item -Path "Plugins\*.ahk" -Destination "ReleaseX32\Plugins\" -Force
-          Copy-Item -Path "Plugins\RapidOcr\*" -Destination "ReleaseX32\Plugins\RapidOcr\" -Recurse -Force
-          Copy-Item -Path "Plugins\OpenCV\*" -Destination "ReleaseX32\Plugins\OpenCV\" -Recurse -Force
-          Copy-Item -Path "Joy\XOutput\*" -Destination "ReleaseX32\Joy\XOutput\" -Recurse -Force
+          Start-Job -ScriptBlock {
+            param($c, $ws, $icon)
+            & $c /in "$ws\RMT.ahk" /out "$ws\ReleaseX32\RMT.exe" /icon $icon /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
+          } -ArgumentList $compiler, "${{ github.workspace }}", $iconPath | Out-Null
 
-      - name: Copy dependencies to ReleaseX64
-        run: |
-          Copy-Item -Path "Audio\*.wav" -Destination "ReleaseX64\Audio\" -Force
-          Copy-Item -Path "Joy\*.png" -Destination "ReleaseX64\Joy\" -Force
-          Copy-Item -Path "Lang\*.txt" -Destination "ReleaseX64\Lang\" -Force
-          Copy-Item -Path "VBS\*.vbs" -Destination "ReleaseX64\VBS\" -Force
-          Copy-Item -Path "Plugins\*.ahk" -Destination "ReleaseX64\Plugins\" -Force
-          Copy-Item -Path "Plugins\RapidOcr\*" -Destination "ReleaseX64\Plugins\RapidOcr\" -Recurse -Force
-          Copy-Item -Path "Plugins\OpenCV\*" -Destination "ReleaseX64\Plugins\OpenCV\" -Recurse -Force
-          Copy-Item -Path "Joy\XOutput\*" -Destination "ReleaseX64\Joy\XOutput\" -Recurse -Force
+          Start-Job -ScriptBlock {
+            param($c, $ws, $icon)
+            & $c /in "$ws\RMT.ahk" /out "$ws\ReleaseX64\RMT.exe" /icon $icon /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
+          } -ArgumentList $compiler, "${{ github.workspace }}", $iconPath | Out-Null
 
-      - name: Create 32-bit package
-        run: |
-          Compress-Archive -Path "ReleaseX32\*" -DestinationPath "RMT_x32.zip" -Force
+          Get-Job | Wait-Job | Receive-Job
+          Remove-Job *
 
-      - name: Create 64-bit package
+      # 优化5: 并行复制依赖文件
+      - name: Copy dependencies (parallel)
         run: |
-          Compress-Archive -Path "ReleaseX64\*" -DestinationPath "RMT_x64.zip" -Force
+          # 32位复制任务
+          $job32 = Start-Job -ScriptBlock {
+            param($ws)
+            Copy-Item -Path "$ws\Audio\*.wav" -Destination "$ws\ReleaseX32\Audio\" -Force
+            Copy-Item -Path "$ws\Joy\*.png" -Destination "$ws\ReleaseX32\Joy\" -Force
+            Copy-Item -Path "$ws\Lang\*.txt" -Destination "$ws\ReleaseX32\Lang\" -Force
+            Copy-Item -Path "$ws\VBS\*.vbs" -Destination "$ws\ReleaseX32\VBS\" -Force
+            Copy-Item -Path "$ws\Plugins\*.ahk" -Destination "$ws\ReleaseX32\Plugins\" -Force
+            Copy-Item -Path "$ws\Plugins\RapidOcr\*" -Destination "$ws\ReleaseX32\Plugins\RapidOcr\" -Recurse -Force
+            Copy-Item -Path "$ws\Plugins\OpenCV\*" -Destination "$ws\ReleaseX32\Plugins\OpenCV\" -Recurse -Force
+            Copy-Item -Path "$ws\Joy\XOutput\*" -Destination "$ws\ReleaseX32\Joy\XOutput\" -Recurse -Force
+          } -ArgumentList "${{ github.workspace }}"
+
+          # 64位复制任务
+          $job64 = Start-Job -ScriptBlock {
+            param($ws)
+            Copy-Item -Path "$ws\Audio\*.wav" -Destination "$ws\ReleaseX64\Audio\" -Force
+            Copy-Item -Path "$ws\Joy\*.png" -Destination "$ws\ReleaseX64\Joy\" -Force
+            Copy-Item -Path "$ws\Lang\*.txt" -Destination "$ws\ReleaseX64\Lang\" -Force
+            Copy-Item -Path "$ws\VBS\*.vbs" -Destination "$ws\ReleaseX64\VBS\" -Force
+            Copy-Item -Path "$ws\Plugins\*.ahk" -Destination "$ws\ReleaseX64\Plugins\" -Force
+            Copy-Item -Path "$ws\Plugins\RapidOcr\*" -Destination "$ws\ReleaseX64\Plugins\RapidOcr\" -Recurse -Force
+            Copy-Item -Path "$ws\Plugins\OpenCV\*" -Destination "$ws\ReleaseX64\Plugins\OpenCV\" -Recurse -Force
+            Copy-Item -Path "$ws\Joy\XOutput\*" -Destination "$ws\ReleaseX64\Joy\XOutput\" -Recurse -Force
+          } -ArgumentList "${{ github.workspace }}"
+
+          Wait-Job $job32, $job64 | Receive-Job
+          Remove-Job *
+
+      # 优化6: 并行打包压缩
+      - name: Create packages (parallel)
+        run: |
+          $job32 = Start-Job -ScriptBlock {
+            param($ws)
+            Compress-Archive -Path "$ws\ReleaseX32\*" -DestinationPath "$ws\RMT_x32.zip" -Force
+          } -ArgumentList "${{ github.workspace }}"
+
+          $job64 = Start-Job -ScriptBlock {
+            param($ws)
+            Compress-Archive -Path "$ws\ReleaseX64\*" -DestinationPath "$ws\RMT_x64.zip" -Force
+          } -ArgumentList "${{ github.workspace }}"
+
+          Wait-Job $job32, $job64 | Receive-Job
+          Remove-Job *
 
       - name: Get version from tag
         id: get_version
