@@ -28,7 +28,7 @@ jobs:
             autohotkey-v2.0.18-${{ runner.os }}-
             autohotkey-${{ runner.os }}-
 
-      # 优化2: 仅在缓存未命中时下载 AutoHotkey 便携版和编译器
+      # 优化2: 仅在缓存未命中时下载 AutoHotkey 并提取编译器
       - name: Install AutoHotkey v2.0.18
         if: steps.cache-ahk.outputs.cache-hit != 'true'
         run: |
@@ -49,13 +49,15 @@ jobs:
           Write-Host "Extracting AutoHotkey..."
           Expand-Archive -Path $ahkZip -DestinationPath "C:\AutoHotkey\v2" -Force
 
-          Write-Host "Downloading Ahk2Exe compiler..."
-          $compilerUrl = "https://github.com/AutoHotkey/Ahk2Exe/releases/download/Ahk2Exe1.1.37.02a0a/Ahk2Exe1.1.37.02a0a.zip"
-          $compilerZip = "$env:TEMP\Ahk2Exe.zip"
-          $webClient.DownloadFile($compilerUrl, $compilerZip)
+          Write-Host "Downloading Ahk2Exe compiler from install package..."
+          $installerUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.18/AutoHotkey_2.0.18_setup.exe"
+          $installerPath = "$env:TEMP\AutoHotkey_2.0.18_setup.exe"
+          $webClient.DownloadFile($installerUrl, $installerPath)
 
-          Write-Host "Extracting compiler..."
-          Expand-Archive -Path $compilerZip -DestinationPath "C:\AutoHotkey\Compiler" -Force
+          # 使用 7zip 提取安装包中的编译器
+          Write-Host "Extracting compiler from installer..."
+          & 7z x $installerPath "-o$env:TEMP\ahk_extract" "-y" | Out-Null
+          Copy-Item -Path "$env:TEMP\ahk_extract\Compiler\*" -Destination "C:\AutoHotkey\Compiler\" -Recurse -Force
 
           Write-Host "Installation complete"
 
