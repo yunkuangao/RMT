@@ -22,34 +22,49 @@ jobs:
         id: cache-ahk
         uses: actions/cache@v4
         with:
-          path: C:\Program Files\AutoHotkey
+          path: C:\AutoHotkey
           key: autohotkey-v2.0.18-${{ runner.os }}
           restore-keys: |
             autohotkey-v2.0.18-${{ runner.os }}-
             autohotkey-${{ runner.os }}-
 
-      # 优化2: 仅在缓存未命中时安装 AutoHotkey
+      # 优化2: 仅在缓存未命中时下载 AutoHotkey 便携版和编译器
       - name: Install AutoHotkey v2.0.18
         if: steps.cache-ahk.outputs.cache-hit != 'true'
         run: |
           $ProgressPreference = 'SilentlyContinue'
-          $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.18/AutoHotkey_2.0.18_setup.exe"
-          $ahkPath = "$env:TEMP\AutoHotkey_2.0.18_setup.exe"
 
-          Write-Host "Downloading AutoHotkey v2.0.18..."
-          Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkPath -UseBasicParsing
+          # 创建安装目录
+          New-Item -ItemType Directory -Force -Path "C:\AutoHotkey\v2" | Out-Null
+          New-Item -ItemType Directory -Force -Path "C:\AutoHotkey\Compiler" | Out-Null
 
-          Write-Host "Installing AutoHotkey (silent mode)..."
-          Start-Process -FilePath $ahkPath -ArgumentList "/S" -Wait
+          Write-Host "Downloading AutoHotkey v2.0.18 (portable)..."
+          $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.18/AutoHotkey_2.0.18.zip"
+          $ahkZip = "$env:TEMP\AutoHotkey_2.0.18.zip"
+
+          $webClient = New-Object System.Net.WebClient
+          $webClient.DownloadFile($ahkUrl, $ahkZip)
+          Write-Host "Download complete"
+
+          Write-Host "Extracting AutoHotkey..."
+          Expand-Archive -Path $ahkZip -DestinationPath "C:\AutoHotkey\v2" -Force
+
+          Write-Host "Downloading Ahk2Exe compiler..."
+          $compilerUrl = "https://github.com/AutoHotkey/Ahk2Exe/releases/download/Ahk2Exe1.1.37.02a0a/Ahk2Exe1.1.37.02a0a.zip"
+          $compilerZip = "$env:TEMP\Ahk2Exe.zip"
+          $webClient.DownloadFile($compilerUrl, $compilerZip)
+
+          Write-Host "Extracting compiler..."
+          Expand-Archive -Path $compilerZip -DestinationPath "C:\AutoHotkey\Compiler" -Force
 
           Write-Host "Installation complete"
 
       - name: Verify AutoHotkey
         run: |
-          $ahkPath = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          $ahkPath = "C:\AutoHotkey\Compiler\Ahk2Exe.exe"
           if (Test-Path $ahkPath) {
             Write-Host "✓ AutoHotkey compiler found"
-            $version = (& "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /Version 2>&1) -split '\n' | Select-Object -First 1
+            $version = (& "C:\AutoHotkey\v2\AutoHotkey64.exe" /Version 2>&1) -split '\n' | Select-Object -First 1
             Write-Host "Version: $version"
           } else {
             Write-Error "✗ AutoHotkey compiler not found!"
@@ -59,18 +74,18 @@ jobs:
       # 优化3: 并行编译32位和64位版本
       - name: Compile Work.ahk (parallel)
         run: |
-          $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          $compiler = "C:\AutoHotkey\Compiler\Ahk2Exe.exe"
           $ws = "${{ github.workspace }}"
 
           # 并行编译 32/64 位
           $job32 = Start-Job -ScriptBlock {
             param($c, $ws)
-            & $c /in "$ws\Thread\Work.ahk" /out "$ws\ReleaseX32\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
+            & $c /in "$ws\Thread\Work.ahk" /out "$ws\ReleaseX32\Thread\Work1.exe" /bin "C:\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
           } -ArgumentList $compiler, $ws
 
           $job64 = Start-Job -ScriptBlock {
             param($c, $ws)
-            & $c /in "$ws\Thread\Work.ahk" /out "$ws\ReleaseX64\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
+            & $c /in "$ws\Thread\Work.ahk" /out "$ws\ReleaseX64\Thread\Work1.exe" /bin "C:\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
           } -ArgumentList $compiler, $ws
 
           Wait-Job $job32, $job64 | Receive-Job
@@ -78,18 +93,18 @@ jobs:
 
       - name: Compile RMT.ahk (parallel)
         run: |
-          $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          $compiler = "C:\AutoHotkey\Compiler\Ahk2Exe.exe"
           $ws = "${{ github.workspace }}"
           $icon = "$ws\Images\Soft\rabit.ico"
 
           $job32 = Start-Job -ScriptBlock {
             param($c, $ws, $icon)
-            & $c /in "$ws\RMT.ahk" /out "$ws\ReleaseX32\RMT.exe" /icon $icon /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
+            & $c /in "$ws\RMT.ahk" /out "$ws\ReleaseX32\RMT.exe" /icon $icon /bin "C:\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
           } -ArgumentList $compiler, $ws, $icon
 
           $job64 = Start-Job -ScriptBlock {
             param($c, $ws, $icon)
-            & $c /in "$ws\RMT.ahk" /out "$ws\ReleaseX64\RMT.exe" /icon $icon /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
+            & $c /in "$ws\RMT.ahk" /out "$ws\ReleaseX64\RMT.exe" /icon $icon /bin "C:\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
           } -ArgumentList $compiler, $ws, $icon
 
           Wait-Job $job32, $job64 | Receive-Job
