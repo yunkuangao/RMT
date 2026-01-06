@@ -1,0 +1,132 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup AutoHotkey v2
+        run: |
+          # Download AutoHotkey v2.0.18
+          $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.18/AutoHotkey_2.0.18_setup.exe"
+          $ahkPath = "$env:TEMP\AutoHotkey_2.0.18_setup.exe"
+          Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkPath
+
+          # Silent install AutoHotkey
+          Start-Process -FilePath $ahkPath -ArgumentList "/S" -Wait
+
+          # Set AHK path
+          echo "AHK_PATH=C:\Program Files\AutoHotkey" >> $env:GITHUB_ENV
+
+      - name: Verify AutoHotkey installation
+        run: |
+          $ahkPath = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          if (Test-Path $ahkPath) {
+            Write-Host "AutoHotkey compiler found at $ahkPath"
+          } else {
+            Write-Error "AutoHotkey compiler not found!"
+            exit 1
+          }
+
+      - name: Compile 32-bit Work.ahk
+        run: |
+          $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          & $compiler /in "Thread\Work.ahk" /out "ReleaseX32\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
+
+      - name: Compile 64-bit Work.ahk
+        run: |
+          $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          & $compiler /in "Thread\Work.ahk" /out "ReleaseX64\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
+
+      - name: Compile 32-bit RMT.ahk
+        run: |
+          $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          $iconPath = "${{ github.workspace }}\Images\Soft\rabit.ico"
+          & $compiler /in "RMT.ahk" /out "ReleaseX32\RMT.exe" /icon $iconPath /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
+
+      - name: Compile 64-bit RMT.ahk
+        run: |
+          $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
+          $iconPath = "${{ github.workspace }}\Images\Soft\rabit.ico"
+          & $compiler /in "RMT.ahk" /out "ReleaseX64\RMT.exe" /icon $iconPath /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
+
+      - name: Copy dependencies to ReleaseX32
+        run: |
+          Copy-Item -Path "Audio\*.wav" -Destination "ReleaseX32\Audio\" -Force
+          Copy-Item -Path "Joy\*.png" -Destination "ReleaseX32\Joy\" -Force
+          Copy-Item -Path "Lang\*.txt" -Destination "ReleaseX32\Lang\" -Force
+          Copy-Item -Path "VBS\*.vbs" -Destination "ReleaseX32\VBS\" -Force
+          Copy-Item -Path "Plugins\*.ahk" -Destination "ReleaseX32\Plugins\" -Force
+          Copy-Item -Path "Plugins\RapidOcr\*" -Destination "ReleaseX32\Plugins\RapidOcr\" -Recurse -Force
+          Copy-Item -Path "Plugins\OpenCV\*" -Destination "ReleaseX32\Plugins\OpenCV\" -Recurse -Force
+          Copy-Item -Path "Joy\XOutput\*" -Destination "ReleaseX32\Joy\XOutput\" -Recurse -Force
+
+      - name: Copy dependencies to ReleaseX64
+        run: |
+          Copy-Item -Path "Audio\*.wav" -Destination "ReleaseX64\Audio\" -Force
+          Copy-Item -Path "Joy\*.png" -Destination "ReleaseX64\Joy\" -Force
+          Copy-Item -Path "Lang\*.txt" -Destination "ReleaseX64\Lang\" -Force
+          Copy-Item -Path "VBS\*.vbs" -Destination "ReleaseX64\VBS\" -Force
+          Copy-Item -Path "Plugins\*.ahk" -Destination "ReleaseX64\Plugins\" -Force
+          Copy-Item -Path "Plugins\RapidOcr\*" -Destination "ReleaseX64\Plugins\RapidOcr\" -Recurse -Force
+          Copy-Item -Path "Plugins\OpenCV\*" -Destination "ReleaseX64\Plugins\OpenCV\" -Recurse -Force
+          Copy-Item -Path "Joy\XOutput\*" -Destination "ReleaseX64\Joy\XOutput\" -Recurse -Force
+
+      - name: Create 32-bit package
+        run: |
+          Compress-Archive -Path "ReleaseX32\*" -DestinationPath "RMT_x32.zip" -Force
+
+      - name: Create 64-bit package
+        run: |
+          Compress-Archive -Path "ReleaseX64\*" -DestinationPath "RMT_x64.zip" -Force
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if ($env:GITHUB_REF -match 'refs/tags/(v[0-9]+\.[0-9]+\.[0-9]+)') {
+            $version = $matches[1]
+            echo "version=$version" >> $env:GITHUB_OUTPUT
+            echo "Version: $version"
+          } else {
+            echo "version=latest" >> $env:GITHUB_OUTPUT
+            echo "No tag found, using latest"
+          }
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: RMT ${{ steps.get_version.outputs.version }}
+          body: |
+            ## 🎉 RMT ${{ steps.get_version.outputs.version }} 发布
+
+            ### 下载
+            - **32位版本**: RMT_x32.zip
+            - **64位版本**: RMT_x64.zip
+
+            ### 使用说明
+            1. 根据你的系统选择下载 32 位或 64 位版本
+            2. 解压到任意目录
+            3. 运行 RMT.exe 即可使用
+
+            ### 更新内容
+            请查看 [更新日志](https://github.com/yunkuangao/rmt/blob/master/Web/更新日志.md)
+          files: |
+            RMT_x32.zip
+            RMT_x64.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
