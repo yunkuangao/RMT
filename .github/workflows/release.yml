@@ -17,77 +17,86 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 优化1: 使用缓存，避免重复下载 AutoHotkey
-      - name: Cache AutoHotkey
+      # 优化1: 使用 GitHub Actions 缓存 AutoHotkey
+      - name: Cache AutoHotkey installation
         id: cache-ahk
         uses: actions/cache@v4
         with:
           path: C:\Program Files\AutoHotkey
-          key: autohotkey-v2.0.18
+          key: autohotkey-v2.0.18-${{ runner.os }}
 
-      # 优化2: 仅在缓存未命中时下载安装
-      - name: Setup AutoHotkey v2
+      # 优化2: 仅在缓存未命中时安装
+      - name: Install AutoHotkey v2
         if: steps.cache-ahk.outputs.cache-hit != 'true'
         run: |
+          $ProgressPreference = 'SilentlyContinue'
           $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.18/AutoHotkey_2.0.18_setup.exe"
           $ahkPath = "$env:TEMP\AutoHotkey_2.0.18_setup.exe"
-          Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkPath
+
+          Write-Host "Downloading AutoHotkey v2.0.18..."
+          Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkPath -UseBasicParsing
+
+          Write-Host "Installing AutoHotkey (silent mode)..."
           Start-Process -FilePath $ahkPath -ArgumentList "/S" -Wait
 
-      - name: Verify AutoHotkey installation
+          Write-Host "Installation complete"
+
+      - name: Verify AutoHotkey
         run: |
           $ahkPath = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
           if (Test-Path $ahkPath) {
-            Write-Host "AutoHotkey compiler found at $ahkPath"
+            Write-Host "✓ AutoHotkey compiler found"
+            $version = (& "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /Version 2>&1) -split '\n' | Select-Object -First 1
+            Write-Host "Version: $version"
           } else {
-            Write-Error "AutoHotkey compiler not found!"
+            Write-Error "✗ AutoHotkey compiler not found!"
             exit 1
           }
 
       # 优化3: 并行编译32位和64位版本
-      - name: Compile Work.ahk (32-bit & 64-bit)
+      - name: Compile Work.ahk (parallel)
         run: |
           $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
-          $iconPath = "${{ github.workspace }}\Images\Soft\rabit.ico"
+          $ws = "${{ github.workspace }}"
 
-          # 并行编译
-          Start-Job -ScriptBlock {
+          # 并行编译 32/64 位
+          $job32 = Start-Job -ScriptBlock {
             param($c, $ws)
             & $c /in "$ws\Thread\Work.ahk" /out "$ws\ReleaseX32\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
-          } -ArgumentList $compiler, "${{ github.workspace }}" | Out-Null
+          } -ArgumentList $compiler, $ws
 
-          Start-Job -ScriptBlock {
+          $job64 = Start-Job -ScriptBlock {
             param($c, $ws)
             & $c /in "$ws\Thread\Work.ahk" /out "$ws\ReleaseX64\Thread\Work1.exe" /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
-          } -ArgumentList $compiler, "${{ github.workspace }}" | Out-Null
+          } -ArgumentList $compiler, $ws
 
-          # 等待所有编译完成
-          Get-Job | Wait-Job | Receive-Job
+          Wait-Job $job32, $job64 | Receive-Job
           Remove-Job *
 
-      # 优化4: 并行编译 RMT 主程序
-      - name: Compile RMT.ahk (32-bit & 64-bit)
+      - name: Compile RMT.ahk (parallel)
         run: |
           $compiler = "C:\Program Files\AutoHotkey\Compiler\Ahk2Exe.exe"
-          $iconPath = "${{ github.workspace }}\Images\Soft\rabit.ico"
+          $ws = "${{ github.workspace }}"
+          $icon = "$ws\Images\Soft\rabit.ico"
 
-          Start-Job -ScriptBlock {
+          $job32 = Start-Job -ScriptBlock {
             param($c, $ws, $icon)
             & $c /in "$ws\RMT.ahk" /out "$ws\ReleaseX32\RMT.exe" /icon $icon /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe" /compress 0
-          } -ArgumentList $compiler, "${{ github.workspace }}", $iconPath | Out-Null
+          } -ArgumentList $compiler, $ws, $icon
 
-          Start-Job -ScriptBlock {
+          $job64 = Start-Job -ScriptBlock {
             param($c, $ws, $icon)
             & $c /in "$ws\RMT.ahk" /out "$ws\ReleaseX64\RMT.exe" /icon $icon /bin "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe" /compress 0
-          } -ArgumentList $compiler, "${{ github.workspace }}", $iconPath | Out-Null
+          } -ArgumentList $compiler, $ws, $icon
 
-          Get-Job | Wait-Job | Receive-Job
+          Wait-Job $job32, $job64 | Receive-Job
           Remove-Job *
 
-      # 优化5: 并行复制依赖文件
+      # 优化4: 并行复制依赖文件
       - name: Copy dependencies (parallel)
         run: |
-          # 32位复制任务
+          $ws = "${{ github.workspace }}"
+
           $job32 = Start-Job -ScriptBlock {
             param($ws)
             Copy-Item -Path "$ws\Audio\*.wav" -Destination "$ws\ReleaseX32\Audio\" -Force
@@ -98,9 +107,8 @@ jobs:
             Copy-Item -Path "$ws\Plugins\RapidOcr\*" -Destination "$ws\ReleaseX32\Plugins\RapidOcr\" -Recurse -Force
             Copy-Item -Path "$ws\Plugins\OpenCV\*" -Destination "$ws\ReleaseX32\Plugins\OpenCV\" -Recurse -Force
             Copy-Item -Path "$ws\Joy\XOutput\*" -Destination "$ws\ReleaseX32\Joy\XOutput\" -Recurse -Force
-          } -ArgumentList "${{ github.workspace }}"
+          } -ArgumentList $ws
 
-          # 64位复制任务
           $job64 = Start-Job -ScriptBlock {
             param($ws)
             Copy-Item -Path "$ws\Audio\*.wav" -Destination "$ws\ReleaseX64\Audio\" -Force
@@ -111,23 +119,25 @@ jobs:
             Copy-Item -Path "$ws\Plugins\RapidOcr\*" -Destination "$ws\ReleaseX64\Plugins\RapidOcr\" -Recurse -Force
             Copy-Item -Path "$ws\Plugins\OpenCV\*" -Destination "$ws\ReleaseX64\Plugins\OpenCV\" -Recurse -Force
             Copy-Item -Path "$ws\Joy\XOutput\*" -Destination "$ws\ReleaseX64\Joy\XOutput\" -Recurse -Force
-          } -ArgumentList "${{ github.workspace }}"
+          } -ArgumentList $ws
 
           Wait-Job $job32, $job64 | Receive-Job
           Remove-Job *
 
-      # 优化6: 并行打包压缩
+      # 优化5: 并行打包压缩
       - name: Create packages (parallel)
         run: |
+          $ws = "${{ github.workspace }}"
+
           $job32 = Start-Job -ScriptBlock {
             param($ws)
             Compress-Archive -Path "$ws\ReleaseX32\*" -DestinationPath "$ws\RMT_x32.zip" -Force
-          } -ArgumentList "${{ github.workspace }}"
+          } -ArgumentList $ws
 
           $job64 = Start-Job -ScriptBlock {
             param($ws)
             Compress-Archive -Path "$ws\ReleaseX64\*" -DestinationPath "$ws\RMT_x64.zip" -Force
-          } -ArgumentList "${{ github.workspace }}"
+          } -ArgumentList $ws
 
           Wait-Job $job32, $job64 | Receive-Job
           Remove-Job *
