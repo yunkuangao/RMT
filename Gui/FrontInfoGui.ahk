@@ -12,6 +12,7 @@ class FrontInfoGui {
         this.TopTogCon := ""
         this.InfoTogArrCon := []
         this.InfoTextArrCon := []
+        this.ChildWinPathCon := ""
     }
 
     ShowGui(winInfoCon, isFront := false) {
@@ -32,21 +33,27 @@ class FrontInfoGui {
         infoStr := winInfoCon.Value
         if (InStr(infoStr, "❖")) {
             idStr := StrReplace(infoStr, "❖", "")
-            infoArr := [idStr, "", "", ""]
+            infoArr := [idStr, "", "", "", ""]
         }
         else {
             if (infoStr != "")
                 infoArr := StrSplit(infoStr, "⎖")
-            if (infoStr == "" || infoArr.Length != 3)
-                infoArr := ["", "", ""]
+            if (infoStr == "" || (infoArr.Length != 3 && infoArr.Length != 4))
+                infoArr := ["", "", "", "", ""]
+
+            ; 兼容旧的3段格式，插入空的子窗口路径
+            if (infoArr.Length == 3)
+                infoArr.Push("")
 
             infoArr.InsertAt(1, "")
         }
 
-        loop 4 {
+        loop 5 {
             this.InfoTogArrCon[A_Index].Value := infoArr[A_Index] != ""
             this.InfoTextArrCon[A_Index].Value := infoArr[A_Index]
         }
+
+        this.ChildWinPathCon := infoArr[5]
 
         DLVariableArr := GetGuiVarArr()
         this.VariCon.Delete()
@@ -136,12 +143,24 @@ class FrontInfoGui {
         con := MyGui.Add("Edit", Format("x{} y{} w360", PosX, PosY - 3), "")
         this.InfoTextArrCon.Push(con)
 
+        PosY += 35
+        PosX := 20
+        con := MyGui.Add("Checkbox", Format("x{} y{}", PosX, PosY), GetLang("子窗口"))
+        con.OnEvent("Click", this.OnTogClick.Bind(this))
+        this.InfoTogArrCon.Push(con)
+        PosX := 95
+        con := MyGui.Add("Edit", Format("x{} y{} w250", PosX, PosY - 3), "")
+        this.InfoTextArrCon.Push(con)
+        PosX += 260
+        btnCon := MyGui.Add("Button", Format("x{} y{} w80", PosX, PosY - 3), GetLang("选择"))
+        btnCon.OnEvent("Click", (*) => this.OnClickChildWinBtn())
+
         PosX := 200
         PosY += 40
         con := MyGui.Add("Button", Format("x{} y{} w100 h40", PosX, PosY), GetLang("确定"))
         con.OnEvent("Click", (*) => this.OnSureBtnClick())
         MyGui.OnEvent("Close", this.OnClose.Bind(this))
-        MyGui.Show(Format("w{} h{}", 500, 400))
+        MyGui.Show(Format("w{} h{}", 500, 440))
     }
 
     RefreshMouseInfo() {
@@ -199,6 +218,11 @@ class FrontInfoGui {
             return false
         }
 
+        if (this.InfoTextArrCon[5].Value && this.InfoTextArrCon[5].Value == "") {
+            MsgBox("勾选子窗口后，子窗口路径不能为空", "", "Owner" this.Gui.Hwnd)
+            return false
+        }
+
         if (this.isFront && this.InfoTogArrCon[1].Value) {
             if (InStr(this.InfoTextArrCon[1].Value, "{")) {
                 MsgBox(GetLang("前台窗口信息句柄ID不能使用变量"), "", "Owner" this.Gui.Hwnd)
@@ -213,17 +237,16 @@ class FrontInfoGui {
         if (this.InfoTogArrCon[1].Value)
             return "❖" this.InfoTextArrCon[1].Value
 
-        Str := ""
-        loop 4 {
-            if (A_Index == 1)
-                continue
-            if (this.InfoTogArrCon[A_Index].Value) {
-                Str .= this.InfoTextArrCon[A_Index].Value
-            }
-            if (A_Index != 4)
-                Str .= "⎖"
-        }
-        if (Str == "⎖⎖")
+        ; 构建 4 段格式：标题⎖类名⎖进程名⎖子窗口路径
+        title := this.InfoTogArrCon[2].Value ? this.InfoTextArrCon[2].Value : ""
+        className := this.InfoTogArrCon[3].Value ? this.InfoTextArrCon[3].Value : ""
+        process := this.InfoTogArrCon[4].Value ? this.InfoTextArrCon[4].Value : ""
+        childPath := this.InfoTogArrCon[5].Value ? this.InfoTextArrCon[5].Value : ""
+
+        Str := title "⎖" className "⎖" process "⎖" childPath
+
+        ; 如果全部为空，返回空字符串
+        if (Str == "⎖⎖⎖")
             return ""
         return Str
     }
@@ -258,7 +281,7 @@ class FrontInfoGui {
             con := this.VarConArr[A_Index]
             con.Enabled := isHwndID
         }
-        loop 4 {
+        loop 5 {
             if (A_Index == 1)
                 continue
             if (isHwndID) {
@@ -274,7 +297,7 @@ class FrontInfoGui {
 
     OnF1() {
         CoordMode("Mouse", "Screen")
-        MouseGetPos &mouseX, &mouseY, &winId
+        MouseGetPos &mouseX, &mouseY, &winId, &controlHwnd, 2
         try {
             title := WinGetTitle(winId)
             className := WinGetClass(winId)
@@ -283,9 +306,23 @@ class FrontInfoGui {
             this.InfoTextArrCon[2].Value := title
             this.InfoTextArrCon[3].Value := className
             this.InfoTextArrCon[4].Value := process
-            loop 4 {
-                state := A_Index != 1
-                this.InfoTogArrCon[A_Index].Value := state
+
+            ; 尝试获取子窗口路径
+            if (controlHwnd && controlHwnd != winId) {
+                classPath := GetChildWindowClassPath(controlHwnd)
+                pathStr := SerializeClassPath(classPath)
+                if (pathStr != "") {
+                    this.InfoTextArrCon[5].Value := pathStr
+                    this.InfoTogArrCon[5].Value := 1
+                }
+            }
+
+            loop 5 {
+                ; 句柄ID不勾选，其他根据当前状态保持（不强制改变子窗口）
+                if (A_Index == 1)
+                    this.InfoTogArrCon[A_Index].Value := 0
+                else if (A_Index != 5)
+                    this.InfoTogArrCon[A_Index].Value := 1
             }
             this.OnTogClick()
         }
@@ -294,8 +331,9 @@ class FrontInfoGui {
     OnClickTypeHelpBtn(*) {
         str1 := GetLang("优先级：句柄ID > 标题 + 窗口类 + 进程名")
         str2 := GetLang("句柄ID支持多ID任意适配")
+        str3 := "子窗口：可选，用于将按键发送到目标窗口的特定子控件（如记事本的文本编辑区）"
 
-        str := Format("{}`n{}", str1, str2)
+        str := Format("{}`n{}`n{}", str1, str2, str3)
         MsgBox(str, GetLang("窗口信息说明"), "Owner" this.Gui.Hwnd)
     }
 
@@ -312,5 +350,29 @@ class FrontInfoGui {
         }
 
         this.InfoTextArrCon[1].Text .= Symbol VarStr
+    }
+
+    OnClickChildWinBtn() {
+        ; 从当前编辑的标题/窗口类/进程名中获取进程名作为初始筛选
+        initFilter := ""
+        if (this.InfoTextArrCon[4].Value != "")
+            initFilter := this.InfoTextArrCon[4].Value
+
+        picker := ChildWinPickerGui()
+        picker.ShowGui(this, initFilter)
+    }
+
+    ; 由 ChildWinPickerGui 的 OnClose 回调
+    OnChildWinSelected(pathStr) {
+        if (pathStr != "") {
+            this.InfoTextArrCon[5].Value := pathStr
+            this.InfoTogArrCon[5].Value := 1
+            ; 只有在非句柄ID模式下才启用子窗口编辑框
+            if (!this.InfoTogArrCon[1].Value) {
+                this.InfoTextArrCon[5].Enabled := true
+            }
+            ; 强制刷新界面
+            this.Gui.Show()
+        }
     }
 }

@@ -726,11 +726,20 @@ OnBGKey(tableItem, cmd, index) {
 
 SendBGKey(Data, tableItem, index) {
     hwndList := GetHwndList(Data.FrontStr)
+    childPathStr := GetChildWinPathFromInfoStr(Data.FrontStr)
+    hasChildPath := childPathStr != ""
+    childPath := hasChildPath ? DeserializeClassPath(childPathStr) : []
 
     if (Data.Type == 1 || Data.Type == 3) {
         for hwnd in hwndList {
+            targetHwnd := hwnd
+            if (hasChildPath) {
+                targetHwnd := FindChildByClassPath(hwnd, childPath)
+                if (!targetHwnd)
+                    continue
+            }
             for key in Data.KeyArr {
-                SendBGKeyState(hwnd, key, 1, tableItem, index)
+                SendBGKeyState(hwnd, targetHwnd, key, 1, tableItem, index, hasChildPath)
             }
         }
 
@@ -742,14 +751,20 @@ SendBGKey(Data, tableItem, index) {
 
     if (Data.Type == 2 || Data.Type == 3) {
         for hwnd in hwndList {
+            targetHwnd := hwnd
+            if (hasChildPath) {
+                targetHwnd := FindChildByClassPath(hwnd, childPath)
+                if (!targetHwnd)
+                    continue
+            }
             for key in Data.KeyArr {
-                SendBGKeyState(hwnd, key, 0, tableItem, index)
+                SendBGKeyState(hwnd, targetHwnd, key, 0, tableItem, index, hasChildPath)
             }
         }
     }
 }
 
-SendBGKeyState(hwnd, Key, state, tableItem, index) {
+SendBGKeyState(hwnd, targetHwnd, Key, state, tableItem, index, useChildWin) {
     if (Key == "逗号")
         Key := ","
     VKCode := GetKeyVK(Key)
@@ -761,7 +776,10 @@ SendBGKeyState(hwnd, Key, state, tableItem, index) {
         if (state == 0)
             return
         try {
-            PostMessage 0x100, VKCode, lParamDown, , "ahk_id " hwnd
+            if (useChildWin)
+                SendMessage 0x102, VKCode, 0, , "ahk_id " targetHwnd
+            else
+                PostMessage 0x100, VKCode, lParamDown, , "ahk_id " hwnd
         }
 
         return
@@ -769,12 +787,24 @@ SendBGKeyState(hwnd, Key, state, tableItem, index) {
 
     if (state == 1) {
         try {
-            PostMessage 0x100, VKCode, lParamDown, , "ahk_id " hwnd
+            if (useChildWin) {
+                SendMessage 0x100, VKCode, lParamDown, , "ahk_id " targetHwnd
+                Sleep 10
+                SendMessage 0x102, VKCode, 0, , "ahk_id " targetHwnd
+            }
+            else {
+                PostMessage 0x100, VKCode, lParamDown, , "ahk_id " hwnd
+            }
         }
     }
     else {
         try {
-            PostMessage 0x101, VKCode, lParamUp, , "ahk_id " hwnd
+            if (useChildWin) {
+                SendMessage 0x101, VKCode, lParamUp, , "ahk_id " targetHwnd
+            }
+            else {
+                PostMessage 0x101, VKCode, lParamUp, , "ahk_id " hwnd
+            }
         }
     }
 

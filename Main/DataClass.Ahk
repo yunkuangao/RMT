@@ -619,6 +619,7 @@ class BGKeyData {
     __New() {
         this.SerialStr := ""
         this.FrontStr := ""
+        this.ChildWinPath := ""
         this.KeyArr := []
         this.Type := 1  ;1按下 2松开 3点击
         this.ClickTime := 100
@@ -690,9 +691,10 @@ class MouseWinData {
         MouseGetPos &mouseX, &mouseY, &winId
         try {
             this.WinId := winId
-            this.WinTitle := WinGetTitle(winId)
-            this.WinClass := WinGetClass(winId)
-            this.WinProcess := WinGetProcessName(winId)
+            rootHwnd := GetRootWindow(winId)
+            this.WinTitle := WinGetTitle(rootHwnd)
+            this.WinClass := WinGetClass(rootHwnd)
+            this.WinProcess := WinGetProcessName(rootHwnd)
         }
         catch as e {
             this.HasError := true

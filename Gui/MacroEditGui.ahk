@@ -15,6 +15,7 @@
 #Include ExVariableGui.ahk
 #Include RMTCMDGui.ahk
 #Include BGKeyGui.ahk
+#Include ChildWinPickerGui.ahk
 #Include LoopGui.ahk
 #Include CompareProGui.ahk
 #Include CompareProEditItemGui.ahk

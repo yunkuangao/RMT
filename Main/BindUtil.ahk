@@ -141,12 +141,13 @@ SetToolCheckInfo() {
     CoordMode("Mouse", "Screen")
     MouseGetPos &mouseX, &mouseY, &winId
     try {
+        rootHwnd := GetRootWindow(winId)
         ToolCheckInfo.PosStr := mouseX . "," . mouseY
-        ToolCheckInfo.ProcessName := WinGetProcessName(winId)
-        ToolCheckInfo.ProcessTile := WinGetTitle(winId)
-        ToolCheckInfo.ProcessPid := WinGetPID(winId)
-        ToolCheckInfo.ProcessClass := WinGetClass(winId)
-        ToolCheckInfo.ProcessId := winId
+        ToolCheckInfo.ProcessName := WinGetProcessName(rootHwnd)
+        ToolCheckInfo.ProcessTile := WinGetTitle(rootHwnd)
+        ToolCheckInfo.ProcessPid := WinGetPID(rootHwnd)
+        ToolCheckInfo.ProcessClass := WinGetClass(rootHwnd)
+        ToolCheckInfo.ProcessId := rootHwnd
         ToolCheckInfo.Color := StrReplace(PixelGetColor(mouseX, mouseY, "Slow"), "0x", "")
 
         WinPosArr := GetCurWinPos()

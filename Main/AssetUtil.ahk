@@ -102,7 +102,7 @@ GetParamsWinInfoStr(infoStr, symbolStr := "default") {
     }
 
     infoArr := StrSplit(infoStr, "⎖")
-    if (infoArr.Length != 3)
+    if (infoArr.Length != 3 && infoArr.Length != 4)
         return ""
 
     title := infoArr[1]
@@ -131,6 +131,17 @@ GetParamsWinInfoStr(infoStr, symbolStr := "default") {
     }
 
     return condition
+}
+
+; 从 FrontStr 中提取子窗口路径（第4段）
+GetChildWinPathFromInfoStr(infoStr) {
+    if (infoStr == "" || InStr(infoStr, "❖"))
+        return ""
+
+    infoArr := StrSplit(infoStr, "⎖")
+    if (infoArr.Length >= 4 && infoArr[4] != "")
+        return infoArr[4]
+    return ""
 }
 
 GetProcessName() {
@@ -1234,12 +1245,198 @@ GetRecordTriggerKeyMap() {
     return resultMap
 }
 
+; 枚举所有可见的顶层窗口及其子窗口
+; 返回 [{hwnd, title, class, process, children: [...]}]
+EnumAllWindows() {
+    result := []
+
+    try {
+        winList := WinGetList()
+    } catch {
+        return result
+    }
+
+    for hwnd in winList {
+        try {
+            title := WinGetTitle(hwnd)
+            cls := WinGetClass(hwnd)
+            proc := WinGetProcessName(hwnd)
+            pid := WinGetPID(hwnd)
+        } catch {
+            continue
+        }
+
+        ; 跳过自身和不可见窗口
+        if (proc == "AutoHotkey64.exe" || proc == "AutoHotkey.exe")
+            continue
+        if (!WinExist("ahk_id " hwnd))
+            continue
+
+        children := EnumChildWindows(hwnd, 3)
+        item := Map("hwnd", hwnd, "title", title, "class", cls, "process", proc, "children", children)
+        result.Push(item)
+    }
+
+    return result
+}
+
+; 递归枚举子窗口
+EnumChildWindows(parentHwnd, maxDepth) {
+    result := []
+    if (maxDepth <= 0)
+        return result
+
+    childHwnd := DllCall("User32\FindWindowEx", "ptr", parentHwnd, "ptr", 0, "ptr", 0, "ptr", 0, "ptr")
+    while (childHwnd) {
+        try {
+            childCls := WinGetClass(childHwnd)
+            childTitle := WinGetTitle(childHwnd)
+        } catch {
+            childCls := ""
+            childTitle := ""
+        }
+
+        children := EnumChildWindows(childHwnd, maxDepth - 1)
+        item := Map("hwnd", childHwnd, "title", childTitle, "class", childCls, "children", children)
+        result.Push(item)
+
+        childHwnd := DllCall("User32\FindWindowEx", "ptr", parentHwnd, "ptr", childHwnd, "ptr", 0, "ptr", 0, "ptr")
+    }
+    return result
+}
+
+; 从子窗口回溯到顶层窗口，获取类名路径
+; 返回 [{class, index}] 数组，index 表示同级同类中的第几个（从1开始）
+GetChildWindowClassPath(targetHwnd) {
+    path := []
+    currentHwnd := targetHwnd
+    GA_ROOT := 2
+
+    ; 从目标窗口向上回溯到顶层窗口
+    hwndChain := []
+    while (currentHwnd) {
+        try {
+            parentHwnd := DllCall("User32\GetParent", "ptr", currentHwnd, "ptr")
+        } catch {
+            parentHwnd := 0
+        }
+        hwndChain.Push(currentHwnd)
+        if (parentHwnd == 0 || parentHwnd == currentHwnd)
+            break
+        currentHwnd := parentHwnd
+    }
+
+    ; 从顶层向下构建路径（去掉顶层窗口本身）
+    ; hwndChain: [target, ..., parent, root]
+    ; 反转为 [root, parent, ..., target]
+    reversed := []
+    for hwnd in hwndChain
+        reversed.InsertAt(1, hwnd)
+    hwndChain := reversed
+
+    for i, hwnd in hwndChain {
+        try {
+            cls := WinGetClass(hwnd)
+        } catch {
+            cls := ""
+        }
+        if (cls == "")
+            continue
+
+        ; 跳过顶层窗口
+        if (i == 1)
+            continue
+
+        ; 计算同级同类中的索引
+        parentHwnd2 := hwndChain[i - 1]
+        sameClassIndex := 0
+        siblingHwnd := DllCall("User32\FindWindowEx", "ptr", parentHwnd2, "ptr", 0, "ptr", 0, "ptr", 0, "ptr")
+        while (siblingHwnd) {
+            try {
+                siblingCls := WinGetClass(siblingHwnd)
+            } catch {
+                siblingCls := ""
+            }
+            if (siblingCls == cls)
+                sameClassIndex++
+            if (siblingHwnd == hwnd)
+                break
+            siblingHwnd := DllCall("User32\FindWindowEx", "ptr", parentHwnd2, "ptr", siblingHwnd, "ptr", 0, "ptr", 0, "ptr")
+        }
+
+        path.Push(Map("class", cls, "index", sameClassIndex))
+    }
+
+    return path
+}
+
+; 根据类名路径在目标窗口中查找子窗口
+; rootHwnd: 顶层窗口句柄, path: [{class, index}]
+FindChildByClassPath(rootHwnd, path) {
+    currentHwnd := rootHwnd
+    for step in path {
+        targetClass := step["class"]
+        targetIndex := step["index"]
+
+        foundIndex := 0
+        childHwnd := DllCall("User32\FindWindowEx", "ptr", currentHwnd, "ptr", 0, "str", targetClass, "ptr", 0, "ptr")
+        while (childHwnd) {
+            foundIndex++
+            if (foundIndex == targetIndex) {
+                currentHwnd := childHwnd
+                break
+            }
+            childHwnd := DllCall("User32\FindWindowEx", "ptr", currentHwnd, "ptr", childHwnd, "str", targetClass, "ptr", 0, "ptr")
+        }
+
+        if (!childHwnd)
+            return 0  ; 路径断开，找不到
+    }
+    return currentHwnd
+}
+
+; 将类名路径序列化为字符串（用于存储）
+; 格式: "NotepadTextBox:1>RichEditD2DPT:1"
+SerializeClassPath(path) {
+    parts := []
+    for step in path {
+        parts.Push(step["class"] ":" step["index"])
+    }
+    result := ""
+    for i, part in parts {
+        if (i > 1)
+            result .= ">"
+        result .= part
+    }
+    return result
+}
+
+; 从序列化字符串解析类名路径
+DeserializeClassPath(str) {
+    if (str == "")
+        return []
+    parts := StrSplit(str, ">")
+    path := []
+    for part in parts {
+        arr := StrSplit(part, ":")
+        if (arr.Length == 2) {
+            path.Push(Map("class", arr[1], "index", Integer(arr[2])))
+        }
+    }
+    return path
+}
+
 StrToHex(str) {
     hex := ""
     loop parse str {
         hex .= Format("{:02X}", Ord(A_LoopField))
     }
     return hex
+}
+
+GetRootWindow(hwnd) {
+    static GA_ROOT := 2
+    return DllCall("User32\GetAncestor", "ptr", hwnd, "uint", GA_ROOT, "ptr")
 }
 
 GetWinPos(ScreenX, ScreenY, hwnd := 0) {
