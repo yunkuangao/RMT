@@ -617,7 +617,7 @@ OnExVariableOnce(tableItem, index, Data) {
         if (!HasX1 || !HasX2 || !HasY1 || !HasY2)
             return
         TextObjs := []
-        hwndList := GetHwndList(Data.WinInfo)
+        hwndList := GetHwndList(Data.WinInfo, tableItem, 1)
         loop hwndList.Length {
             CurWinTextObjs := GetWinTextObjArr(hwndList[A_Index], X1, Y1, X2, Y2, Data.OCRType)
             if (CurWinTextObjs != "")
@@ -693,7 +693,7 @@ OnBGMouse(tableItem, cmd, index) {
     }
     PosX := GetFloatValue(PosX, MySoftData.CoordXFloat)
     PosY := GetFloatValue(PosY, MySoftData.CoordYFloat)
-    hwndList := GetHwndList(Data.TargetTitle)
+    hwndList := GetHwndList(Data.TargetTitle, tableItem, index)
     loop hwndList.Length {
         hwnd := hwndList[A_Index]
         ; 点击位置（窗口客户区坐标）
@@ -748,7 +748,7 @@ OnBGKey(tableItem, cmd, index) {
 }
 
 SendBGKey(Data, tableItem, index) {
-    hwndList := GetHwndList(Data.FrontStr)
+    hwndList := GetHwndList(Data.FrontStr, tableItem, index)
 
     if (Data.Type == 1 || Data.Type == 3) {
         for hwnd in hwndList {

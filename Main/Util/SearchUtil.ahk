@@ -59,7 +59,7 @@ SearchOnce(tableItem, Data, index) {
 
     ; 执行搜索
     ResXList := [], ResYList := [], ResHwndList := []
-    found := DoSearch(Data, X1, Y1, X2, Y2, Text, &ResX, &ResY, &ResXList, &ResYList, &ResHwndList)
+    found := DoSearch(tableItem, index, Data, X1, Y1, X2, Y2, Text, &ResX, &ResY, &ResXList, &ResYList, &ResHwndList)
 
     ; 处理搜索结果
     if (found) {
@@ -69,14 +69,14 @@ SearchOnce(tableItem, Data, index) {
     return false
 }
 
-DoSearch(Data, X1, Y1, X2, Y2, Text, &ResX, &ResY, &ResXList, &ResYList, &ResHwndList) {
+DoSearch(tableItem, index, Data, X1, Y1, X2, Y2, Text, &ResX, &ResY, &ResXList, &ResYList, &ResHwndList) {
     CoordMode("Pixel", "Screen")
     ResX := 0, ResY := 0, found := false
     ResXList := [], ResYList := [], ResHwndList := []
     isWin := Data.SearchType == 4 || Data.SearchType == 5 || Data.SearchType == 6
 
     if (isWin) {
-        hwndList := GetHwndList(Data.WinInfo)
+        hwndList := GetHwndList(Data.WinInfo, tableItem, index)
     }
 
     if (Data.SearchType == 1) {     ;屏幕图片

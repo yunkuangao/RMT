@@ -63,7 +63,7 @@ GetCurMSec() {
     return A_Hour * 3600 * 1000 + A_Min * 60 * 1000 + A_Sec * 1000 + A_mSec
 }
 
-GetHwndList(infoStr) {
+GetHwndList(infoStr, tableItem := 0, index := "") {
     HwndList := []
     if (infoStr == "")
         return HwndList
@@ -71,8 +71,13 @@ GetHwndList(infoStr) {
     if (InStr(infoStr, "❖")) {
         infoStr := StrReplace(infoStr, "❖")
         hwndIdStrList := StrSplit(infoStr, "|")
-        for index, hwndIdStr in hwndIdStrList {
-            hasValue := TryGetVarValue(&hwnd, hwndIdStr)
+        for index2, hwndIdStr in hwndIdStrList {
+            ; 去除变量名外的花括号 {VarName} → VarName
+            varName := StrReplace(StrReplace(hwndIdStr, "{"), "}")
+            if (tableItem && index != "")
+                hasValue := TryGetTabVarValue(&hwnd, tableItem, index, varName)
+            else
+                hasValue := TryGetVarValue(&hwnd, varName)
             if (hasValue)
                 HwndList.Push(hwnd)
         }
