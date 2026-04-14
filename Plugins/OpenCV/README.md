@@ -28,3 +28,14 @@
 9. 属性 C/C++ 预处理器 预处理器定义 添加 IMAGEFINDER_EXPORTS
 
 10. 编译
+
+
+
+#### 各技术参考资料
+
+WGC:
+1. https://github.com/thqby/ahk2_lib/blob/master/wincapture/README.md
+2. https://blog.csdn.net/kanhao100/article/details/149227257
+3. https://learn.microsoft.com/en-us/uwp/api/windows.graphics.capture?view=winrt-22621
+4. https://www.vbforums.com/showthread.php?898778-Problems-getting-a-window-capture-with-Bitblt-and-PrintWindow/page3
+5. https://www.ahk66.com/355
