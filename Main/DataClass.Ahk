@@ -661,6 +661,38 @@ class ArrayData {
     }
 }
 
+class YoloeData {
+    __New() {
+        this.SerialStr := ""
+        this.ModelPath := ""           ; ONNX 模型文件路径
+        this.Classes := "person,car"   ; 检测类别（逗号分隔）
+        this.ConfThresh := 35         ; 置信度阈值 (0~100)
+        this.NmsThresh := 45          ; NMS 阈值 (0~100)
+        this.UseGPU := true           ; 是否使用GPU
+        this.TargetClassId := -1      ; 目标类别ID (-1=任意)
+        this.SearchType := 1          ; 1屏幕检测 2窗口检测
+        this.WinInfo := ""            ; 窗口信息
+        this.StartPosX := 0
+        this.StartPosY := 0
+        this.EndPosX := A_ScreenWidth
+        this.EndPosY := A_ScreenHeight
+        this.SearchCount := 1         ; 检测次数
+        this.SearchInterval := 1000   ; 每次间隔(ms)
+        this.MouseActionType := 1     ; 1无动作 2移动到目标 3移动并点击
+        this.Speed := 90              ; 移动速度
+        this.ClickCount := 1          ; 点击次数
+        this.TrueMacro := ""          ; 找到后的指令
+        this.FalseMacro := ""         ; 未找到后的指令
+        this.ResultToggle := 0        ; 结果保存开关
+        this.ResultSaveName := GetLang("检测结果")  ; 结果变量名
+        this.TrueValue := true            ; 找到后保存的值
+        this.FalseValue := false           ; 未找到保存的值
+        this.CoordToogle := 0         ; 坐标保存开关
+        this.CoordXName := GetLang("坐标X")    ; X坐标变量名
+        this.CoordYName := GetLang("坐标Y")    ; Y坐标变量名
+    }
+}
+
 class RMTCMDData {
     __New() {
         this.SerialStr := ""

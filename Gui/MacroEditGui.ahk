@@ -21,6 +21,7 @@
 #Include TextOpsGui.ahk
 #Include ArrayGui.ahk
 #Include InputGui.ahk
+#include YoloeGui.ahk
 
 class MacroEditGui {
     __new() {
@@ -52,11 +53,11 @@ class MacroEditGui {
         this.DefaultFocusCon := ""
         this.SubMacroLastIndex := 0
 
-        this.CMDStrArr := GetLangArr(["间隔", "按键", "搜索", "搜索Pro", "移动", "移动Pro", "输入", "输出", "循环", "宏操作", "变量", "变量提取",
+        this.CMDStrArr := GetLangArr(["间隔", "按键", "搜索", "搜索Pro", "YOLOE检测", "移动", "移动Pro", "输入", "输出", "循环", "宏操作", "变量", "变量提取",
             "如果", "如果Pro", "运算", "运行", "数组", "文本处理", "后台鼠标", "后台按键", "RMT指令"])
 
         this.IconMap := Map(GetLang("间隔"), "Icon1", GetLang("按键"), "Icon2", GetLang("搜索"), "Icon3", GetLang("搜索Pro"),
-        "Icon4", GetLang("移动"), "Icon5", GetLang("移动Pro"),
+        "Icon4", GetLang("YOLOE检测"), "Icon26", GetLang("移动"), "Icon5", GetLang("移动Pro"),
         "Icon6", GetLang("输出"), "Icon7", GetLang("运行"), "Icon8", GetLang("循环"), "Icon9", GetLang("宏操作"), "Icon10",
         GetLang("变量"), "Icon11", GetLang("变量提取"), "Icon12", GetLang("如果"), "Icon13", GetLang("如果Pro"),
         "Icon14", GetLang("运算"), "Icon15", GetLang("RMT指令"), "Icon16", GetLang("后台鼠标"), "Icon17", GetLang("后台按键"),
@@ -86,6 +87,10 @@ class MacroEditGui {
         this.SearchProGui := SearchProGui()
         this.SearchProGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
         this.SubGuiMap.Set(GetLang("搜索Pro"), this.SearchProGui)
+
+        this.YoloeGui := YoloeGui()
+        this.YoloeGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
+        this.SubGuiMap.Set(GetLang("YOLOE检测"), this.YoloeGui)
 
         this.RunGui := RunGui()
         this.RunGui.SureBtnAction := (CommandStr) => this.OnSubGuiSureBtnClick(CommandStr)
@@ -186,6 +191,7 @@ class MacroEditGui {
             IL_Add(ImageListID, "Images\Soft\TextOps.png")      ;todo 还没正式化
             IL_Add(ImageListID, "Images\Soft\Arr.png")            ;todo 还没正式化
             IL_Add(ImageListID, "Images\Soft\Input.png")            ;todo 还没正式化
+            IL_Add(ImageListID, "Images\Soft\Yoloe.png")           ;YOLOE检测
         }
 
         MySoftData.RecordToggleCon := this.RecordMacroCon
@@ -225,6 +231,12 @@ class MacroEditGui {
         btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), GetLang("搜索Pro"))
         btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
         btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.SearchProGui))
+
+        PosX := 15
+        PosY += 40
+        btnCon := MyGui.Add("Button", Format("x{} y{} h{} w{} center", PosX, PosY, 30, 75), GetLang("YOLOE检测"))
+        btnCon.SetFont((Format("S{} W{} Q{}", 11, 400, 5)))
+        btnCon.OnEvent("Click", (*) => this.OnOpenSubGui(this.YoloeGui))
 
         PosX := 15
         PosY += 40
@@ -1191,6 +1203,7 @@ class MacroEditGui {
         fileMap := Map(
             GetLang("搜索"), SearchFile,
             GetLang("搜索Pro"), SearchProFile,
+            GetLang("YOLOE检测"), YoloeFile,
             GetLang("如果"), CompareFile,
             GetLang("如果Pro"), CompareProFile,
             GetLang("循环"), LoopFile

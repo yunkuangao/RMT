@@ -57,6 +57,7 @@ OnTriggerMacroOnce(tableItem, macro, index) {
         "按键", OnPressKey,
         "搜索", OnSearchWrapper,
         "搜索Pro", OnSearchWrapper,
+        "YOLOE检测", OnYoloeWrapper,
         "移动", OnMouseMove,
         "移动Pro", OnMMPro,
         "运行", OnRunFile,
@@ -104,6 +105,15 @@ OnTriggerMacroOnce(tableItem, macro, index) {
 OnSearchWrapper(tableItem, cmdStr, index) {
     isLoopFound := SearchOnTrigger(tableItem, cmdStr, index)
     if (isLoopFound != "" && isLoopFound == false) {
+        return [cmdStr]
+    }
+}
+
+OnYoloeWrapper(tableItem, cmdStr, index) {
+    paramArr := StrSplit(cmdStr, "_")
+    Data := GetMacroCMDData(paramArr[1])
+    isLoopFound := DoYoloe(tableItem, Data, index)
+    if (isLoopFound == false && isLoopFound != "") {
         return [cmdStr]
     }
 }
