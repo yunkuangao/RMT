@@ -10,6 +10,7 @@ onnxruntime-win-x64-*/
 test/data/
 test_result.jpg
 test_ahk_*
+test/test_result_*.jpg
 
 # OS
 .DS_Store

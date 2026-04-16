@@ -24,13 +24,19 @@ YOLO
 git clone https://github.com/Geekgineer/YOLOs-CPP.git
 ```
 
-### 2. 准备 OpenCV / ONNX Runtime / Build Tools + C++ 桌面开发
+### 2. 准备 OpenCV / ONNX Runtime / Build Tools + C++ 桌面开发 / cmake
 
-OpenCV: 下载并解压 [OpenCV](https://github.com/opencv/opencv/releases/tag/4.8.1) （如 `opencv-4.8.1-windows.exe`）,设置环境变量:`$env:OpenCV_DIR = "C:\opencv\build"`
+OpenCV: 下载并解压 [OpenCV](https://github.com/opencv/opencv/releases/tag/4.8.1) （如 `opencv-4.8.1-windows.exe`）,设置环境变量:
 
-ONNX Runtime: 下载并解压 [ONNX Runtime](https://github.com/microsoft/onnxruntime/releases/tag/v1.24.4)（如 v1.24.4）,设置环境变量:`$env:ONNXRUNTIME_DIR = "C:\onnxruntime"`
+`$env:OpenCV_DIR = "C:\opencv\build"`
 
-Build Tools C++ 桌面开发: 安装[Build Tools C++ 桌面开发](https://visualstudio.microsoft.com/zh-hans/visual-cpp-build-tools/)，选择"使用C++的桌面开发"，安装即可
+ONNX Runtime: 下载并解压 [ONNX Runtime](https://github.com/microsoft/onnxruntime/releases/tag/v1.24.4)（如 v1.24.4）,设置环境变量:
+
+`$env:ONNXRUNTIME_DIR = "C:\onnxruntime"`
+
+Build Tools C++ 桌面开发/Cmake: 安装[Build Tools C++ 桌面开发](https://visualstudio.microsoft.com/zh-hans/visual-cpp-build-tools/)，选择"使用C++的桌面开发，在'单个组件'中选中'用于 Windows 的 C++ Cmake 工具'"，安装即可，执行完成后将cmake位置添加进环境变量path，位置可能是
+
+`C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`
 
 ### 3. 运行打包脚本
 
