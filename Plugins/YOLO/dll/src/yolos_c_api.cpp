@@ -3,23 +3,25 @@
  * @brief C-style API for YOLOs-CPP DLL (AHK DllCall compatible)
  *
  * 导出函数仅3个（参考 FindScreenImage 设计模式）：
- *   YoloCreate       → 创建检测器
+ *   YoloCreate       → 创建检测器（直接传入类别字符串，无临时文件）
  *   YoloDetectScreen → 截屏+检测+绘制+保存（一体化）
  *   YoloDestroy      → 销毁检测器
  *
  * 内部辅助函数（不导出）：
- *   captureScreenInternal, drawDetections, parseClassesCsv, writeLabelsFile, findBestTarget
+ *   captureScreenInternal, drawDetections, parseClassesCsv, findBestTarget
+ *
+ * 零侵入设计：通过 yolos_detector_patch.hpp 继承 YOLODetector
+ * 实现纯内存初始化，不修改 YOLOs-CPP 源码
  */
 
 #define YOLOSCPP_BUILD_DLL
 #include "yolos/core/yolos_c_api.hpp"
-#include "yolos/tasks/detection.hpp"
+#include "yolos_detector_patch.hpp"
 
 #include <iostream>
 #include <string>
 #include <chrono>
 #include <cstring>
-#include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <vector>
@@ -34,14 +36,12 @@ using namespace yolos::det;
 static thread_local char g_lastError[1024] = {0};
 
 struct YolosContext {
-    std::unique_ptr<YOLODetector> detector;
-    std::string tempLabelsPath;
+    std::unique_ptr<YolosDllDetector> detector;
     std::vector<Detection> lastResults;
     int lastFilteredCount = 0;
 
-    YolosContext(const char* modelPath, const std::string& labelsFilePath, bool useGPU)
-        : detector(std::make_unique<YOLODetector>(modelPath, labelsFilePath, useGPU)),
-          tempLabelsPath(labelsFilePath) {}
+    YolosContext(const char* modelPath, const std::vector<std::string>& classNames, bool useGPU)
+        : detector(std::make_unique<YolosDllDetector>(modelPath, classNames, useGPU)) {}
 };
 
 static std::vector<std::string> parseClassesCsv(const char* csv) {
@@ -56,18 +56,6 @@ static std::vector<std::string> parseClassesCsv(const char* csv) {
             names.push_back(item.substr(start, end - start + 1));
     }
     return names;
-}
-
-static std::string writeLabelsFile(const char* csv) {
-    if (!csv || !csv[0]) return "";
-    auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-    std::string path = "yolos_temp_labels_" + std::to_string(now) + ".names";
-    std::ofstream f(path);
-    if (!f.is_open()) return "";
-    for (const auto& name : parseClassesCsv(csv))
-        f << name << "\n";
-    f.close();
-    return path;
 }
 
 static int findBestTarget(const std::vector<Detection>& results, int targetClassId) {
@@ -153,9 +141,8 @@ YOLOS_C_API_EXPORT YolosHandle __cdecl YoloCreate(const char* modelPath,
                                                    const char* classesCsv,
                                                    int useGPU) {
     try {
-        std::string labelsFilePath = writeLabelsFile(classesCsv);
-        if (labelsFilePath.empty()) return nullptr;
-        return static_cast<void*>(new YolosContext(modelPath, labelsFilePath, useGPU != 0));
+        std::vector<std::string> classNames = parseClassesCsv(classesCsv);
+        return static_cast<void*>(new YolosContext(modelPath, classNames, useGPU != 0));
     } catch (...) {
         return nullptr;
     }
@@ -250,8 +237,6 @@ YOLOS_C_API_EXPORT int __cdecl YoloDetectScreen(YolosHandle handle,
 YOLOS_C_API_EXPORT void __cdecl YoloDestroy(YolosHandle handle) {
     if (!handle) return;
     auto* ctx = static_cast<YolosContext*>(handle);
-    if (!ctx->tempLabelsPath.empty())
-        std::remove(ctx->tempLabelsPath.c_str());
     delete ctx;
 }
 

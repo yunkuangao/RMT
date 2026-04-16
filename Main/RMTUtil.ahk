@@ -169,7 +169,7 @@ PluginInit() {
     DllCall('LoadLibrary', 'str', OpenCvPath, "Ptr")
     DllCall("LoadLibrary", "Str", IBPath)
 
-    yoloOpencv := A_ScriptDir "\Plugins\OpenCv\opencv_world481.dll" ; 确保在此之前能加载,OpenCv是隐式加载机制
+    yoloOpencv := A_ScriptDir "\Plugins\OpenCV\opencv_world481.dll"
     yoloOnnx := A_ScriptDir "\Plugins\YOLO\onnxruntime.dll"
     yoloDll := A_ScriptDir "\Plugins\YOLO\yolos.dll"
     DllCall("LoadLibrary", "Str", yoloOpencv, "Ptr")
