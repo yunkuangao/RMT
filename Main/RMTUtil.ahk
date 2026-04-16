@@ -169,6 +169,13 @@ PluginInit() {
     DllCall('LoadLibrary', 'str', OpenCvPath, "Ptr")
     DllCall("LoadLibrary", "Str", IBPath)
 
+    yoloOpencv := A_ScriptDir "\Plugins\OpenCv\opencv_world481.dll" ; 确保在此之前能加载,OpenCv是隐式加载机制
+    yoloOnnx := A_ScriptDir "\Plugins\YOLO\onnxruntime.dll"
+    yoloDll := A_ScriptDir "\Plugins\YOLO\yolos.dll"
+    DllCall("LoadLibrary", "Str", yoloOpencv, "Ptr")
+    DllCall("LoadLibrary", "Str", yoloOnnx, "Ptr")
+    DllCall("LoadLibrary", "Str", yoloDll, "Ptr")
+
     RMTPath := A_ScriptDir "\Plugins\RMT\RMT.dll"
     RMT_ASM := CLR_LoadLibrary(RMTPath)   ;加载RMT程序集
     global RMT_Http := RMT_ASM.CreateInstance("RMT.Http")     ; 创建对象实例

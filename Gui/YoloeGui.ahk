@@ -1,6 +1,7 @@
 #Requires AutoHotkey v2.0
 #Include MacroEditGui.ahk
 #Include WinRuleGui.ahk
+#Include ..\Main\Util\YoloeUtil.ahk
 
 class YoloeGui {
     __new() {
@@ -88,18 +89,10 @@ class YoloeGui {
 
         PosY += 30
         PosX := 15
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("检测类别："))
-        PosX += 65
-        this.ClassesCon := MyGui.Add("Edit", Format("x{} y{} Center", PosX, PosY - 3, 245),
-            "person,car,bus,bicycle,motorcycle,truck")
-
-        PosY += 28
-        PosX := 15
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("目标类别："))
-        PosX += 65
-        this.TargetClassDL := MyGui.Add("DropDownList", Format("x{} y{} Center", PosX, PosY - 3, 160), [])
-        PosX += 165
-        this.UseGPUCon := MyGui.Add("Checkbox", Format("x{} y{} Left", PosX, PosY + 2), GetLang("使用GPU加速"))
+        ; 目标类别 ID：-1=全部, 0=person, 2=car, ... (对应 coco.names 行号)
+        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("目标类别ID："))
+        PosX += 80
+        this.TargetClassIdCon := MyGui.Add("Edit", Format("x{} y{} Center", PosX, PosY - 3, 60), "-1")
 
         ; === Right column: Detection Params GroupBox ===
         PosX := 360
@@ -108,14 +101,9 @@ class YoloeGui {
 
         PosY += 22
         PosX := 365
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("置信度阈值(%):"))
-        PosX += 100
         this.ConfThreshCon := MyGui.Add("Edit", Format("x{} y{} Center", PosX, PosY - 3, 60), "35")
 
-        PosX += 70
-        MyGui.Add("Text", Format("x{} y{}", PosX, PosY), GetLang("NMS阈值(%):"))
-        PosX += 85
-        this.NmsThreshCon := MyGui.Add("Edit", Format("x{} y{} Center", PosX, PosY - 3, 60), "45")
+        ; NMS 阈值隐藏，使用内部默认值 0.45
 
         PosY += 32
         PosX := 365
@@ -298,16 +286,14 @@ class YoloeGui {
 
         ; 加载数据
         this.ModelPathCon.Value := this.Data.ModelPath
-        this.ClassesCon.Value := this.Data.Classes
         this.ConfThreshCon.Value := this.Data.ConfThresh
-        this.NmsThreshCon.Value := this.Data.NmsThresh
-        this.UseGPUCon.Value := this.Data.UseGPU
+        ; NMS 阈值隐藏，使用默认值
+        ; GPU 默认使用 CPU
         this.SearchTypeCon.Value := this.Data.SearchType
         this.WinInfoCon.Value := this.Data.WinInfo
 
-        ; 先根据类别列表更新下拉选项，再设置选中值
-        this.UpdateTargetClassDL()
-        this.TargetClassDL.Value := this.Data.TargetClassId + 1  ; 转为1-based（0=任意类别）
+        ; 加载目标类别 ID
+        this.TargetClassIdCon.Value := this.Data.TargetClassId
         this.StartPosXCon.Text := this.Data.StartPosX
         this.StartPosYCon.Text := this.Data.StartPosY
         this.EndPosXCon.Text := this.Data.EndPosX
@@ -327,7 +313,6 @@ class YoloeGui {
         this.CoordXNameCon.Text := this.Data.CoordXName
         this.CoordYNameCon.Text := this.Data.CoordYName
 
-        this.UpdateTargetClassDL()
         this.OnChangeSearchType()
         this.OnChangeMouseAction()
     }
@@ -353,29 +338,7 @@ class YoloeGui {
     }
 
     UpdateTargetClassDL() {
-        classStr := this.ClassesCon.Text
-        classes := StrSplit(classStr, ", `t`n`r")
-        dlArr := [GetLang("任意类别")]
-        for cls in classes {
-            cls := Trim(cls)
-            if (cls != "")
-                dlArr.Push(cls)
-        }
-        this.TargetClassDL.Delete()
-        this.TargetClassDL.Add(dlArr)
-        this.TargetClassDL.Value := 1
-    }
-
-    GetTargetClassText(classId) {
-        if (classId < 0) {
-            return GetLang("任意类别")
-        }
-        classStr := this.ClassesCon.Text
-        classes := StrSplit(classStr, ", `t`n`r")
-        if (classId < classes.Length) {
-            return Trim(classes[classId + 1])
-        }
-        return GetLang("任意类别")
+        ; 保留接口供 ClassesCon Change 事件调用（当前为空实现）
     }
 
     GetCommandStr() {
@@ -401,13 +364,8 @@ class YoloeGui {
         }
 
         confVal := this.ConfThreshCon.Value
-        nmsVal := this.NmsThreshCon.Value
         if (!IsNumber(confVal) || confVal < 0 || confVal > 100) {
             MsgBox(GetLang("置信度阈值必须在0~100之间"))
-            return false
-        }
-        if (!IsNumber(nmsVal) || nmsVal < 0 || nmsVal > 100) {
-            MsgBox(GetLang("NMS阈值必须在0~100之间"))
             return false
         }
 
@@ -590,13 +548,19 @@ class YoloeGui {
     SaveData() {
         data := this.Data
         data.ModelPath := this.ModelPathCon.Value
-        data.Classes := this.ClassesCon.Value
+        ; 目标类别 ID：直接读取数字
+        data.TargetClassId := Integer(this.TargetClassIdCon.Value)
+        ; 从 .names 文件自动加载类别列表（替代硬编码）
+        data.Classes := LoadClassNamesFromModel(data.ModelPath)
+        if (data.Classes == "")
+            data.Classes := "person,car"  ; 兜底默认值
         data.ConfThresh := this.ConfThreshCon.Value
-        data.NmsThresh := this.NmsThreshCon.Value
-        data.UseGPU := this.UseGPUCon.Value
+        ; NMS 阈值隐藏，使用默认值 45
+        data.NmsThresh := 45
+        ; GPU 默认使用 CPU
+        data.UseGPU := 0
         data.SearchType := this.SearchTypeCon.Value
         data.WinInfo := this.WinInfoCon.Value
-        data.TargetClassId := this.TargetClassDL.Value - 1  ; 转为0-based，-1表示任意
         data.StartPosX := this.StartPosXCon.Text
         data.StartPosY := this.StartPosYCon.Text
         data.EndPosX := this.EndPosXCon.Text

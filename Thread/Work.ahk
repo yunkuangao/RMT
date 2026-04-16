@@ -3,7 +3,6 @@
 #Include "..\Gui\CustomInputGui.ahk"
 #Include "..\Gui\InputBtnGui.ahk"
 #Include "..\Plugins\RapidOcr\RapidOcr.ahk"
-#Include "..\Plugins\YOLO\YoloE.ahk"
 #Include "..\Plugins\IbInputSimulator.ahk"
 #Include WorkUtil.ahk
 #SingleInstance Force
