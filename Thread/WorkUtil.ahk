@@ -56,6 +56,13 @@
 
         DllCall('LoadLibrary', 'str', OpenCvPath, "Ptr")
         DllCall('LoadLibrary', 'str', IBPath)
+
+        yoloOpencv := A_ScriptDir "\Plugins\OpenCv\opencv_world481.dll" ; 确保在此之前能加载,OpenCv是隐式加载机制
+        yoloOnnx := A_ScriptDir "\Plugins\YOLO\onnxruntime.dll"
+        yoloDll := A_ScriptDir "\Plugins\YOLO\yolos.dll"
+        DllCall("LoadLibrary", "Str", yoloOpencv, "Ptr")
+        DllCall("LoadLibrary", "Str", yoloOnnx, "Ptr")
+        DllCall("LoadLibrary", "Str", yoloDll, "Ptr")
     }
 }
 
