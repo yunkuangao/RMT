@@ -261,7 +261,7 @@ class MacroEditGui {
     }
 
     ShowGui(CommandStr, ShowSaveBtn) {
-        global MySoftData
+        global MainSoftData
         this._revealed := false
         ; XAML 窗口不支持隐藏复用：已打开的实例先关掉再重建
         if (IsObject(this.ui) && !this._closed)
@@ -599,12 +599,12 @@ class MacroEditGui {
 
     ; 构建一行指令：星标 + 指令按钮（图标+名称）
     _AddCmdRowBtn(row, config, favBtnName, cmdBtnName, isFav) {
-        fav := row.Add("Button").Name(favBtnName).Width(22).Height(30).Margin("0,1,0,1")
+        fav := row.Add("Button").Name(favBtnName).Width(22).Height(UILayout.CtrlH.Btn).Margin("0,1,0,1")
             .Background("Transparent").BorderThickness("0").Cursor("Hand").Padding("0")
             .VerticalContentAlignment("Center").HorizontalContentAlignment("Center")
         fav.Add("TextBlock").Name(favBtnName "_Txt").Text(isFav ? "⭐" : "☆").FontSize(13)
             .HorizontalAlignment("Center").VerticalAlignment("Center")
-        b := row.Add("Button").Name(cmdBtnName).Height(30).Margin("2,1").Background("Transparent").BorderThickness("0")
+        b := row.Add("Button").Name(cmdBtnName).Height(UILayout.CtrlH.Btn).Margin("2,1").Background("Transparent").BorderThickness("0")
             .Cursor("Hand").HorizontalContentAlignment("Left").VerticalContentAlignment("Center")
         sp := b.Add("StackPanel").Orientation("Horizontal").VerticalAlignment("Center")
         sp.Add("Image").Source(StrReplace(A_WorkingDir "\" config.icon, "\", "/")).Width(16).Height(16).Margin("0,0,4,0")
@@ -633,7 +633,7 @@ class MacroEditGui {
             expanded := this._catExpand.Get(cat.name, true)
             arrow := expanded ? Chr(0x25BE) : Chr(0x25B8)   ; ▾ / ▸
             panel.Add("Button").Name("CatToggle_" idx).Content(arrow " " GetLang(cat.name))
-                .HorizontalAlignment("Stretch").Height(28).Background("Transparent").BorderThickness("0")
+                .HorizontalAlignment("Stretch").Height(UILayout.CtrlH.RowSm).Background("Transparent").BorderThickness("0")
                 .Cursor("Hand").HorizontalContentAlignment("Left").FontSize(12).FontWeight("SemiBold")
                 .Foreground("{DynamicResource TextMain}").Margin("0,6,0,0").Padding("6,0")
             catPanel := panel.Add("StackPanel").Name("CatPanel_" idx).Visibility(expanded ? "Visible" : "Collapsed")
@@ -681,12 +681,12 @@ class MacroEditGui {
     }
 
     _BuildAndShow(CommandStr, ShowSaveBtn) {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         this.Gui := MacroEditGuiFacade(this)
         title := this.ParentTile GetLang("宏指令编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -694,15 +694,15 @@ class MacroEditGui {
         chrome := XAMLHost.AddTitleBarChrome(main, title)
         BtnGroup := chrome.Btns
         ; §8 帮助/视频按钮（占位）：帮助打开指令手册，视频提示制作中（文档/视频完成后按指令跳转）
-        helpBtn := BtnGroup.Add("Button").Name("BtnCmdHelp").WindowChrome_IsHitTestVisibleInChrome("True").Width(34).Height(30).MinHeight(30).Background("Transparent").Foreground("{DynamicResource TitleBarForeground}").BorderThickness(0).ToolTip(GetLang("指令手册"))
+        helpBtn := BtnGroup.Add("Button").Name("BtnCmdHelp").WindowChrome_IsHitTestVisibleInChrome("True").Width(34).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Background("Transparent").Foreground("{DynamicResource TitleBarForeground}").BorderThickness(0).ToolTip(GetLang("指令手册"))
         helpBtn.Add("TextBlock").Text(Chr(0xE946)).FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(10).VerticalAlignment("Center").HorizontalAlignment("Center")
-        videoBtn := BtnGroup.Add("Button").Name("BtnCmdVideo").WindowChrome_IsHitTestVisibleInChrome("True").Width(34).Height(30).MinHeight(30).Background("Transparent").Foreground("{DynamicResource TitleBarForeground}").BorderThickness(0).ToolTip(GetLang("指令视频"))
+        videoBtn := BtnGroup.Add("Button").Name("BtnCmdVideo").WindowChrome_IsHitTestVisibleInChrome("True").Width(34).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Background("Transparent").Foreground("{DynamicResource TitleBarForeground}").BorderThickness(0).ToolTip(GetLang("指令视频"))
         videoBtn.Add("TextBlock").Text(Chr(0xE714)).FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(10).VerticalAlignment("Center").HorizontalAlignment("Center")
         XAMLHost.AddTitleCloseBtn(BtnGroup, "BtnClosePanel", titleHeight)
 
         ; === 主体 ===
         body := main.Add("Grid").Grid_Row(1)
-        body.Rows("30", "*")
+        body.Rows("Auto", "*")   ; 菜单栏行 Auto：定高 30 在大字号下溢出压到内容区
 
         ; 菜单栏：按钮 + ContextMenu（桥接有成熟先例 MG_CM，Menu 控件本桥接未验证过）
         menuBar := body.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").Margin("2,2,0,0").Background("{DynamicResource BgColor}")
@@ -759,11 +759,14 @@ class MacroEditGui {
         blankCtx.Add("MenuItem").Name("MenuBlankPasteCmd").Header(GetLang("粘贴"))
 
         content := body.Add("Grid").Grid_Row(1)
-        content.Cols("210", "*")
-        content.Rows("42", "30", "*", "48")
+        ; 左列 Auto + GroupBox MinWidth 兜底（同主界面左栏模式）：
+        ; 小字号保底 SU(210) 比例宽，大字号内容放不下按最宽子元素自然撑宽、往右挤指令区
+        content.Cols("Auto", "*")
+        content.Rows("Auto", "Auto", "*", "Auto")
 
         ; 左侧指令面板（§13：按类型分类 + 收藏星标 + 滚动条 + 展开状态记忆）
-        left := content.Add("GroupBox").Grid_Column(0).Grid_RowSpan(4).Header(GetLang("指令选项")).Margin("5,4,2,4")
+        ; MinWidth 兜底 + 内容撑宽（Auto 列），同主界面左栏
+        left := content.Add("GroupBox").Grid_Column(0).Grid_RowSpan(4).MinWidth(UILayout.SU(210)).Header(GetLang("指令选项")).Margin("5,4,2,4")
             .BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1").Foreground("{DynamicResource TextMain}")
         this._BuildCmdPanel(left)
 
@@ -772,12 +775,12 @@ class MacroEditGui {
         toolRow.Cols("*", "Auto")
         leftStack := toolRow.Add("StackPanel").Grid_Column(0).Orientation("Horizontal")
         leftStack.Add("TextBlock").Text(GetLang("编辑模式：")).VerticalAlignment("Center")
-        combo := leftStack.Add("ComboBox").Name("EditModeCombo").Width(86).Height(26).MinHeight(26).SelectedIndex("0").Margin("4,0")
+        combo := leftStack.Add("ComboBox").Name("EditModeCombo").MinWidth(UILayout.SU(86)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).SelectedIndex("0").Margin("4,0")
         combo.Add("ComboBoxItem").Content(GetLang("逻辑树")).Tag("1")
         combo.Add("ComboBoxItem").Content(GetLang("文本")).Tag("2")
         leftStack.Add("CheckBox").Name("RecordTog").Content(GetLang("指令录制")).VerticalAlignment("Center").Margin("12,0,0,0")
         leftStack.Add("TextBlock").Name("RecordHotkeyText").Text(FormatHotkeyDisplay(MainSoftData.ToolRecordMacroHotKey)).Opacity("0.6").VerticalAlignment("Center").Margin("6,0,0,0")
-        toolRow.Add("Button").Grid_Column(1).Name("BtnGraphNode").Content(GetLang("图形节点")).Height(28).MinHeight(28).Padding("10,3").Margin("6,0,0,0")
+        toolRow.Add("Button").Grid_Column(1).Name("BtnGraphNode").Content(GetLang("图形节点")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("10,3").Margin("6,0,0,0")
 
         ; 当前宏指令行
         row1 := content.Add("StackPanel").Grid_Column(1).Grid_Row(1).Orientation("Horizontal").Margin("10,4,10,0")
@@ -807,24 +810,31 @@ class MacroEditGui {
             .Foreground("{DynamicResource TextMain}").FontSize("12")
         view.Add("TextBox").Name("MacroText").AcceptsReturn("True").FontSize("12").Visibility("Collapsed")
             .VerticalContentAlignment("Top")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .ScrollViewer_HorizontalScrollBarVisibility("Auto").ScrollViewer_VerticalScrollBarVisibility("Auto")
 
-        ; 底部按钮
+        ; 底部按钮（MinWidth 字号化：内容撑开 + 底线对齐）
         bottom := content.Add("StackPanel").Grid_Column(1).Grid_Row(3).Orientation("Horizontal").Margin("10,6,10,0").HorizontalAlignment("Center")
-        bottom.Add("Button").Name("BtnUndo").Content(GetLang("撤销")).Width(80).Height(32).MinHeight(32).Margin("4,0").IsEnabled("False")
-        bottom.Add("Button").Name("BtnRedo").Content(GetLang("重做")).Width(80).Height(32).MinHeight(32).Margin("4,0").IsEnabled("False")
-        bottom.Add("Button").Name("BtnBack").Content(GetLang("退格")).Width(80).Height(32).MinHeight(32).Margin("4,0")
-        bottom.Add("Button").Name("BtnClear").Content(GetLang("清空指令")).Width(80).Height(32).MinHeight(32).Margin("4,0")
-        bottom.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(80).Height(32).MinHeight(32).Margin("4,0")
-        bottom.Add("Button").Name("SaveBtn").Content(GetLang("应用并保存")).Width(80).Height(32).MinHeight(32).Margin("4,0")
+        bottom.Add("Button").Name("BtnUndo").Content(GetLang("撤销")).MinWidth(UILayout.SU(80)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").IsEnabled("False")
+        bottom.Add("Button").Name("BtnRedo").Content(GetLang("重做")).MinWidth(UILayout.SU(80)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").IsEnabled("False")
+        bottom.Add("Button").Name("BtnBack").Content(GetLang("退格")).MinWidth(UILayout.SU(80)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0")
+        bottom.Add("Button").Name("BtnClear").Content(GetLang("清空指令")).MinWidth(UILayout.SU(80)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0")
+        bottom.Add("Button").Name("BtnOk").Content(GetLang("确定")).MinWidth(UILayout.SU(80)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0")
+        bottom.Add("Button").Name("SaveBtn").Content(GetLang("应用并保存")).MinWidth(UILayout.SU(80)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
+        tmp := StrReplace(tmp, "%ResizeMode%", "CanResize")   ; 允许拖边拉伸（引擎默认 NoResize，WindowChrome 已有 6px ResizeBorder）
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="945" Height="570" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        ; 窗口尺寸按实际字号比例缩放（无钳；屏幕工作区封顶防超屏）——
+        ; S() 的 0.8~1.6 钳对字号 30~40 远不够，窗口小于内容会整体裁切
+        fsRatio := UILayout.StructScaleU()
+        dpiScale := DllCall("GetDpiForSystem", "UInt") / 96.0
+        waW := DllCall("user32\GetSystemMetrics", "Int", 16) / dpiScale   ; SM_CXFULLSCREEN 工作区 DIP
+        waH := DllCall("user32\GetSystemMetrics", "Int", 17) / dpiScale
+        winW := Min(UILayout.SU(945), Round(waW - 16))
+        winH := Min(UILayout.SU(570), Round(waH - 16))
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' winW '" Height="' winH '" Tag="NoViewbox" Opacity="0"')
         groupBoxStyle := '<Style TargetType="GroupBox"><Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{DynamicResource TextMain}"/></Style>'
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', groupBoxStyle)
 

@@ -172,7 +172,7 @@ class XAMLHost {
         if (InStr(xaml, "%Height%"))
             xaml := StrReplace(xaml, "%Height%", "700")
         if (InStr(xaml, "%ResizeMode%"))
-            xaml := StrReplace(xaml, "%ResizeMode%", "CanResize")
+            xaml := StrReplace(xaml, "%ResizeMode%", "NoResize")
         if (InStr(xaml, "%FontSize%"))
             xaml := StrReplace(xaml, "%FontSize%", String(XAMLHost.GetDesignFontSize()))
 
@@ -409,7 +409,8 @@ class XAMLHost {
         return chrome
     }
 
-    ; Popup/ContextMenu 脱离 Viewbox：字号 = 主题字号 × 主窗 Viewbox，视觉上才和界面正文一致
+    ; Popup/ContextMenu 字号：主题字号 × 主窗缩放系数。主窗口 NoViewbox 后系数恒为 1
+    ; （见 GetMainViewboxScale），即纯主题字号；仅 Viewbox 缩放型窗口才可能 >1
     static PopupFontSize() {
         theme := XAMLHost.GetThemeFontSize()
         scale := XAMLHost.GetMainViewboxScale()
@@ -462,11 +463,18 @@ class XAMLHost {
         XAML_FontSizeDelta := Integer(MainSoftData.FontSize) - base
     }
 
-    ; 主界面根内容按 1400×787 设计，引擎 Viewbox 按窗口实际尺寸等比缩放。
-    ; 其它窗口若要和设置页签「看起来一样大」，窗口尺寸 = 设计尺寸 × 该系数。
+    ; 主窗口缩放系数：主窗口 Viewbox 时代按 1400×787 设计等比缩放；NoViewbox 后恒为 1。
+    ; 仅剩语义：Viewbox 缩放型子窗口的视觉比例基准（历史机制保留）。
     static GetMainViewboxScale() {
         designW := 1400, designH := 787
         scale := 1.0
+        ; 主窗口已是真实弹性布局（Tag="NoViewbox"）：主窗尺寸反映用户拉伸而非内容缩放，
+        ; 弹窗视觉缩放与菜单字号不再跟随主窗尺寸（字号只由主题字号决定，桌面范式）
+        try {
+            if (IsSet(MyMainWin) && IsObject(MyMainWin) && IsObject(MyMainWin.ui)
+                && MyMainWin.ui.HasProp("xaml") && InStr(MyMainWin.ui.xaml, 'Tag="NoViewbox"'))
+                return 1.0
+        }
         try {
             hwnd := 0
             if (IsSet(MyMainWin) && IsObject(MyMainWin) && IsObject(MyMainWin.ui) && MyMainWin.ui.HasProp("wpfHwnd"))
@@ -498,6 +506,15 @@ class XAMLHost {
         if (!RegExMatch(rest, "i)<(Grid|DockPanel|StackPanel|Border|Canvas)\b([^>]*)>", &m))
             return false
         return InStr(m[2], "Width=")
+    }
+
+    ; 统一窗口尺寸/标题注入入口（统一UI管理器设计 §二）：消除各窗口对模板锚点
+    ; 'Width="940" Height="700"' 的散落 StrReplace。title 由调用方完成 XML 转义。
+    static SetWindowSize(&xaml, w, h, title := "") {
+        attr := 'Width="' w '" Height="' h '"'
+        if (title != "")
+            attr .= ' Title="' title '"'
+        xaml := StrReplace(xaml, 'Width="940" Height="700"', attr ' Opacity="0"')
     }
 
     ; 子窗口只跟主界面 Viewbox 比例，不因主题字号改变宽高。
@@ -2815,6 +2832,28 @@ XAML_TEMPLATE := '
             <Thickness x:Key="WindowBorderThickness">0</Thickness>
             <SolidColorBrush x:Key="WindowBorderBrush" Color="Transparent" />
             <sys:Double x:Key="TitleBarGradientOpacity">0</sys:Double>
+            <!-- 隐式输入控件样式（P1 样式下沉）：值与存量显式四件套逐一相同，显式设置仍优先；暗色由运行期资源刷新自动跟随 -->
+            <Style TargetType="TextBox">
+                <Setter Property="Background" Value="{DynamicResource InputBg}" />
+                <Setter Property="Foreground" Value="{DynamicResource InputText}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource InputStroke}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Padding" Value="4,0" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+            <Style TargetType="ComboBox">
+                <Setter Property="Background" Value="{DynamicResource InputBg}" />
+                <Setter Property="Foreground" Value="{DynamicResource InputText}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource InputStroke}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
+            <!-- 键控版：显式 .Style("{DynamicResource InputBoxStyle}") 场景（TextBox/ComboBox 通用） -->
+            <Style x:Key="InputBoxStyle" TargetType="Control">
+                <Setter Property="Background" Value="{DynamicResource InputBg}" />
+                <Setter Property="Foreground" Value="{DynamicResource InputText}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource InputStroke}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
             %resources%
         </Window.Resources>
     

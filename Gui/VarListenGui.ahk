@@ -83,7 +83,7 @@ class VarListenGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("变量监视器")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         this._btnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Opacity" Value="0.85"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
 
         ; 配置/WinGetPos 为物理像素，XAML 宽高为 DIP
@@ -116,7 +116,7 @@ class VarListenGui {
         listGrid.IsSharedSizeScope("True")
 
         ; 表头：变量名/类型/值，列间插入 GridSplitter 以便拖动调整列宽
-        header := listGrid.Add("Grid").Grid_Row(0).Height(28).Background("{DynamicResource TitleBarColor}")
+        header := listGrid.Add("Grid").Grid_Row(0).Height(UILayout.CtrlH.RowSm).Background("{DynamicResource TitleBarColor}")
         hColDefs := header.Add("Grid.ColumnDefinitions")
         hColDefs.Add("ColumnDefinition").Name("VarHeaderCol0").Width("120")
         hColDefs.Add("ColumnDefinition").Width("7")
@@ -166,7 +166,6 @@ class VarListenGui {
                 Format('Left="{}" Top="{}" WindowStartupLocation="Manual"', PhysToDip(this._initX), PhysToDip(this._initY)))
         }
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%',
             '<CornerRadius x:Key="PanelRadius">8</CornerRadius><SolidColorBrush x:Key="ListAltBg" Color="#40000000" />')
 

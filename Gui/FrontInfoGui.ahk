@@ -67,7 +67,7 @@ class FrontInfoGui {
     }
 
     ShowGui(winInfoCon, isFront := false) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -82,11 +82,11 @@ class FrontInfoGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := GetLang("前台信息编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "28", "Auto")
@@ -131,9 +131,8 @@ class FrontInfoGui {
         body.Cols("Auto", "*")
         body.Rows("Auto", "Auto", "Auto", "Auto", "Auto", "Auto", "Auto", "Auto", "Auto")
         body.Add("TextBlock").Text(GetLang("当前鼠标下窗口信息：")).Grid_Row(0).Grid_ColumnSpan(2).VerticalAlignment("Center")
-        body.Add("TextBox").Name("CurWinInfoCon").Grid_Row(1).Grid_ColumnSpan(2).Height(97).Margin("0,2,0,4").IsReadOnly("True")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
+        body.Add("TextBox").Name("CurWinInfoCon").Grid_Row(1).Grid_ColumnSpan(2).Height(UILayout.S(97)).Margin("0,2,0,4").IsReadOnly("True")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
             .AcceptsReturn("True").TextWrapping("NoWrap")
             .HorizontalScrollBarVisibility("Auto").VerticalScrollBarVisibility("Disabled")
 
@@ -142,8 +141,8 @@ class FrontInfoGui {
         varRow := body.Add("StackPanel").Grid_Row(4).Grid_Column(1).Orientation("Horizontal")
             .HorizontalAlignment("Right").Margin("0,4,0,0")
         varRow.Add("TextBlock").Name("VariTipCon").Text(GetLang("变量:")).VerticalAlignment("Center")
-        varRow.Add("ComboBox").Name("VariCon").Width(130).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-        addVarBtn := varRow.Add("Button").Name("BtnAddVar").Content(GetLang("追加变量值")).Width(110).Height(26).MinHeight(26).Padding("12,0").Margin("6,0,0,0").Cursor("Hand")
+        varRow.Add("ComboBox").Name("VariCon").Width(UILayout.S(130)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+        addVarBtn := varRow.Add("Button").Name("BtnAddVar").Content(GetLang("追加变量值")).Width(UILayout.S(110)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Padding("12,0").Margin("6,0,0,0").Cursor("Hand")
             .Background("{DynamicResource ControlBg}").BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1.25")
             .Foreground("{DynamicResource TextMain}")
         addVarBtn.InjectResources(toolHover)
@@ -152,7 +151,7 @@ class FrontInfoGui {
         this._AddInfoRow(body, 7, 5, GetLang("进程名"), false)
         btnRow := body.Add("StackPanel").Grid_Row(8).Grid_ColumnSpan(2).Orientation("Horizontal")
             .HorizontalAlignment("Center").Margin("0,10,0,4")
-        sureBtn := btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(80).Height(32).MinHeight(32).Cursor("Hand")
+        sureBtn := btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(UILayout.S(80)).Height(UILayout.S(32)).MinHeight(32).Cursor("Hand")
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1").FontSize(13).FontWeight("Bold")
         sureBtn.InjectResources(okStyle)
@@ -160,8 +159,7 @@ class FrontInfoGui {
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="460" Height="425" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(460) '" SizeToContent="Height" Opacity="0"')
         pinStyle := '<Style x:Key="FrontPinBtn" TargetType="Button">'
             . '<Setter Property="Width" Value="30"/><Setter Property="Height" Value="30"/><Setter Property="MinHeight" Value="30"/>'
             . '<Setter Property="Padding" Value="0"/><Setter Property="Cursor" Value="Hand"/>'
@@ -205,10 +203,10 @@ class FrontInfoGui {
             .VerticalAlignment("Center").Margin("0,4,8,0")
         box := parent.Add("Border").Grid_Row(row).Grid_Column(1).Margin("0,4,0,0")
             .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}")
-            .BorderThickness("1").CornerRadius("3").Height(28).MinHeight(28).Padding("0")
+            .BorderThickness("1").CornerRadius("3").Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("0")
             .SnapsToDevicePixels("True")
         box.Add("TextBox").Name("InfoText" idx)
-            .Height(26).MinHeight(26).BorderThickness("0").Background("Transparent")
+            .Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).BorderThickness("0").Background("Transparent")
             .Foreground("{DynamicResource InputText}").VerticalContentAlignment("Center").Padding("4,1")
             .HorizontalScrollBarVisibility("Disabled").VerticalScrollBarVisibility("Disabled")
     }

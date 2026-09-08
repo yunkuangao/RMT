@@ -47,7 +47,7 @@ class CompareGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)   ; XAML 窗口不支持隐藏复用：关旧重建
             this._CloseWindow()
         this._BuildAndShow()
@@ -62,11 +62,11 @@ class CompareGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("如果编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "30", "30", "34", "34", "34", "34", "82", "30", "92", "44")
@@ -78,21 +78,19 @@ class CompareGui {
         top := main.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").Margin("10,4")
         top.Add("TextBlock").Text(GetLang("快捷方式：")).VerticalAlignment("Center")
         top.Add("TextBlock").Text("!l").VerticalAlignment("Center").Margin("4,0,0,0").Opacity("0.6")
-        top.Add("Button").Name("BtnTrigger").Content(GetLang("执行指令")).Width(80).Height(26).MinHeight(26).Margin("8,0,0,0").Cursor("Hand")
+        top.Add("Button").Name("BtnTrigger").Content(GetLang("执行指令")).Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").Cursor("Hand")
         top.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center").Margin("12,0,0,0")
-        top.Add("TextBox").Name("RemarkCon").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
+        top.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
 
         ; === 逻辑关系行 ===
         logicRow := main.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").Margin("10,2")
         logicRow.Add("TextBlock").Text(GetLang("逻辑关系：")).VerticalAlignment("Center")
-        logicCon := logicRow.Add("ComboBox").Name("LogicalTypeCon").Width(70).Height(26).MinHeight(26).Margin("4,0,0,0").SelectedIndex("0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        logicCon := logicRow.Add("ComboBox").Name("LogicalTypeCon").Width(UILayout.S(70)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").SelectedIndex("0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["且", "或"])
             logicCon.Add("ComboBoxItem").Content(t)
-        logicRow.Add("Button").Name("BtnTypeHelp").Content("?").Width(30).Height(26).MinHeight(26).Margin("8,0,0,0").Cursor("Hand")
+        logicRow.Add("Button").Name("BtnTypeHelp").Content("?").Width(30).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1").Padding("0")
 
@@ -107,36 +105,32 @@ class CompareGui {
         foundCol := macroRow.Add("StackPanel").Grid_Column(0).Orientation("Vertical").Margin("0,0,8,0")
         ft := foundCol.Add("StackPanel").Orientation("Horizontal")
         ft.Add("TextBlock").Text(GetLang("真-分支指令:（可选）")).VerticalAlignment("Center")
-        ft.Add("Button").Name("BtnTrueEdit").Content(GetLang("编辑")).Height(24).MinHeight(24).Margin("8,0,0,0").Cursor("Hand")
-        foundCol.Add("TextBox").Name("TrueMacroCon").Height(48).Margin("0,2,0,0").AcceptsReturn("True").TextWrapping("Wrap")
+        ft.Add("Button").Name("BtnTrueEdit").Content(GetLang("编辑")).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("8,0,0,0").Cursor("Hand")
+        foundCol.Add("TextBox").Name("TrueMacroCon").Height(UILayout.S(48)).Margin("0,2,0,0").AcceptsReturn("True").TextWrapping("Wrap")
             .VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         unfoundCol := macroRow.Add("StackPanel").Grid_Column(1).Orientation("Vertical").Margin("8,0,0,0")
         ft2 := unfoundCol.Add("StackPanel").Orientation("Horizontal")
         ft2.Add("TextBlock").Text(GetLang("假-分支指令:（可选）")).VerticalAlignment("Center")
-        ft2.Add("Button").Name("BtnFalseEdit").Content(GetLang("编辑")).Height(24).MinHeight(24).Margin("8,0,0,0").Cursor("Hand")
-        unfoundCol.Add("TextBox").Name("FalseMacroCon").Height(48).Margin("0,2,0,0").AcceptsReturn("True").TextWrapping("Wrap")
+        ft2.Add("Button").Name("BtnFalseEdit").Content(GetLang("编辑")).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("8,0,0,0").Cursor("Hand")
+        unfoundCol.Add("TextBox").Name("FalseMacroCon").Height(UILayout.S(48)).Margin("0,2,0,0").AcceptsReturn("True").TextWrapping("Wrap")
             .VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; === 真/假 流程控制 ===
         ctrlRow := main.Add("Grid").Grid_Row(8).Margin("10,2,10,0")
         ctrlRow.Cols("*", "*")
         lc := ctrlRow.Add("StackPanel").Grid_Column(0).Orientation("Horizontal").VerticalAlignment("Center")
         lc.Add("TextBlock").Text(GetLang("真-流程控制：")).VerticalAlignment("Center")
-        tcc := lc.Add("ComboBox").Name("TrueControlCon").Width(125).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        tcc := lc.Add("ComboBox").Name("TrueControlCon").Width(UILayout.S(125)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["无", "循环-跳过本轮", "循环-跳出", "分支-跳出"])
             tcc.Add("ComboBoxItem").Content(t)
         rc := ctrlRow.Add("StackPanel").Grid_Column(1).Orientation("Horizontal").VerticalAlignment("Center")
         rc.Add("TextBlock").Text(GetLang("假-流程控制：")).VerticalAlignment("Center")
-        fcc := rc.Add("ComboBox").Name("FalseControlCon").Width(125).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        fcc := rc.Add("ComboBox").Name("FalseControlCon").Width(UILayout.S(125)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["无", "循环-跳过本轮", "循环-跳出", "分支-跳出"])
             fcc.Add("ComboBoxItem").Content(t)
 
@@ -151,27 +145,23 @@ class CompareGui {
         rgGrid.Add("TextBlock").Name("ResultLabelTrueCon").Text(GetLang("真值")).Grid_Row(0).Grid_Column(2).VerticalAlignment("Center").Margin("10,0,0,0")
         rgGrid.Add("TextBlock").Name("ResultLabelFalseCon").Text(GetLang("假值")).Grid_Row(0).Grid_Column(3).VerticalAlignment("Center").Margin("10,0,0,0")
         rgGrid.Add("CheckBox").Name("SaveToggleCon").Grid_Row(1).Grid_Column(0).VerticalAlignment("Center")
-        rgGrid.Add("ComboBox").Name("SaveNameCon").Width(120).Height(26).MinHeight(26).Grid_Row(1).Grid_Column(1).Margin("4,0,0,0").IsEditable("True")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
-        rgGrid.Add("TextBox").Name("TrueValueCon").Width(70).Height(26).MinHeight(26).Grid_Row(1).Grid_Column(2).Margin("10,0,0,0")
+        rgGrid.Add("ComboBox").Name("SaveNameCon").Width(UILayout.S(120)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Grid_Row(1).Grid_Column(1).Margin("4,0,0,0").IsEditable("True")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
+        rgGrid.Add("TextBox").Name("TrueValueCon").Width(UILayout.S(70)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Grid_Row(1).Grid_Column(2).Margin("10,0,0,0")
             .VerticalContentAlignment("Center").TextAlignment("Center").FontSize("11").Padding("4,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
-        rgGrid.Add("TextBox").Name("FalseValueCon").Width(70).Height(26).MinHeight(26).Grid_Row(1).Grid_Column(3).Margin("10,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}")
+        rgGrid.Add("TextBox").Name("FalseValueCon").Width(UILayout.S(70)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Grid_Row(1).Grid_Column(3).Margin("10,0,0,0")
             .VerticalContentAlignment("Center").TextAlignment("Center").FontSize("11").Padding("4,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; === 底部按钮 ===
         btnRow := main.Add("StackPanel").Grid_Row(10).Orientation("Horizontal").HorizontalAlignment("Right").VerticalAlignment("Center").Margin("0,0,18,0")
-        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(90).Height(32).MinHeight(32).Cursor("Hand")
+        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(UILayout.S(90)).Height(UILayout.S(32)).MinHeight(32).Cursor("Hand")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="500" Height="480" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(500) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===
@@ -194,17 +184,14 @@ class CompareGui {
     _AddCompareRow(parent, rowIdx, idx) {
         row := parent.Add("StackPanel").Grid_Row(rowIdx).Orientation("Horizontal").VerticalAlignment("Center").Margin("8,0,0,0")
         row.Add("CheckBox").Name(this.ToggleConArr[idx]).Width(28).VerticalAlignment("Center").IsChecked("True")
-        row.Add("ComboBox").Name(this.NameConArr[idx]).Width(140).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
-        cc := row.Add("ComboBox").Name(this.CompareTypeConArr[idx]).Width(90).Height(26).MinHeight(26).Margin("8,0,0,0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        row.Add("ComboBox").Name(this.NameConArr[idx]).Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
+        cc := row.Add("ComboBox").Name(this.CompareTypeConArr[idx]).Width(UILayout.S(90)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["大于", "大于等于", "等于", "小于等于", "小于", "字符包含", "变量存在", "正则匹配"])
             cc.Add("ComboBoxItem").Content(t)
-        row.Add("ComboBox").Name(this.VariableConArr[idx]).Width(140).Height(26).MinHeight(26).Margin("8,0,0,0").IsEditable("True")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        row.Add("ComboBox").Name(this.VariableConArr[idx]).Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").IsEditable("True")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
     }
 
     ; ---------------- 数据读写辅助 ----------------

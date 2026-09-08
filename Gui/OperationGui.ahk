@@ -22,7 +22,7 @@ class OperationGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -67,11 +67,11 @@ class OperationGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("运算编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -82,12 +82,12 @@ class OperationGui {
         ; === 内容 ===
         body := main.Add("Grid").Grid_Row(1).Margin("10,8")
         body.Rows("32", "26", "185", "34")
-        body.Cols("40", "290", "55", "120", "36")
+        body.Cols("40", UILayout.S(290), UILayout.S(55), UILayout.S(120), "36")
 
         ; 行0：备注
         row0 := body.Add("StackPanel").Grid_Row(0).Grid_ColumnSpan(5).Orientation("Horizontal").VerticalAlignment("Center")
         row0.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center")
-        row0.Add("TextBox").Name("RemarkCon").Width(150).Height(24).MinHeight(24).Margin("4,0,0,0")
+        row0.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0")
 
         ; 行1：表头
         body.Add("TextBlock").Grid_Row(1).Grid_Column(0).Text(GetLang("开关")).VerticalAlignment("Center")
@@ -102,14 +102,13 @@ class OperationGui {
 
         ; 行3：添加 + 确定
         btnRow := body.Add("StackPanel").Grid_Row(3).Grid_ColumnSpan(5).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnAddOp").Content(GetLang("添加运算")).Width(90).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36).Margin("8,0")
+        btnRow.Add("Button").Name("BtnAddOp").Content(GetLang("添加运算")).Width(UILayout.S(90)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36).Margin("8,0")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="620" Height="380" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(620) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

@@ -111,7 +111,7 @@ class SttGui {
         global MainSoftData
         this.hasGui := true
         title := GetLang("语音转文字")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -131,16 +131,16 @@ class SttGui {
         ; 按钮行（置顶开关靠右）
         btnRow := body.Add("Grid").Grid_Row(1)
         btnRow.Cols("Auto", "Auto", "Auto", "Auto", "*", "Auto")
-        btnRow.Add("Button").Grid_Column(0).Name("BtnStart").Content(GetLang("开始")).Width(80).Height(32).MinHeight(32).Margin("0,4,6,4")
-        btnRow.Add("Button").Grid_Column(1).Name("BtnStop").Content(GetLang("停止")).Width(80).Height(32).MinHeight(32).Margin("0,4,6,4")
-        btnRow.Add("Button").Grid_Column(2).Name("BtnCopy").Content(GetLang("复制")).Width(80).Height(32).MinHeight(32).Margin("0,4,6,4")
-        btnRow.Add("Button").Grid_Column(3).Name("BtnClear").Content(GetLang("清空")).Width(80).Height(32).MinHeight(32).Margin("0,4,6,4")
+        btnRow.Add("Button").Grid_Column(0).Name("BtnStart").Content(GetLang("开始")).Width(80).Height(UILayout.S(32)).MinHeight(32).Margin("0,4,6,4")
+        btnRow.Add("Button").Grid_Column(1).Name("BtnStop").Content(GetLang("停止")).Width(80).Height(UILayout.S(32)).MinHeight(32).Margin("0,4,6,4")
+        btnRow.Add("Button").Grid_Column(2).Name("BtnCopy").Content(GetLang("复制")).Width(80).Height(UILayout.S(32)).MinHeight(32).Margin("0,4,6,4")
+        btnRow.Add("Button").Grid_Column(3).Name("BtnClear").Content(GetLang("清空")).Width(80).Height(UILayout.S(32)).MinHeight(32).Margin("0,4,6,4")
         btnRow.Add("CheckBox").Grid_Column(5).Name("TopCon").Content(GetLang("窗口置顶"))
             .VerticalAlignment("Center").Margin("0,0,0,0").Foreground("{DynamicResource TextMain}")
 
         ; 模型缺失时的下载按钮（默认隐藏）
         body.Add("Button").Grid_Row(2).Name("BtnDownload").Content(GetLang("下载识别模型"))
-            .Width(180).Height(32).MinHeight(32).HorizontalAlignment("Left").Margin("0,4,0,4").Visibility("Collapsed")
+            .Width(180).Height(UILayout.S(32)).MinHeight(32).HorizontalAlignment("Left").Margin("0,4,0,4").Visibility("Collapsed")
 
         ; 结果标题
         body.Add("TextBlock").Grid_Row(3).Text(GetLang("识别结果：")).Margin("0,8,0,4").VerticalAlignment("Center")
@@ -148,8 +148,7 @@ class SttGui {
         ; 结果编辑框（只读，可全选复制）
         body.Add("TextBox").Grid_Row(4).Name("EdResult").TextWrapping("Wrap").IsReadOnly("True")
             .VerticalContentAlignment("Top").Margin("0,0,0,4")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .ScrollViewer_VerticalScrollBarVisibility("Auto")
 
         ; 提示文案
@@ -161,7 +160,6 @@ class SttGui {
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", ownerHwnd)
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="580" Height="440" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

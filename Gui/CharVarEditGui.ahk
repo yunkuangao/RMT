@@ -46,7 +46,7 @@ class CharVarEditGui {
         this._closed := false
         title := this.ParentTile GetLang("字符变量编辑")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -62,31 +62,29 @@ class CharVarEditGui {
         ; 行1：输出内容
         body.Add("TextBlock").Grid_Row(1).Grid_Column(0).Text(GetLang("字符内容：")).VerticalAlignment("Top").Margin("0,4,0,0")
         body.Add("TextBox").Grid_Row(1).Grid_Column(1).Grid_ColumnSpan(3).Name("TextCon").AcceptsReturn("True").TextWrapping("Wrap")
-            .VerticalContentAlignment("Top").Margin("4,2,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .VerticalContentAlignment("Top").Margin("4,2,0,0").MinHeight(96)
+            .Style("{DynamicResource InputBoxStyle}")
             .ScrollViewer_VerticalScrollBarVisibility("Auto")
 
         ; 行2：变量数组（追加名/追加值，同输出指令）
         row3 := body.Add("StackPanel").Grid_Row(2).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center").Margin("0,4,0,0")
         row3.Add("TextBlock").Text(GetLang("变量数组：")).VerticalAlignment("Center")
-        vt := row3.Add("ComboBox").Name("VarTypeCombo").Width(80).Height(26).MinHeight(26).Margin("4,0,0,0")
+        vt := row3.Add("ComboBox").Name("VarTypeCombo").Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         vt.Add("ComboBoxItem").Content(GetLang("变量"))
         vt.Add("ComboBoxItem").Content(GetLang("数组"))
-        row3.Add("ComboBox").Name("VariCombo").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0")
-        row3.Add("Button").Name("BtnAddName").Content(GetLang("追加名")).Height(26).MinHeight(26).Margin("8,0,0,0")
-        row3.Add("Button").Name("BtnAddValue").Content(GetLang("追加值")).Height(26).MinHeight(26).Margin("4,0,0,0")
+        row3.Add("ComboBox").Name("VariCombo").Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+        row3.Add("Button").Name("BtnAddName").Content(GetLang("追加名")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0")
+        row3.Add("Button").Name("BtnAddValue").Content(GetLang("追加值")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
 
         ; 行3：确定/取消
         btnRow := body.Add("StackPanel").Grid_Row(3).Grid_ColumnSpan(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center").Margin("0,10,0,0")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("4,0")
-        btnRow.Add("Button").Name("BtnCancel").Content(GetLang("取消")).Width(80).Height(32).MinHeight(32).Margin("4,0")
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0")
+        btnRow.Add("Button").Name("BtnCancel").Content(GetLang("取消")).Width(UILayout.S(80)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="560" Height="230" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(560) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

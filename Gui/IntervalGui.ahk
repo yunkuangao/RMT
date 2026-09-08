@@ -18,7 +18,7 @@ class IntervalGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -63,11 +63,11 @@ class IntervalGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("间隔编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -81,69 +81,65 @@ class IntervalGui {
         ; ---- Tab1 常规 ----
         ti1 := tc.Add("TabItem").Header(GetLang("常规"))
         body := ti1.Add("Grid").Margin("16,14,16,14")
-        body.Rows("34", "34", "34", "34", "*")
+        body.Rows("34", "34", "34", "Auto", "*")
         ; 备注（阶段5）：放选项卡第一个位置
         row0 := body.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").VerticalAlignment("Center")
-        row0.Add("TextBlock").Text(GetLang("备注：")).Width(92).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        row0.Add("TextBox").Name("RemarkCon").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0")
+        row0.Add("TextBlock").Text(GetLang("备注：")).Width(UILayout.S(92)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        row0.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
             .VerticalContentAlignment("Center").FontSize("11").Padding("4,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         row1 := body.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").VerticalAlignment("Center")
-        row1.Add("TextBlock").Text(GetLang("类型：")).Width(92).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        combo := row1.Add("ComboBox").Name("TypeCombo").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0").SelectedIndex("0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        row1.Add("TextBlock").Text(GetLang("类型：")).Width(UILayout.S(92)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        combo := row1.Add("ComboBox").Name("TypeCombo").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").SelectedIndex("0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         combo.Add("ComboBoxItem").Content(GetLang("固定")).Tag("1")
         combo.Add("ComboBoxItem").Content(GetLang("随机")).Tag("2")
 
         row2 := body.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").VerticalAlignment("Center")
-        row2.Add("TextBlock").Text(GetLang("时间(毫秒)：")).Width(92).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        row2.Add("ComboBox").Name("TimeVarCon1").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        row2.Add("TextBlock").Text(GetLang("时间(毫秒)：")).Width(UILayout.S(92)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        row2.Add("ComboBox").Name("TimeVarCon1").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
 
-        row3 := body.Add("StackPanel").Name("TimeRow2").Grid_Row(3).Orientation("Horizontal").VerticalAlignment("Center")
-        row3.Add("TextBlock").Text(GetLang("时间(毫秒)：")).Width(92).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        row3.Add("ComboBox").Name("TimeVarCon2").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        row3 := body.Add("StackPanel").Name("TimeRow2").Grid_Row(3).Orientation("Horizontal").VerticalAlignment("Center").Margin("0,4,0,4")
+        row3.Add("TextBlock").Text(GetLang("时间(毫秒)：")).Width(UILayout.S(92)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        row3.Add("ComboBox").Name("TimeVarCon2").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
 
         btnRow := body.Add("StackPanel").Grid_Row(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36)
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36)
 
         ; ---- Tab2 错误处理 ----
         ti2 := tc.Add("TabItem").Header(GetLang("错误处理"))
         body2 := ti2.Add("Grid").Margin("16,14,16,14")
-        body2.Rows("34", "34", "34", "*")
+        body2.Rows("34", "Auto", "Auto", "*")
         ehRow1 := body2.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").VerticalAlignment("Center")
-        ehRow1.Add("TextBlock").Text(GetLang("错误处理：")).Width(92).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        ehCombo := ehRow1.Add("ComboBox").Name("EHModeCombo").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0").SelectedIndex("0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        ehRow1.Add("TextBlock").Text(GetLang("错误处理：")).Width(UILayout.S(92)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        ehCombo := ehRow1.Add("ComboBox").Name("EHModeCombo").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").SelectedIndex("0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         ehCombo.Add("ComboBoxItem").Content(GetLang("停止运行")).Tag("stop")
         ehCombo.Add("ComboBoxItem").Content(GetLang("忽略错误并继续")).Tag("ignore")
         ehCombo.Add("ComboBoxItem").Content(GetLang("重试")).Tag("retry")
 
-        ehRow2 := body2.Add("StackPanel").Name("EHRetryRow").Grid_Row(1).Orientation("Horizontal").VerticalAlignment("Center")
-        ehRow2.Add("TextBlock").Text(GetLang("重试次数：")).Width(92).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        ehRow2.Add("TextBox").Name("EHRetryCount").Width(60).Height(26).MinHeight(26).Margin("4,0,0,0")
+        ehRow2 := body2.Add("StackPanel").Name("EHRetryRow").Grid_Row(1).Orientation("Horizontal").VerticalAlignment("Center").Margin("0,4,0,4")
+        ehRow2.Add("TextBlock").Text(GetLang("重试次数：")).Width(UILayout.S(92)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        ehRow2.Add("TextBox").Name("EHRetryCount").Width(UILayout.S(60)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
             .VerticalContentAlignment("Center").TextAlignment("Center").FontSize("11").Padding("4,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
-        ehRow3 := body2.Add("StackPanel").Name("EHIntervalRow").Grid_Row(2).Orientation("Horizontal").VerticalAlignment("Center")
-        ehRow3.Add("TextBlock").Text(GetLang("重试间隔(ms)：")).Width(92).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        ehRow3.Add("TextBox").Name("EHRetryInterval").Width(60).Height(26).MinHeight(26).Margin("4,0,0,0")
+        ehRow3 := body2.Add("StackPanel").Name("EHIntervalRow").Grid_Row(2).Orientation("Horizontal").VerticalAlignment("Center").Margin("0,4,0,4")
+        ehRow3.Add("TextBlock").Text(GetLang("重试间隔(ms)：")).Width(UILayout.S(92)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        ehRow3.Add("TextBox").Name("EHRetryInterval").Width(UILayout.S(60)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
             .VerticalContentAlignment("Center").TextAlignment("Center").FontSize("11").Padding("4,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ehBtnRow := body2.Add("StackPanel").Grid_Row(3).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        ehBtnRow.Add("Button").Name("BtnOk2").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36)
+        ehBtnRow.Add("Button").Name("BtnOk2").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="340" Height="330" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(340) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

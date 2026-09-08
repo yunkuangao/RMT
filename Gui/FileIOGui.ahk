@@ -30,7 +30,7 @@ class FileIOGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -76,11 +76,11 @@ class FileIOGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("文件读写编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -90,94 +90,94 @@ class FileIOGui {
 
         ; === 内容 ===
         body := main.Add("Grid").Grid_Row(1).Margin("10,6")
-        body.Rows("34", "34", "34", "34", "34", "34", "Auto", "Auto", "*")
-        body.Cols("90", "150", "90", "150")
+        body.Rows("34", "34", "34", "34", "Auto", "Auto", "Auto", "Auto", "*")
+        body.Cols(UILayout.S(90), UILayout.S(150), UILayout.S(90), UILayout.S(150))
 
         ; 行0：快捷方式
         row0 := body.Add("StackPanel").Grid_Row(0).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
         row0.Add("TextBlock").Text(GetLang("快捷方式：")).VerticalAlignment("Center")
-        row0.Add("TextBox").Width(60).Height(24).MinHeight(24).Margin("4,0,0,0").Text("!l").IsReadOnly("True")
-        row0.Add("Button").Name("BtnExecute").Content(GetLang("执行指令")).Height(26).MinHeight(26).Margin("10,0,0,0")
+        row0.Add("TextBox").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0").Text("!l").IsReadOnly("True")
+        row0.Add("Button").Name("BtnExecute").Content(GetLang("执行指令")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("10,0,0,0")
         row0.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center").Margin("14,0,0,0")
-        row0.Add("TextBox").Name("RemarkCon").Width(150).Height(24).MinHeight(24).Margin("4,0,0,0")
+        row0.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0")
 
         ; 行1：操作类型 + 文件编码
         body.Add("TextBlock").Grid_Row(1).Grid_Column(0).Text(GetLang("操作类型:")).VerticalAlignment("Center")
-        ot := body.Add("ComboBox").Grid_Row(1).Grid_Column(1).Name("OperTypeCombo").Height(26).MinHeight(26)
+        ot := body.Add("ComboBox").Grid_Row(1).Grid_Column(1).Name("OperTypeCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         for t in GetLangArr(["读取Excel", "写入Excel", "读取文本文件", "写入文本文件"])
             ot.Add("ComboBoxItem").Content(t)
         encRow := body.Add("StackPanel").Name("EncodingRow").Grid_Row(1).Grid_Column(2).Grid_ColumnSpan(2).Orientation("Horizontal").VerticalAlignment("Center")
         encRow.Add("TextBlock").Text(GetLang("文件编码:")).VerticalAlignment("Center")
-        encRow.Add("ComboBox").Name("EncodingCombo").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0")
+        encRow.Add("ComboBox").Name("EncodingCombo").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
 
         ; 行2：文件路径
         row2 := body.Add("StackPanel").Grid_Row(2).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
-        row2.Add("TextBlock").Text(GetLang("文件路径:")).VerticalAlignment("Center").Width(80)
-        row2.Add("ComboBox").Name("FilePathCombo").Width(320).Height(26).MinHeight(26).IsEditable("True")
-        row2.Add("Button").Name("BtnSelectFile").Content(GetLang("选择文件")).Height(26).MinHeight(26).Margin("6,0,0,0")
+        row2.Add("TextBlock").Text(GetLang("文件路径:")).VerticalAlignment("Center").Width(UILayout.S(80))
+        row2.Add("ComboBox").Name("FilePathCombo").Width(UILayout.S(320)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).IsEditable("True")
+        row2.Add("Button").Name("BtnSelectFile").Content(GetLang("选择文件")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,0")
 
         ; 行3：操作模式 + 行号
         body.Add("TextBlock").Grid_Row(3).Grid_Column(0).Text(GetLang("操作模式:")).VerticalAlignment("Center")
-        body.Add("ComboBox").Grid_Row(3).Grid_Column(1).Name("OperModeCombo").Height(26).MinHeight(26)
+        body.Add("ComboBox").Grid_Row(3).Grid_Column(1).Name("OperModeCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         textRow := body.Add("StackPanel").Name("TextRowRow").Grid_Row(3).Grid_Column(2).Grid_ColumnSpan(2).Orientation("Horizontal").VerticalAlignment("Center")
         textRow.Add("TextBlock").Text(GetLang("行号:")).VerticalAlignment("Center")
-        textRow.Add("ComboBox").Name("TextRowCombo").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        textRow.Add("ComboBox").Name("TextRowCombo").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
 
-        ; 行4：表名或序号 + 表格行号 + 表格列号
-        excelRow := body.Add("StackPanel").Name("ExcelRow").Grid_Row(4).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
-        excelRow.Add("TextBlock").Text(GetLang("表名或序号:")).VerticalAlignment("Center")
-        excelRow.Add("ComboBox").Name("NameOrSerialCombo").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-        excelRow.Add("TextBlock").Text(GetLang("表格行号:")).VerticalAlignment("Center").Margin("14,0,0,0")
-        excelRow.Add("ComboBox").Name("RowCombo").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-        excelRow.Add("TextBlock").Text(GetLang("表格列号:")).VerticalAlignment("Center").Margin("14,0,0,0")
-        excelRow.Add("ComboBox").Name("ColCombo").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        ; 行4：表名或序号 + 表格行号 + 表格列号（窄窗单行放不下，拆成两行 + Auto 行高）
+        excelRow := body.Add("StackPanel").Name("ExcelRow").Grid_Row(4).Grid_ColumnSpan(4).Orientation("Vertical").VerticalAlignment("Center").Margin("0,4,0,4")
+        excelLine1 := excelRow.Add("StackPanel").Orientation("Horizontal")
+        excelLine1.Add("TextBlock").Text(GetLang("表名或序号:")).VerticalAlignment("Center")
+        excelLine1.Add("ComboBox").Name("NameOrSerialCombo").Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+        excelLine1.Add("TextBlock").Text(GetLang("表格行号:")).VerticalAlignment("Center").Margin("14,0,0,0")
+        excelLine1.Add("ComboBox").Name("RowCombo").Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+        excelLine2 := excelRow.Add("StackPanel").Orientation("Horizontal").Margin("0,4,0,0")
+        excelLine2.Add("TextBlock").Text(GetLang("表格列号:")).VerticalAlignment("Center")
+        excelLine2.Add("ComboBox").Name("ColCombo").Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
 
         ; 行5：终止行号 + 终止列号
-        regionRow := body.Add("StackPanel").Name("RegionRow").Grid_Row(5).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
+        regionRow := body.Add("StackPanel").Name("RegionRow").Grid_Row(5).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center").Margin("0,4,0,4")
         regionRow.Add("TextBlock").Text(GetLang("终止行号:")).VerticalAlignment("Center")
-        regionRow.Add("ComboBox").Name("RowEndCombo").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        regionRow.Add("ComboBox").Name("RowEndCombo").Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
         regionRow.Add("TextBlock").Text(GetLang("终止列号:")).VerticalAlignment("Center").Margin("14,0,0,0")
-        regionRow.Add("ComboBox").Name("ColEndCombo").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        regionRow.Add("ComboBox").Name("ColEndCombo").Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
 
         ; 行6：结果保存 GroupBox
         resGroup := body.Add("GroupBox").Name("ResultGroup").Grid_Row(6).Grid_ColumnSpan(4).Header(GetLang("结果保存"))
             .Margin("0,2,0,2").BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1").Foreground("{DynamicResource TextMain}")
         res := resGroup.Add("StackPanel").Orientation("Horizontal").Margin("10,6")
         res.Add("TextBlock").Text(GetLang("结果：")).VerticalAlignment("Center")
-        st := res.Add("ComboBox").Name("SaveTypeCombo").Width(90).Height(26).MinHeight(26).Margin("4,0,0,0")
+        st := res.Add("ComboBox").Name("SaveTypeCombo").Width(UILayout.S(90)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         st.Add("ComboBoxItem").Content(GetLang("变量"))
         st.Add("ComboBoxItem").Content(GetLang("数组"))
-        res.Add("ComboBox").Name("SaveNameCombo").Width(150).Height(26).MinHeight(26).Margin("10,0,0,0").IsEditable("True")
+        res.Add("ComboBox").Name("SaveNameCombo").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("10,0,0,0").IsEditable("True")
 
         ; 行7：写入内容 / 写入数组
         writeRow := body.Add("StackPanel").Name("WriteContentRow").Grid_Row(7).Grid_ColumnSpan(4).Orientation("Vertical")
         w1 := writeRow.Add("StackPanel").Orientation("Horizontal")
         w1.Add("TextBlock").Text(GetLang("输出内容：")).VerticalAlignment("Top").Margin("0,16,0,0")
-        w1.Add("TextBox").Name("ContentCon").Width(370).Height(50).MinHeight(50).Margin("4,0,0,0").AcceptsReturn("True").TextWrapping("Wrap")
+        w1.Add("TextBox").Name("ContentCon").Width(UILayout.S(370)).Height(UILayout.S(50)).MinHeight(50).Margin("4,0,0,0").AcceptsReturn("True").TextWrapping("Wrap")
             .VerticalContentAlignment("Top")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
         w2 := writeRow.Add("StackPanel").Orientation("Horizontal").Margin("0,4,0,0")
-        w2.Add("TextBlock").Text(GetLang("变量数组：")).VerticalAlignment("Center").Width(80)
-        wvt := w2.Add("ComboBox").Name("WriteVarTypeCombo").Width(80).Height(26).MinHeight(26)
+        w2.Add("TextBlock").Text(GetLang("变量数组：")).VerticalAlignment("Center").Width(UILayout.S(80))
+        wvt := w2.Add("ComboBox").Name("WriteVarTypeCombo").Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         wvt.Add("ComboBoxItem").Content(GetLang("变量"))
         wvt.Add("ComboBoxItem").Content(GetLang("数组"))
-        w2.Add("ComboBox").Name("WriteVarCombo").Width(120).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-        w2.Add("Button").Name("BtnAddName").Content(GetLang("追加名")).Height(26).MinHeight(26).Margin("6,0,0,0")
-        w2.Add("Button").Name("BtnAddValue").Content(GetLang("追加值")).Height(26).MinHeight(26).Margin("4,0,0,0")
+        w2.Add("ComboBox").Name("WriteVarCombo").Width(UILayout.S(120)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+        w2.Add("Button").Name("BtnAddName").Content(GetLang("追加名")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,0")
+        w2.Add("Button").Name("BtnAddValue").Content(GetLang("追加值")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         writeArrRow := body.Add("StackPanel").Name("WriteArrRow").Grid_Row(7).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
-        writeArrRow.Add("TextBlock").Text(GetLang("写入数组：")).VerticalAlignment("Center").Width(80)
-        writeArrRow.Add("ComboBox").Name("WriteArrCombo").Width(130).Height(26).MinHeight(26).IsEditable("True")
+        writeArrRow.Add("TextBlock").Text(GetLang("写入数组：")).VerticalAlignment("Center").Width(UILayout.S(80))
+        writeArrRow.Add("ComboBox").Name("WriteArrCombo").Width(UILayout.S(130)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).IsEditable("True")
 
         ; 行8：确定
         btnRow := body.Add("StackPanel").Grid_Row(8).Grid_ColumnSpan(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36)
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="560" Height="430" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(560) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

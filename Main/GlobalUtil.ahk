@@ -14,8 +14,11 @@
 #Include ..\Plugins\AHK-XAML\lib\XAML_Dialog.ahk
 #Include ..\Plugins\AHK-XAML\lib\AXML.ahk
 #Include Util\XamlWin.ahk
+#Include Util\UILayout.ahk
+#Include Util\UIManager.ahk
 #Include Util\ToastUtil.ahk
 #Include Util\RmtDialog.ahk
+#Include Util\CustomMsgBoxXaml.ahk
 #Include RMTUtil.ahk
 #Include WorkPool.ahk
 #Include MainWindowXaml.ahk

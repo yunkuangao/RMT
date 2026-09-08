@@ -166,6 +166,9 @@ class StateBtnAdapter {
 ; MainWin — 主窗口壳 + 静态页 + 宏列表渲染
 ; ============================================================================
 class MainWin {
+    ; 主窗口为真实弹性布局（Tag="NoViewbox"）：拉伸=内容延伸，字号由主题字号直控；
+    ; 不再做任何「窗口尺寸×字号比例」的整窗缩放（2026-09-08 第二轮评审拆除）。
+
     __New() {
         this.ui := ""
         this.closed := false
@@ -380,15 +383,18 @@ class MainWin {
             MainSoftData.TableIndex := 1
         this.closed := false
         title := "RMTv" RMT_VERSION
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
-        ; 根内容固定按 1400×787 设计渲染：引擎 Viewbox 会保留显式尺寸，
-        ; 再按窗口实际尺寸（随屏幕等比缩放，见下方 wh 计算）等比例缩放——
-        ; 任何分辨率下内容布局完全一致（高分屏只是整体放大）。
+        ; 根 Grid 不设显式尺寸（NoViewbox 弹性布局）：WPF 无尺寸的 Grid 自动铺满窗口，
+        ; 拉伸/最大化时 `*` 行列真实吸收变化（2026-09-08 拆除 Viewbox 后必须去钉）。
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}")
-        main.Width(1400).Height(787)
+        ; 窗口继承基准字号走 VlFontSize 资源（运行期可刷）：
+        ; 无显式字号的元素（含切页/VL_INIT 新建行）继承它，字号变化刷资源即全局生效
+        main.TextElement_FontSize("{DynamicResource VlFontSize}")
         main.Rows(titleHeight, "*")
-        main.Cols("130", "*")
+        ; 左栏宽度：ColumnDefinition.Width 是 GridLength，不吃 double 资源的 DynamicResource（解析即失败、整窗不弹）；
+        ; 列改 Auto，宽度由左栏元素 Width={DynamicResource SidebarW} 驱动（double 属性合法）
+        main.Cols("Auto", "*")
 
         ; §11 主界面背景图（全局配置；铺满窗口最底层，内容面板未覆盖处可见）
         _bgImg := Trim(MainSoftData.BackImagePath)
@@ -420,9 +426,15 @@ class MainWin {
         closeBtn.Add("TextBlock").Text(Chr(0xE8BB)).FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(10).VerticalAlignment("Center").HorizontalAlignment("Center")
 
         ; ---- 左操作栏 ----
-        left := main.Add("Grid").Grid_Row(1).Grid_Column(0).Margin("6,6,4,6")
+        ; 列 Auto：宽度由元素 MinWidth={DynamicResource SidebarW}（构建期 S(130) 缩放底线）兜底，
+        ; 大字号内容放不下时按最宽子元素自然撑宽、往右挤主内容区（定宽会裁字）
+        left := main.Add("Grid").Name("SidebarPanel").MinWidth("{DynamicResource SidebarW}").Grid_Row(1).Grid_Column(0).Margin("6,6,4,6")
         left.Rows("*", "Auto")
-        leftTop := left.Add("StackPanel").Grid_Row(0)
+        ; 上部按钮群套滚动：超大字号内容超出可用高度时出滚动条，
+        ; 否则 * 行装不下会溢出与贴底的「RMT文档/应用并保存」重叠。
+        ; 不加 Margin——滚动条 Auto 默认不出现不占宽，加了会造成与底部按钮右缘错位
+        leftScroll := left.Add("ScrollViewer").Grid_Row(0).VerticalScrollBarVisibility("Auto").HorizontalScrollBarVisibility("Disabled")
+        leftTop := leftScroll.Add("StackPanel")
         ; 当前配置名称：单行居中、非粗体；字号=主题字号；超长由 Viewbox 仅缩小不放大（改 FontSize 会被主题下限钳制）
         curNameBox := leftTop.Add("Viewbox").Margin("0,3,0,2").Stretch("Uniform").StretchDirection("DownOnly").HorizontalAlignment("Stretch")
         curNameBox.Add("TextBlock").Name("TxtCurSetting").Text(MySoftData.CurSettingName).TextAlignment("Center").HorizontalAlignment("Center").VerticalAlignment("Center").TextWrapping("NoWrap")
@@ -431,7 +443,7 @@ class MainWin {
         ; 全局操作标题 + 右侧展开按钮（控制休眠/暂停/终止所有宏的快捷键提示显隐，默认显示）
         globalOps := leftTop.Add("Grid").Margin("4,0,0,4")
         globalOps.Add("TextBlock").Text(GetLang("全局操作")).FontWeight("Bold").FontSize(11).Opacity("0.7").VerticalAlignment("Center").HorizontalAlignment("Left")
-        globalOps.Add("Button").Name("BtnToggleHotkeyHint").Content(Chr(0xE70D)).Width(24).Height(24).MinHeight(24).Margin("0,0,2,0").HorizontalAlignment("Right").VerticalAlignment("Center").FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(10).Style("{StaticResource RmtIconBtn}")
+        globalOps.Add("Button").Name("BtnToggleHotkeyHint").Content(Chr(0xE70D)).Width(24).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("0,0,2,0").HorizontalAlignment("Right").VerticalAlignment("Center").FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(10).Style("{StaticResource RmtIconBtn}")
         ; 休眠按钮：激活（休眠中）时切换为主题 Action 色背景 + 右上角白点
         suspendGrid := leftTop.Add("Grid").Margin("2,0,0,0")
         suspendGrid.Add("Button").Name("BtnSuspend").Content(GetLang("休眠")).Height(33).MinHeight(33).Style("{StaticResource RmtSidebarBtn}")
@@ -450,7 +462,7 @@ class MainWin {
         leftTop.Add("TextBlock").Name("TxtKillKey").Text(FormatHotkeyDisplay(MainSoftData.KillMacroHotkey)).Opacity("0.6").FontSize(11).Margin("0,0,6,0").HorizontalAlignment("Right").TextAlignment("Right")
         leftTop.Add("Button").Name("BtnReload").Content(GetLang("重启")).Height(33).MinHeight(33).Margin("0,8,0,0").Style("{StaticResource RmtSidebarBtn}")
         leftBottom := left.Add("StackPanel").Grid_Row(1).VerticalAlignment("Bottom")
-        leftBottom.Add("Button").Name("BtnHelp").Content(GetLang("RMT文档")).Height(28).MinHeight(28).Margin("0,2,0,2")
+        leftBottom.Add("Button").Name("BtnHelp").Content(GetLang("RMT文档")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Margin("0,2,0,2")
         leftBottom.Add("Button").Name("BtnSave").Content(GetLang("应用并保存")).Height(36).MinHeight(36).Margin("0,2,0,0").FontWeight("Bold")
 
         ; ---- 右侧 TabControl ----
@@ -597,20 +609,20 @@ class MainWin {
             . '</Style>'
         foldRowStyles := this._BuildFoldRowStyles()
         ; 主窗口页签样式（隐式 Style，只作用于本窗口）：
-        ; - 固定每个页签大小（宽 80），页签间用 1px 垂直线分割，仅上 20% ~ 下 20%（高度 60%）显示
+        ; - MinWidth 保底（TabW 资源随字号缩放），超出按内容自适应撑开——短页签不浪费、长页签不裁字
+        ;   （字号由主题字号直控；MinWidth/MinHeight 走 TabW/TabH 资源随主题字号缩放，UpdateVlFontSize 同步刷）
         ; - 选中态：整块主题强调色低透明度背景（TabSelBg，各主题自动适配）+ 右上角 Accent 小圆点
         ; - 悬停：ControlBorder（TabItem 无 IsPressed，按下态无法用 Storyboard+DynamicResource，故仅做 hover）
         ; - 圆角：仅第一个页签左侧（4,0,0,4）、最后一个页签右侧（0,4,4,0）适配页签条圆角，其余页签直角
         tabItemStyle := '<Style TargetType="TabItem">'
-            . '<Setter Property="Width" Value="80"/>'
-            . '<Setter Property="Height" Value="28"/>'
-            . '<Setter Property="MinHeight" Value="28"/>'
-            . '<Setter Property="MaxHeight" Value="28"/>'
+            . '<Setter Property="MinWidth" Value="{DynamicResource TabW}"/>'
+            ; 高度只设 MinHeight（TabH 资源兜底）：大字号时页签随内容撑高，定高会裁字
+            . '<Setter Property="MinHeight" Value="{DynamicResource TabH}"/>'
             . '<Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem">'
-            . '<Grid Height="28" ClipToBounds="True">'
+            . '<Grid MinHeight="{DynamicResource TabH}" ClipToBounds="True">'
             . '<Border x:Name="Bd" Background="Transparent" BorderThickness="0" BorderBrush="Transparent" Padding="5,4,5,4" Cursor="Hand" CornerRadius="0">'
             . '<Grid>'
-            . '<ContentPresenter ContentSource="Header" TextElement.Foreground="{DynamicResource TextMain}" TextElement.FontSize="14" TextElement.FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>'
+            . '<ContentPresenter ContentSource="Header" TextElement.Foreground="{DynamicResource TextMain}" TextElement.FontSize="{DynamicResource VlFontSize}" TextElement.FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>'
             . '<Ellipse x:Name="SelDot" Width="6" Height="6" Fill="{DynamicResource Accent}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-1,-3" Visibility="Collapsed" IsHitTestVisible="False"/>'
             . '</Grid>'
             . '</Border>'
@@ -659,20 +671,36 @@ class MainWin {
             . '<SolidColorBrush x:Key="OutlineStroke" Color="#FF999999"/>'
             . '<sys:Double x:Key="AiChatFontSize">' XAMLHost.ChatBodyFontSize() '</sys:Double>'
             . '<sys:Double x:Key="AiChatFontSizeSmall">' XAMLHost.ChatSmallFontSize() '</sys:Double>'
-        this._foldFieldW := 198
-        this._foldFrontW := this._foldFieldW + 80
-        ; 备注右缘对齐「菜单宏」右分割线(3×80)；前台左缘对齐「定时宏」左分割线(5×80)
-        ; 间隙 160，扣掉备注右侧 Margin 8 → 前台左移 152；触发类型列 +5 → 157
-        ; 宏行工具列收窄 10、TK 列 +5，Del 右缘左移 5 → 工具栏右移量 155
-        ; 备注右缘到前台左缘：备注右侧 Margin 8 + 此前台左移 157
-        this._foldFrontShift := 157
-        this._itemToolbarShift := 200
+            ; 结构尺寸资源（P1.5 字号化）：左栏宽/页签宽高随主题字号缩放（k=FontSize/15，钳 0.8~1.6），
+            ; 构建期取值、重启生效；运行期控件高度跟随由引擎 FitControlHeightToFont 通道处理
+            . '<sys:Double x:Key="SidebarW">' UILayout.S(130) '</sys:Double>'
+            . '<sys:Double x:Key="TabW">' UILayout.S(80) '</sys:Double>'
+            . '<sys:Double x:Key="TabH">' UILayout.S(28) '</sys:Double>'
+            ; 模块头触发键字段宽（非 VL 行 / VL DataTemplate 共用资源，高度 24 不缩放——DPI 整数像素；构建期按字号取值，重启生效）
+            ; VlFontSize：窗口继承基准字号走可刷新资源——运行期改字号后刷资源，
+            ; 切页/VL_INIT 新建的行直接拿到新字号，不依赖 VL_INIT 后的补刷时序
+            . '<sys:Double x:Key="VlFontSize">' XAMLHost.FontSize() '</sys:Double>'
+            ; 宏行模板档位资源（响应式核心）：VL/非VL 行模板字号全部引用这些资源，UpdateVlFontSize
+            ; 刷新后所有已实例化行（含非选中 tab——逻辑树可达）实时跟随，无需切页补刷
+            . '<sys:Double x:Key="VlFontSm">' XAMLHost.FormatFontSize(XAMLHost.GetThemeFontSize() - 4) '</sys:Double>'
+            . '<sys:Double x:Key="VlFontIcon">' XAMLHost.FormatFontSize(XAMLHost.GetThemeFontSize() - 3) '</sys:Double>'
+            . '<sys:Double x:Key="VlFontLg">' XAMLHost.FormatFontSize(XAMLHost.GetThemeFontSize() + 3) '</sys:Double>'
+            . '<sys:Double x:Key="FoldTkTypeW">' UILayout.S(70) '</sys:Double>'
+            . '<sys:Double x:Key="FoldTkW">' UILayout.S(100) '</sys:Double>'
+        ; 宏行/模块头弹性列尺寸（阶段 B）：备注列最小宽、前台字段定宽；
+        ; 拉伸由备注列 100* 吸收（旧页签分割线对齐数学已随弹性化退役）。
+        ; P1.5：定宽族随主题字号缩放（UILayout.S），行 XML 构建期取值、Relayout 重建生效
+        this._foldFieldW := UILayout.S(198)
+        this._foldFrontW := this._foldFieldW + UILayout.S(80)
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
+        tmp := StrReplace(tmp, "%ResizeMode%", "CanResize") ; 主窗口有自己的最小/最大化按钮，需保留缩放（引擎默认已改 NoResize）
         tmp := StrReplace(tmp, "%resources%", tabStyle . tabItemStyle . tabSelBgRes . stateBtnStyle . defaultBtnStyle . sidebarBtnStyle . iconBtnStyle . foldRowStyles . this._BuildVListTemplates())
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
+        ; 主窗口走真实弹性布局（根 Grid * 行列吸收拉伸，字号由主题字号直控不随窗口变）：
+        ; Tag="NoViewbox" 让引擎跳过 Viewbox 包裹；字号走通用 ApplyFontSizeDelta/ApplyFonts 机制。
         ; 首帧即定死保存位置：模板 CenterScreen 会让 WPF 强制居中并覆盖后续 WinMove → 先默认位置闪一帧。
         ; 改 Manual + 注入 Left/Top/Width/Height（AHK 逻辑坐标 = WPF DIP，125% DPI 下物理 132,126 已实测吻合，无单位错位）。
-        ; LastWinPos 无效时保持 CenterScreen 1070×590 居中默认。
+        ; LastWinPos 无效时保持 CenterScreen 默认居中。
         pos := GetLastWinPos()
         startLoc := 'WindowStartupLocation="CenterScreen"'
         ; 主界面默认尺寸按屏幕等比缩放：1920×1080 参考 1400×787。
@@ -682,17 +710,27 @@ class MainWin {
         dipSW := A_ScreenWidth / dpiScale
         dipSH := A_ScreenHeight / dpiScale
         fs := Min(dipSW / 1920, dipSH / 1080)
-        wh := 'Width="' Round(1400 * fs) '" Height="' Round(787 * fs) '"'
+        ; 默认尺寸 = 设计稿 × 屏幕系数，等比钳制进工作区（不遮任务栏）
+        waW := DllCall("user32\GetSystemMetrics", "Int", 16) / dpiScale
+        waH := DllCall("user32\GetSystemMetrics", "Int", 17) / dpiScale
+        fit := Min(1.0, waW / (1400 * fs), waH / (787 * fs))
+        defW := Round(1400 * fs * fit), defH := Round(787 * fs * fit)
+        wh := 'Width="' defW '" Height="' defH '"'
+        XamlUiDiag(Format("build fs={} wh=[{}] screen={}x{} posLen={}", fs, wh, A_ScreenWidth, A_ScreenHeight, pos.Length), "MainWin.build")
         if (pos.Length) {
             ; AHK 进程 DPI aware，WinGetPos/LastWinPos 是物理像素；XAML 注入按 DIP 解释，须换算（实测 125% 屏偏右下 26px）
             ; ponytail: 用 GetDpiForSystem 单值；跨屏不同 DPI 时可能偏差，待真机多屏再按 per-monitor 换算
             scale := DllCall("GetDpiForSystem", "UInt") / 96.0
-            x := Round(pos[1] / scale), y := Round(pos[2] / scale), w := Round(pos[3] / scale), h := Round(pos[4] / scale)
+            x := Round(pos[1] / scale), y := Round(pos[2] / scale)
+            w := Round(pos[3] / scale), h := Round(pos[4] / scale)
+            ; 等比钳制进屏幕（历史 ini 值可能烘过字号比例，超屏在此一次性消化）
+            fitR := Min(1.0, dipSW / w, dipSH / h)
+            w := Round(w * fitR), h := Round(h * fitR)
             startLoc := 'WindowStartupLocation="Manual" Left="' x '" Top="' y '"'
             wh := 'Width="' w '" Height="' h '"'
         }
         ; 先填内容再显示：Opacity=0 走引擎离屏揭盖，避免空壳→主题/列表刷入时抖动
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" ' wh ' Opacity="0"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" ' wh ' MinWidth="1000" MinHeight="400" Tag="NoViewbox" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"', startLoc)
 
         ; ---- 壳级事件（初始 XAML 内，经 eventBindings 绑定） ----
@@ -785,16 +823,34 @@ class MainWin {
         ; AI 预置对话改为首次打开侧栏/切到 AI 时惰性注入，避免启动与首展卡顿
     }
 
-    ; VL_INIT 重建虚拟行后补刷主题字号（否则新行仍用样式声明 11，比已缩放行偏小）
-    RefreshVLFonts() {
-        if (!IsObject(this.ui) || this.ui.IsFontScaleSkipped())
+    ; VL_INIT 重建虚拟行后补刷主题字号（否则新行仍用样式声明 11，比已缩放行偏小）。
+    ; change 默认 0（补刷语义：只把小于下限的字号抬上来）；主题预览实时调整传真实增量，
+    ; 否则 C# 端 useSize=max(下限, v+0) 只上钳不下移——主窗口预览拉小永远无效。
+    RefreshVLFonts(change := 0) {
+        if (!IsObject(this.ui))
             return
         try {
             fs := XAMLHost.GetThemeFontSize()
-            this.ui.Update("Window", "ApplyFonts", XAMLHost.BuildApplyFontsPayload(0, fs))
+            this.ui.Update("Window", "ApplyFonts", XAMLHost.BuildApplyFontsPayload(change, fs))
             XAMLHost.SyncChatFontResources(this.ui)
         } catch {
         }
+    }
+
+    ; 刷新窗口继承基准字号资源：运行期改字号后调用，切页/VL_INIT 新建的行直接拿新字号
+    UpdateVlFontSize() {
+        if (!IsObject(this.ui))
+            return
+        ; 三档一起刷：主档（行文本/页签继承）+ 小档（折叠头/占位符）+ 图标档 + 大档（键盘图标）
+        fs := XAMLHost.GetThemeFontSize()
+        try this.ui.Update("Resource", "VlFontSize", "Double:" XAMLHost.FormatFontSize(fs))
+        try this.ui.Update("Resource", "VlFontSm", "Double:" XAMLHost.FormatFontSize(fs - 4))
+        try this.ui.Update("Resource", "VlFontIcon", "Double:" XAMLHost.FormatFontSize(fs - 3))
+        try this.ui.Update("Resource", "VlFontLg", "Double:" XAMLHost.FormatFontSize(fs + 3))
+        ; 页签宽高资源同步：页签文字挂 VlFontSize 实时变宽，MinWidth 保底值需同步放大，
+        ; 否则大字号时保底不足以容字、依赖内容撑开（短页签会露底）
+        try this.ui.Update("Resource", "TabW", "Double:" UILayout.S(80))
+        try this.ui.Update("Resource", "TabH", "Double:" UILayout.S(28))
     }
 
     OnWindowLoad(state, ctrl, event) {
@@ -811,6 +867,7 @@ class MainWin {
         } catch as e {
             XamlUiDiag("MainWin OnWindowLoad err: " e.Message, "MainWin")
         }
+        XamlUiDiagWindow(this.ui.wpfHwnd, "MainWin.loaded")   ; 实测落位尺寸（排查整窗缩放用）
         ; 最小化启动：保持隐藏，不揭盖
         if (this.HasOwnProp("_startHidden") && this._startHidden)
             return
@@ -885,6 +942,11 @@ class MainWin {
         if (!this._renderedTabs.Has(idx)) {
             this._renderedTabs[idx] := true
             this.RenderTab(MySoftData.TableInfo[idx])
+        } else if (this._useVirtual.Has(idx) || CheckIsItemTable(idx)) {
+            ; 缓存命中页切回：VL_INIT 不重跑，行字号停在烘焙值——预览广播的逻辑树
+            ; 走不到非选中页的 ListBoxItem（数据虚拟化，行不在逻辑树）。补一次子树
+            ; 字号对齐（change=0 幂等，引擎端延迟到布局后执行）
+            try this.ui.Update("FoldList_" idx, "ApplyFonts", XAMLHost.BuildApplyFontsPayload(0, XAMLHost.GetThemeFontSize()))
         }
         nav := this._pendingMacroNav
         this._pendingMacroNav := ""
@@ -1198,7 +1260,7 @@ class MainWin {
         host := toolBar.Add("Grid").Margin("0,0,4,0").ClipToBounds("False")
         btn := host.Add("Button").Name(prefix key "_" idx)
             .Style("{StaticResource RmtFoldToolBtn}")
-            .Width(26).Height(26).MinHeight(26)
+            .Width(26).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(12)
             .ToolTip(tip)
             .Background("{DynamicResource ControlBg}")
@@ -1297,7 +1359,7 @@ class MainWin {
         else
             treeCtx.Background("{DynamicResource DropdownBg}").BorderBrush("{DynamicResource InputStroke}")
                 .BorderThickness("1").Foreground("{DynamicResource TextMain}")
-        treeCtx.FontSize(String(XAMLHost.PopupFontSizeDeclared()))
+        treeCtx.FontSize(String(XAMLHost.PopupFontSize()))
             .FontFamily((MainSoftData.HasProp("FontType") && MainSoftData.FontType != "") ? MainSoftData.FontType : "微软雅黑")
         ; 编辑 | 复制、粘贴 | 上插、下插 | 跳过、调试起点 | 删除
         treeCtx.Add("MenuItem").Name("SideMenuEditCmd").Header(GetLang("编辑"))
@@ -1327,7 +1389,7 @@ class MainWin {
         else
             branchCtx.Background("{DynamicResource DropdownBg}").BorderBrush("{DynamicResource InputStroke}")
                 .BorderThickness("1").Foreground("{DynamicResource TextMain}")
-        branchCtx.FontSize(String(XAMLHost.PopupFontSizeDeclared()))
+        branchCtx.FontSize(String(XAMLHost.PopupFontSize()))
             .FontFamily((MainSoftData.HasProp("FontType") && MainSoftData.FontType != "") ? MainSoftData.FontType : "微软雅黑")
         miAdd := branchCtx.Add("MenuItem").Name("SideMenuBranchAddCmd").Header(GetLang("添加指令"))
         this._AddSideCmdMenuItems(miAdd, "SideMenuBranchAdd_")
@@ -1346,7 +1408,7 @@ class MainWin {
         else
             blankCtx.Background("{DynamicResource DropdownBg}").BorderBrush("{DynamicResource InputStroke}")
                 .BorderThickness("1").Foreground("{DynamicResource TextMain}")
-        blankCtx.FontSize(String(XAMLHost.PopupFontSizeDeclared()))
+        blankCtx.FontSize(String(XAMLHost.PopupFontSize()))
             .FontFamily((MainSoftData.HasProp("FontType") && MainSoftData.FontType != "") ? MainSoftData.FontType : "微软雅黑")
         miBlank := blankCtx.Add("MenuItem").Name("SideMenuBlankInsertCmd").Header(GetLang("插入指令"))
         this._AddSideCmdMenuItems(miBlank, "SideMenuBlankInsert_")
@@ -1676,7 +1738,7 @@ class MainWin {
         head := g.Add("Grid").Grid_Row(0)
         head.Rows("28", "1.5", "Auto", "1.5")
         tabW := this._AiTabW()
-        opt := head.Add("Grid").Grid_Row(0).Height(28).MinHeight(28)
+        opt := head.Add("Grid").Grid_Row(0).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm)
         opt.Cols(tabW, "Auto", tabW, "*", "Auto")
         opt.Add("Button").Name("BtnSideModeTree_" idx).Grid_Column(0).Content(GetLang("逻辑树"))
             .Style("{StaticResource RmtSideModeTab}").Width(tabW).Tag("sel-first")
@@ -1686,7 +1748,7 @@ class MainWin {
         opt.Add("Button").Name("BtnSideModeAi_" idx).Grid_Column(2).Content(GetLang("AI助手"))
             .Style("{StaticResource RmtSideModeTab}").Width(tabW).Tag("last")
         opt.Add("Button").Name("BtnSideToolsToggle_" idx).Grid_Column(4)
-            .Style("{StaticResource RmtFoldToolBtn}").Width(26).Height(26).MinHeight(26)
+            .Style("{StaticResource RmtFoldToolBtn}").Width(26).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
             .Margin("0,0,6,0").VerticalAlignment("Center").HorizontalAlignment("Right")
             .Content(Chr(0xE70E)).FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(12)
             .ToolTip(GetLang("收起操作"))
@@ -1697,7 +1759,7 @@ class MainWin {
             .SnapsToDevicePixels("True")
 
         toolBar := head.Add("StackPanel").Name("SideToolBar_" idx).Grid_Row(2)
-            .Orientation("Horizontal").Height(30).Margin("4,4,4,4").VerticalAlignment("Center")
+            .Orientation("Horizontal").Height(UILayout.CtrlH.Btn).Margin("4,4,4,4").VerticalAlignment("Center")
         this._AddSideToolBtn(toolBar, idx, "Expand", Chr(0xE73F), GetLang("展开/收缩"), false)
         this._AddSideToolBtn(toolBar, idx, "Undo", Chr(0xE7A7), GetLang("撤销"), false)
         this._AddSideToolBtn(toolBar, idx, "Redo", Chr(0xE7A6), GetLang("恢复"), false)
@@ -1710,7 +1772,7 @@ class MainWin {
         this._AddSideToolBtn(toolBar, idx, "Top", Chr(0xE840), GetLang("窗口置顶"), true)
 
         aiToolBar := head.Add("StackPanel").Name("SideAiToolBar_" idx).Grid_Row(2)
-            .Orientation("Horizontal").Height(30).Margin("4,4,4,4").VerticalAlignment("Center")
+            .Orientation("Horizontal").Height(UILayout.CtrlH.Btn).Margin("4,4,4,4").VerticalAlignment("Center")
             .Visibility("Collapsed")
         this._AddSideToolBtn(aiToolBar, idx, "History", Chr(0xE81C), GetLang("对话记录"), false, "SideAiTool")
         this._AddSideToolBtn(aiToolBar, idx, "Settings", Chr(0xE713), GetLang("设置"), false, "SideAiTool")
@@ -1810,11 +1872,11 @@ class MainWin {
     }
 
     ; 文本框 / 只读富文本：用 XAML ContextMenu 替换系统旧菜单
-    ; AI 菜单在 Viewbox 外：只用主题字号（与输入框观感一致），不再乘 Viewbox（窗口化时会过大）
+    ; 菜单字号=纯主题字号（主窗口 NoViewbox 后 GetMainViewboxScale 恒 1，见引擎 PopupFontSize）
     _AttachTextEditContextMenu(el, editable) {
         if (!IsObject(el))
             return
-        fs := XAMLHost.FontSize()
+        fs := XAMLHost.PopupFontSize()
         ff := (MainSoftData.HasProp("FontType") && MainSoftData.FontType != "") ? MainSoftData.FontType : "微软雅黑"
         cm := el.Add("FrameworkElement.ContextMenu").Add("ContextMenu")
             .MinWidth("140").Placement("MousePoint")
@@ -1843,7 +1905,7 @@ class MainWin {
     }
 
     _AiMsgContextMenuXaml(isUser := false, text := "") {
-        fs := XAMLHost.FontSize()
+        fs := XAMLHost.PopupFontSize()
         ff := (MainSoftData.HasProp("FontType") && MainSoftData.FontType != "") ? this._XmlEsc(MainSoftData.FontType) : "微软雅黑"
         extra := '<MenuItem Header="' this._XmlEsc(GetLang("全选")) '" Command="SelectAll"/>'
         if (isUser) {
@@ -3858,6 +3920,9 @@ class MainWin {
             }
         }
         this._BindFoldRows(t)
+        ; 行字号子树补刷（同 VirtualListHost.Init：行声明字号被自身覆盖继承，须子树 ApplyFonts
+        ; 逐行平移；change=0 下限钳制必然对齐当前主题字号，幂等、拉大拉小都对）
+        try this.ui.Update(listName, "ApplyFonts", XAMLHost.BuildApplyFontsPayload(0, XAMLHost.GetThemeFontSize()))
     }
 
     _BuildFoldTitleRow(t, f, isFirst := false) {
@@ -3867,55 +3932,49 @@ class MainWin {
         ns := 'xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"'
         foldBg := fold.ForbidState ? "{DynamicResource ListRowForbidBg}" : "{DynamicResource FoldHeaderBg}"
         xaml := '<Border ' ns ' Name="FoldCard_' t '_' f '" CornerRadius="0" BorderThickness="0" BorderBrush="{DynamicResource OutlineStroke}" Background="' foldBg '" Margin="0" Padding="8,6,8,6"' this._BorderSnap() '>'
-            . '<StackPanel Name="FoldCardInner_' t '_' f '" Opacity="' (fold.ForbidState ? this._ForbidContentOpacity() : "1") '" VerticalAlignment="Center" TextElement.FontSize="' XAMLHost.FormatFontSize(XAMLHost.ScaleFontSize(11)) '">'
+            . '<StackPanel Name="FoldCardInner_' t '_' f '" Opacity="' (fold.ForbidState ? this._ForbidContentOpacity() : "1") '" VerticalAlignment="Center" TextElement.FontSize="{DynamicResource VlFontSm}">'
             . this._BuildFoldDividerXaml(false, isFirst)
             . this._BuildFoldHeaderRowXaml(t, f, fold, false)
         if (isMenu || isUI) {
             xaml .= '<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,0">'
                 . '<TextBlock Text="' (isUI ? GetLang("面板触发键：") : GetLang("菜单触发键：")) '" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}"/>'
-                . '<ComboBox Name="FoldTKType_' t '_' f '" Width="70" Height="24" MinHeight="24" Margin="2,0,10,0" SelectedIndex="' (fold.TKType - 1) '" IsEnabled="' (isUI ? "False" : "True") '">'
+                . '<ComboBox Name="FoldTKType_' t '_' f '" MinWidth="{DynamicResource FoldTkTypeW}" MinHeight="24" Margin="2,0,10,0" SelectedIndex="' (fold.TKType - 1) '" IsEnabled="' (isUI ? "False" : "True") '">'
                 . '<ComboBoxItem Content="' GetLang("按下") '"/><ComboBoxItem Content="' GetLang("松开") '"/><ComboBoxItem Content="' GetLang("松止") '"/><ComboBoxItem Content="' GetLang("开关") '"/><ComboBoxItem Content="' GetLang("长按") '"/><ComboBoxItem Content="' GetLang("双击") '"/>'
                 . '</ComboBox>'
-                . '<TextBox Name="FoldTK_' t '_' f '" Text="' this._XmlEsc(fold.TK) '" Width="100" Height="24" VerticalContentAlignment="Center" TextAlignment="Center"/>'
-                . '<Button Name="FoldTKEdit_' t '_' f '" Content="' GetLang("编辑") '" Height="24" MinHeight="24" Padding="8,0" Margin="6,0,0,0"/>'
+            . '<TextBox Name="FoldTK_' t '_' f '" Text="' this._XmlEsc(fold.TK) '" MinWidth="{DynamicResource FoldTkW}" MinHeight="24" VerticalContentAlignment="Center" TextAlignment="Center"/>'
+            . '<Button Name="FoldTKEdit_' t '_' f '" Content="' GetLang("编辑") '" MinHeight="24" Padding="8,0" Margin="6,0,0,0"/>'
                 . '</StackPanel>'
         }
         xaml .= '</StackPanel></Border>'
         return xaml
     }
 
-    ; 模块头主行：备注 | 间距 | 前台 | 同距 | 操作按钮 | 剩余
+    ; 模块头主行（阶段 B 弹性化）：折叠钮 | 备注(100* 吸收拉伸) | 前台 | 工具按钮 | 剩余
     _BuildFoldHeaderRowXaml(t, f, fold, vlMode) {
         ns := 'xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"'
         folded := vlMode ? false : fold.FoldState
         remark := vlMode ? "" : fold.Remark
         frontInfo := vlMode ? "" : fold.FrontInfo
         forbidState := vlMode ? false : fold.ForbidState
-        gap := this._FoldGroupGap()
-        if (this._IsAiPanelOpen()) {
-            wideGap := 8 + this._foldFrontShift
-            gapCol := '<ColumnDefinition Width="100*" MinWidth="' this._AiPanelGapMin() '" MaxWidth="' wideGap '"/>'
-            lastCol := '<ColumnDefinition Width="*"/>'
-        } else {
-            gapCol := '<ColumnDefinition Width="' gap '"/>'
-            lastCol := '<ColumnDefinition Width="*"/>'
-        }
         return '<Grid ' ns ' VerticalAlignment="Center">'
             . '<Grid.ColumnDefinitions>'
-            . '<ColumnDefinition Width="Auto"/>' gapCol
-            . '<ColumnDefinition Width="Auto"/>' gapCol
-            . '<ColumnDefinition Width="Auto"/>' lastCol
+            . '<ColumnDefinition Width="Auto"/>'
+            . '<ColumnDefinition Width="100*" MinWidth="' this._foldFieldW '"/>'
+            . '<ColumnDefinition Width="Auto"/>'
+            . '<ColumnDefinition Width="Auto"/>'
+            . '<ColumnDefinition Width="*"/>'
             . '</Grid.ColumnDefinitions>'
-            . '<StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">' this._BuildFoldCollapseBtnXaml(t, f, folded, vlMode) this._BuildFoldRemarkFieldXaml(t, f, remark, vlMode) '</StackPanel>'
-            . '<StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">' this._BuildFoldFrontCenterXaml(t, f, frontInfo, vlMode) '</StackPanel>'
-            . '<StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">' this._BuildFoldToolbarXaml(t, f, forbidState, vlMode) '</StackPanel>'
+            . '<StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">' this._BuildFoldCollapseBtnXaml(t, f, folded, vlMode) '</StackPanel>'
+            . this._BuildFoldRemarkFieldXaml(t, f, remark, vlMode)
+            . '<StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,8,0">' this._BuildFoldFrontCenterXaml(t, f, frontInfo, vlMode) '</StackPanel>'
+            . '<StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">' this._BuildFoldToolbarXaml(t, f, forbidState, vlMode) '</StackPanel>'
             . '</Grid>'
     }
 
     _BuildFoldCollapseBtnXaml(t, f, folded, vlMode) {
         iconStyle := ' Style="{StaticResource RmtIconBtn}"'
         if (vlMode) {
-            return '<Button Tag="FoldBtn" Width="24" Height="24" MinHeight="24" Margin="0,0,6,0" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12">'
+            return '<Button Tag="FoldBtn" Width="24" Height="24" MinHeight="24" Margin="0,0,6,0" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}">'
                 . '<Button.Style><Style TargetType="Button" BasedOn="{StaticResource RmtIconBtn}">'
                 . '<Setter Property="Content" Value="&#xE70D;"/>'
                 . '<Style.Triggers><DataTrigger Binding="{Binding Folded}" Value="True"><Setter Property="Content" Value="&#xE76C;"/></DataTrigger></Style.Triggers>'
@@ -3923,15 +3982,14 @@ class MainWin {
         }
         foldGlyph := folded ? "&#xE76C;" : "&#xE70D;"
         return '<Button Name="FoldBtn_' t '_' f '" Width="24" Height="24" MinHeight="24" Margin="0,0,6,0"' iconStyle '>'
-            . '<TextBlock Name="FoldGlyph_' t '_' f '" Text="' foldGlyph '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>'
+            . '<TextBlock Name="FoldGlyph_' t '_' f '" Text="' foldGlyph '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}" HorizontalAlignment="Center" VerticalAlignment="Center"/>'
             . '</Button>'
     }
 
     ; 模块头专用样式：输入框左内边距与占位符对齐；工具按钮悬停跟主题色
     _BuildFoldRowStyles() {
-        foldFs := XAMLHost.FormatFontSize(XAMLHost.ScaleFontSize(11))
         fieldBox := '<Style x:Key="RmtFoldFieldBox" TargetType="TextBox">'
-            . '<Setter Property="FontSize" Value="' foldFs '"/>'
+            . '<Setter Property="FontSize" Value="{DynamicResource VlFontSm}"/>'
             . '<Setter Property="MinHeight" Value="24"/>'
             . '<Setter Property="Height" Value="24"/>'
             . '<Setter Property="Padding" Value="1,0,1,0"/>'
@@ -3946,8 +4004,8 @@ class MainWin {
             . '<ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}" VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}"/>'
             . '</Border></ControlTemplate></Setter.Value></Setter>'
             . '<Style.Triggers>'
-            . '<Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="1"/><Setter Property="FontSize" Value="' foldFs '"/></Trigger>'
-            . '<Trigger Property="IsReadOnly" Value="True"><Setter Property="FontSize" Value="' foldFs '"/></Trigger>'
+            . '<Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="1"/><Setter Property="FontSize" Value="{DynamicResource VlFontSm}"/></Trigger>'
+            . '<Trigger Property="IsReadOnly" Value="True"><Setter Property="FontSize" Value="{DynamicResource VlFontSm}"/></Trigger>'
             . '</Style.Triggers></Style>'
         chatBox := '<Style x:Key="RmtAiChatBox" TargetType="TextBox">'
             . '<Setter Property="FontSize" Value="' this._AiChatBodyFontSize() '"/>'
@@ -4023,7 +4081,7 @@ class MainWin {
             . '<Setter Property="Width" Value="24"/><Setter Property="Height" Value="24"/><Setter Property="MinHeight" Value="24"/>'
             . '<Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0,0,4,0"/>'
             . '<Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>'
-            . '<Setter Property="FontSize" Value="12"/>'
+            . '<Setter Property="FontSize" Value="{DynamicResource VlFontIcon}"/>'
             . '<Setter Property="Cursor" Value="Hand"/>'
             . '<Setter Property="Background" Value="{DynamicResource ControlBg}"/>'
             . '<Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>'
@@ -4166,7 +4224,7 @@ class MainWin {
             . '<Grid Height="28" ClipToBounds="True">'
             . '<Border x:Name="Bd" Background="Transparent" BorderThickness="0" Padding="{TemplateBinding Padding}" Cursor="Hand" CornerRadius="0">'
             . '<Grid>'
-            . '<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{DynamicResource TextMain}" TextElement.FontSize="14" TextElement.FontWeight="SemiBold"/>'
+            . '<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{DynamicResource TextMain}" TextElement.FontSize="{DynamicResource VlFontSize}" TextElement.FontWeight="SemiBold"/>'
             . '<Ellipse x:Name="SelDot" Width="6" Height="6" Fill="{DynamicResource Accent}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-1,-3" Visibility="Collapsed" IsHitTestVisible="False"/>'
             . '</Grid></Border></Grid>'
             . '<ControlTemplate.Triggers>'
@@ -4190,7 +4248,7 @@ class MainWin {
             . '</ControlTemplate.Triggers>'
             . '</ControlTemplate></Setter.Value></Setter></Style>'
         sideTreeItem := '<Style x:Key="RmtSideTreeItem" TargetType="ListBoxItem">'
-            . '<Setter Property="Height" Value="28"/><Setter Property="MinHeight" Value="28"/>'
+            . '<Setter Property="MinHeight" Value="28"/>'
             . '<Setter Property="Padding" Value="8,0"/>'
             . '<Setter Property="Margin" Value="0"/>'
             . '<Setter Property="HorizontalContentAlignment" Value="Stretch"/>'
@@ -4198,8 +4256,8 @@ class MainWin {
             . '<Setter Property="Background" Value="{DynamicResource ControlBg}"/>'
             . '<Setter Property="Cursor" Value="Hand"/>'
             . '<Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">'
-            . '<Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" Height="28">'
-            . '<TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis" Foreground="{TemplateBinding Foreground}"/>'
+            . '<Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" MinHeight="28">'
+            . '<TextBlock Text="{Binding}" VerticalAlignment="Center" FontSize="{DynamicResource VlFontSm}" TextTrimming="CharacterEllipsis" Foreground="{TemplateBinding Foreground}"/>'
             . '</Border>'
             . '<ControlTemplate.Triggers>'
             . '<Trigger Property="ItemsControl.AlternationIndex" Value="1"><Setter TargetName="Bd" Property="Background" Value="{DynamicResource ListRowAltBg}"/></Trigger>'
@@ -4241,67 +4299,25 @@ class MainWin {
         return this.HasOwnProp("aiAssistOpen") && this.aiAssistOpen
     }
 
-    _FoldGroupGap() {
-        return this._IsAiPanelOpen() ? this._AiPanelGapMin() : (8 + this._foldFrontShift)
-    }
-
-    ; 宏行列宽：备注右缘对齐模块备注；触发键对齐「语音宏」左分割线；组间距统一用备注→触发键间距
-    _ItemLayoutWide() {
-        tabW := 80
-        toTab := 2
-        inner0 := 4 + this._ItemDragColW()
-        colorW := 20
-        seqW := 22
-        remarkW := (8 + 24 + 6 + this._foldFieldW) - inner0 - colorW - seqW
-        tkW := 125
-        typeW := 82
-        editCol := 68
-        loopCol := 86
-        settingCol := 48
-        tkLeft := tabW * 4 - toTab - inner0
-        spacerTK := tkLeft - (colorW + seqW + remarkW)
-        if (spacerTK < 0)
-            spacerTK := 0
-        spacerTK += 35
-        return Map("color", colorW, "seq", seqW, "remark", remarkW
-            , "spacerTK", spacerTK, "tk", tkW, "type", typeW
-            , "spacerEdit", spacerTK, "edit", editCol, "loop", loopCol, "setting", settingCol
-            , "spacerCopy", spacerTK)
-    }
-
-    _ItemLayout() {
-        L := this._ItemLayoutWide()
-        if (this._IsAiPanelOpen()) {
-            g := this._AiPanelGapMin()
-            L["spacerTK"] := g
-            L["spacerEdit"] := g
-            L["spacerCopy"] := g
-        }
-        return L
-    }
-
+    ; 宏行列定义（阶段 B 弹性化）：备注列 100*（MinWidth=_foldFieldW）吸收拉伸，
+    ; 其余列定宽、列数恒 13（元素按 Grid.Column 摆放，两条行模板共用）。
+    ; 旧「页签分割线对齐」spacer 数学（_ItemLayoutWide/_foldFrontShift）已退役。
     _ItemInnerColDefs() {
-        L := this._ItemLayoutWide()
-        if (this._IsAiPanelOpen()) {
-            minG := this._AiPanelGapMin()
-            maxG := L["spacerTK"]
-            sp := '<ColumnDefinition Width="100*" MinWidth="' minG '" MaxWidth="' maxG '"/>'
-            return '<ColumnDefinition Width="' L["color"] '"/><ColumnDefinition Width="' L["seq"] '"/><ColumnDefinition Width="' L["remark"] '"/>'
-                . sp . '<ColumnDefinition Width="' L["tk"] '"/><ColumnDefinition Width="' L["type"] '"/>'
-                . sp . '<ColumnDefinition Width="' L["edit"] '"/><ColumnDefinition Width="' L["loop"] '"/><ColumnDefinition Width="' L["setting"] '"/>'
-                . sp . '<ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>'
-        }
-        return '<ColumnDefinition Width="' L["color"] '"/><ColumnDefinition Width="' L["seq"] '"/><ColumnDefinition Width="' L["remark"] '"/>'
-            . '<ColumnDefinition Width="' L["spacerTK"] '"/><ColumnDefinition Width="' L["tk"] '"/><ColumnDefinition Width="' L["type"] '"/>'
-            . '<ColumnDefinition Width="' L["spacerEdit"] '"/><ColumnDefinition Width="' L["edit"] '"/><ColumnDefinition Width="' L["loop"] '"/><ColumnDefinition Width="' L["setting"] '"/>'
-            . '<ColumnDefinition Width="' L["spacerCopy"] '"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>'
+        ; P1.5：定宽/间距族随主题字号缩放（构建期取值，Relayout 重建行 XML 生效）
+        g := UILayout.S(this._IsAiPanelOpen() ? this._AiPanelGapMin() : 35)
+        return '<ColumnDefinition Width="' UILayout.S(20) '"/><ColumnDefinition Width="' UILayout.S(22) '"/>'
+            . '<ColumnDefinition Width="100*" MinWidth="' this._foldFieldW '"/>'
+            . '<ColumnDefinition Width="' g '"/><ColumnDefinition Width="' UILayout.S(125) '"/><ColumnDefinition Width="' UILayout.S(82) '"/>'
+            . '<ColumnDefinition Width="' g '"/><ColumnDefinition Width="' UILayout.S(68) '"/><ColumnDefinition Width="' UILayout.S(86) '"/><ColumnDefinition Width="' UILayout.S(48) '"/>'
+            . '<ColumnDefinition Width="' g '"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>'
     }
 
     _BuildItemCardOpen(ns := "", t := 0, i := 0, forbid := false, rowSel := false) {
         nsAttr := ns != "" ? " " ns : ""
         nameAttr := t > 0 ? ' Name="ItemCard_' t '_' i '"' : ""
         defBg := rowSel ? "{DynamicResource TabSelBg}" : ((t > 0 && forbid) ? "{DynamicResource ListRowForbidBg}" : "{DynamicResource ControlBg}")
-        ; 宏行贴在页签内容框里，不再自绘左右/底边；高度 30（内边距 3+3，内容 24）。
+        ; 宏行贴在页签内容框里，不再自绘左右/底边；MinHeight 30（内边距 3+3，内容 24）——
+        ; 大字号时引擎字号适配通道顶高行内控件，行卡片随内容自动撑高（定高会裁切，2026-09-08）。
         return '<Border' nsAttr nameAttr ' BorderBrush="{DynamicResource OutlineStroke}" ClipToBounds="False"' this._BorderSnap() '>'
             . '<Border.Style><Style TargetType="Border">'
             . '<Setter Property="CornerRadius" Value="0"/>'
@@ -4309,16 +4325,14 @@ class MainWin {
             . '<Setter Property="Margin" Value="0"/>'
             . '<Setter Property="Padding" Value="4,3,6,3"/>'
             . '<Setter Property="Background" Value="' defBg '"/>'
-            . '<Setter Property="Height" Value="30"/>'
             . '<Setter Property="MinHeight" Value="30"/>'
-            . '<Setter Property="MaxHeight" Value="30"/>'
             . '<Style.Triggers>'
             . '<DataTrigger Binding="{Binding IsAltRow}" Value="True"><Setter Property="Background" Value="{DynamicResource ListRowAltBg}"/></DataTrigger>'
             . '<DataTrigger Binding="{Binding Forbid}" Value="True"><Setter Property="Background" Value="{DynamicResource ListRowForbidBg}"/></DataTrigger>'
             . '<DataTrigger Binding="{Binding FoldForbid}" Value="True"><Setter Property="Background" Value="{DynamicResource ListRowForbidBg}"/></DataTrigger>'
             . '<DataTrigger Binding="{Binding RowSel}" Value="True"><Setter Property="Background" Value="{DynamicResource TabSelBg}"/></DataTrigger>'
             . '</Style.Triggers></Style></Border.Style>'
-            . '<Grid Height="24" VerticalAlignment="Center"' this._ItemForbidOpacityAttrs(t == 0, t, i, forbid) '>'
+            . '<Grid MinHeight="24" VerticalAlignment="Center"' this._ItemForbidOpacityAttrs(t == 0, t, i, forbid) '>'
             . this._ItemForbidOpacityStyle(t == 0)
             . '<Grid.ColumnDefinitions><ColumnDefinition Width="' this._ItemDragColW() '"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>'
             . '<Grid Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ClipToBounds="False">'
@@ -4326,7 +4340,7 @@ class MainWin {
             . this._BuildRowSelIconXaml(t == 0, t, i, rowSel)
             . '<Grid VerticalAlignment="Center" HorizontalAlignment="Left" Margin="12,0,2,0">' this._BuildDragHandleXaml() '</Grid>'
             . '</Grid>'
-            . '<Grid Grid.Column="1" Height="24">'
+            . '<Grid Grid.Column="1" MinHeight="24">'
     }
 
     _ItemCardClose() {
@@ -4429,59 +4443,57 @@ class MainWin {
                 . '<Viewbox.Style><Style TargetType="Viewbox"><Setter Property="Visibility" Value="Visible"/>'
                 . '<Style.Triggers><DataTrigger Binding="{Binding TKStr}" Value=""><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>'
                 . '</Style></Viewbox.Style>'
-                . '<TextBlock Text="{Binding TKStr}" TextWrapping="NoWrap" TextAlignment="Center" FontSize="14"/>'
+                . '<TextBlock Text="{Binding TKStr}" TextWrapping="NoWrap" TextAlignment="Center" FontSize="{DynamicResource VlFontSize}"/>'
                 . '</Viewbox>'
-                . '<TextBlock Text="' kb '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center">'
+                . '<TextBlock Text="' kb '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontLg}" HorizontalAlignment="Center" VerticalAlignment="Center">'
                 . '<TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/>'
                 . '<Style.Triggers><DataTrigger Binding="{Binding TKStr}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>'
                 . '</Style></TextBlock.Style></TextBlock>'
                 . '</Grid>'
         }
         if (tkStr == "")
-            return '<TextBlock Text="' kb '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>'
+            return '<TextBlock Text="' kb '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontLg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>'
         return '<Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Stretch" VerticalAlignment="Center">'
-            . '<TextBlock Text="' this._XmlEsc(tkStr) '" TextWrapping="NoWrap" TextAlignment="Center" FontSize="14"/>'
+            . '<TextBlock Text="' this._XmlEsc(tkStr) '" TextWrapping="NoWrap" TextAlignment="Center" FontSize="{DynamicResource VlFontSize}"/>'
             . '</Viewbox>'
     }
 
     _BuildFoldRemarkFieldXaml(t, f, remark, vlMode) {
-        foldFs := XAMLHost.FormatFontSize(XAMLHost.ScaleFontSize(11))
         ph := this._XmlEsc(GetLang("请输入备注信息"))
         fw := this._foldFieldW
         box := this._FoldFieldBoxAttrs()
         if (vlMode) {
             ; 占位符绑 TextBox.Text（模板内局部名），按键即隐；不绑 FoldRemark（LostFocus 才回写）
-            return '<Grid Width="' fw '" Height="24" MinHeight="24">'
+            return '<Grid Grid.Column="1" MinWidth="' fw '" MinHeight="24" Margin="0,0,8,0">'
                 . '<TextBox Name="FoldRemarkBox" Tag="FoldRemark" Text="{Binding FoldRemark}"' box '/>'
-                . '<TextBlock Text="' ph '" IsHitTestVisible="False" VerticalAlignment="Center" Margin="1,0,1,0" HorizontalAlignment="Left" Foreground="{DynamicResource TextSub}" Opacity="0.55" FontSize="' foldFs '">'
+                . '<TextBlock Text="' ph '" IsHitTestVisible="False" VerticalAlignment="Center" Margin="1,0,1,0" HorizontalAlignment="Left" Foreground="{DynamicResource TextSub}" Opacity="0.55" FontSize="{DynamicResource VlFontSm}">'
                 . '<TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/>'
                 . '<Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=FoldRemarkBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>'
                 . '</Style></TextBlock.Style></TextBlock></Grid>'
         }
-        return '<Grid Width="' fw '" Height="24" MinHeight="24">'
+        return '<Grid Grid.Column="1" MinWidth="' fw '" MinHeight="24" Margin="0,0,8,0">'
             . '<TextBox Name="FoldRemark_' t '_' f '" Text="' this._XmlEsc(remark) '"' box '/>'
-            . '<TextBlock Text="' ph '" IsHitTestVisible="False" VerticalAlignment="Center" Margin="1,0,1,0" HorizontalAlignment="Left" Foreground="{DynamicResource TextSub}" Opacity="0.55" FontSize="' foldFs '">'
+            . '<TextBlock Text="' ph '" IsHitTestVisible="False" VerticalAlignment="Center" Margin="1,0,1,0" HorizontalAlignment="Left" Foreground="{DynamicResource TextSub}" Opacity="0.55" FontSize="{DynamicResource VlFontSm}">'
             . '<TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/>'
             . '<Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=FoldRemark_' t '_' f '}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>'
             . '</Style></TextBlock.Style></TextBlock></Grid>'
     }
 
     _BuildItemRemarkFieldXaml(t, i, remark, vlMode) {
-        foldFs := XAMLHost.FormatFontSize(XAMLHost.ScaleFontSize(11))
         ph := this._XmlEsc(GetLang("请输入备注信息"))
         box := this._FoldFieldBoxAttrs(' ToolTip="' GetLang("备注") '"')
         if (vlMode) {
             ; 占位符绑 TextBox.Text（模板内局部名），按键即隐；不绑 Remark（LostFocus 才回写）
-            return '<Grid Grid.Column="2" Height="24" MinHeight="24" Margin="-5,0,0,0">'
+            return '<Grid Grid.Column="2" MinHeight="24" Margin="-5,0,0,0">'
                 . '<TextBox Name="RemarkBox" Tag="Remark" Text="{Binding Remark}"' box '/>'
-                . '<TextBlock Text="' ph '" IsHitTestVisible="False" VerticalAlignment="Center" Margin="1,0,1,0" HorizontalAlignment="Left" Foreground="{DynamicResource TextSub}" Opacity="0.55" FontSize="' foldFs '">'
+                . '<TextBlock Text="' ph '" IsHitTestVisible="False" VerticalAlignment="Center" Margin="1,0,1,0" HorizontalAlignment="Left" Foreground="{DynamicResource TextSub}" Opacity="0.55" FontSize="{DynamicResource VlFontSm}">'
                 . '<TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/>'
                 . '<Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=RemarkBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>'
                 . '</Style></TextBlock.Style></TextBlock></Grid>'
         }
-        return '<Grid Grid.Column="2" Height="24" MinHeight="24" Margin="-5,0,0,0">'
+        return '<Grid Grid.Column="2" MinHeight="24" Margin="-5,0,0,0">'
             . '<TextBox Name="Remark_' t '_' i '" Text="' this._XmlEsc(remark) '"' box '/>'
-            . '<TextBlock Text="' ph '" IsHitTestVisible="False" VerticalAlignment="Center" Margin="1,0,1,0" HorizontalAlignment="Left" Foreground="{DynamicResource TextSub}" Opacity="0.55" FontSize="' foldFs '">'
+            . '<TextBlock Text="' ph '" IsHitTestVisible="False" VerticalAlignment="Center" Margin="1,0,1,0" HorizontalAlignment="Left" Foreground="{DynamicResource TextSub}" Opacity="0.55" FontSize="{DynamicResource VlFontSm}">'
             . '<TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/>'
             . '<Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=Remark_' t '_' i '}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>'
             . '</Style></TextBlock.Style></TextBlock></Grid>'
@@ -4490,7 +4502,7 @@ class MainWin {
     _BuildFoldFrontCenterXaml(t, f, frontInfo, vlMode) {
         fw := this._foldFrontW
         box := this._FoldFieldBoxAttrs(' IsReadOnly="True" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"')
-        iconFont := ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"'
+        iconFont := ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}"'
         frontIcon := '<TextBlock Text="&#xE7F4;" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}"' iconFont ' Margin="0,0,4,0" ToolTip="' GetLang("前台") '"/>'
         if (vlMode) {
             return frontIcon
@@ -4541,7 +4553,7 @@ class MainWin {
             . this._BuildSeqNoXaml(false, t, i, rowSel)
             . this._BuildItemRemarkFieldXaml(t, i, item.Remark, false)
             . '<StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Left">'
-            . (isNetwork ? '<Button Name="NetHelp_' t '_' i '" Style="{StaticResource RmtItemFieldBtn}" Width="24" Margin="0,0,2,0" Content="&#xE946;" ToolTip="' GetLang("网络触发说明") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"/>' : '')
+            . (isNetwork ? '<Button Name="NetHelp_' t '_' i '" Style="{StaticResource RmtItemFieldBtn}" Width="24" Margin="0,0,2,0" Content="&#xE946;" ToolTip="' GetLang("网络触发说明") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}"/>' : '')
             . '<Button Name="TKBtn_' t '_' i '" Style="{StaticResource RmtItemFieldBtn}" Margin="0,0,4,0" ToolTip="' GetLang("触发键") '" IsEnabled="' (isSubMacro ? "False" : "True") '">' this._BuildTKBtnInnerXaml(tkStr, false) '</Button>'
             . '</StackPanel>'
             . '<ComboBox Grid.Column="5" Name="TKType_' t '_' i '" Style="{StaticResource RmtItemCombo}" Margin="0" SelectedIndex="' tkTypeIdx '" IsEnabled="' (isNormal ? "True" : "False") '" Visibility="' (isNetwork ? "Collapsed" : "Visible") '" ToolTip="' GetLang("触发类型") '">'
@@ -4551,18 +4563,18 @@ class MainWin {
             . '<ComboBox Grid.Column="8" Name="Loop_' t '_' i '" Style="{StaticResource RmtItemCombo}" Margin="0,0,4,0" IsEditable="True" IsEnabled="' (isMacro ? "True" : "False") '" ToolTip="' GetLang("循环次数") '">'
             . '<ComboBoxItem Content="' GetLang("无限") '"/>'
             . '</ComboBox>'
-            . '<Button Grid.Column="9" Name="Setting_' t '_' i '" Style="{StaticResource RmtItemPrimaryBtn}" Margin="0" Content="&#xE713;" ToolTip="' GetLang("设置") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"/>'
+            . '<Button Grid.Column="9" Name="Setting_' t '_' i '" Style="{StaticResource RmtItemPrimaryBtn}" Margin="0" Content="&#xE713;" ToolTip="' GetLang("设置") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontSize}"/>'
             . '<StackPanel Grid.Column="11" Orientation="Horizontal" VerticalAlignment="Center">'
-            . '<Button Name="Copy_' t '_' i '" Style="{StaticResource RmtFoldToolBtn}" Content="&#xE8C8;" ToolTip="' GetLang("复制") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"/>'
+            . '<Button Name="Copy_' t '_' i '" Style="{StaticResource RmtFoldToolBtn}" Content="&#xE8C8;" ToolTip="' GetLang("复制") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}"/>'
             . this._BuildItemForbidBtnXaml(t, i, item.Forbid, false)
-            . '<Button Name="Del_' t '_' i '" Style="{StaticResource RmtFoldToolBtn}" Content="&#xE74D;" ToolTip="' GetLang("删除") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Margin="0"/>'
+            . '<Button Name="Del_' t '_' i '" Style="{StaticResource RmtFoldToolBtn}" Content="&#xE74D;" ToolTip="' GetLang("删除") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}" Margin="0"/>'
             . '</StackPanel>'
             . this._ItemCardClose()
         return xaml
     }
 
     _BuildItemEditBtnInnerXaml(vlMode, t := 0, i := 0, kind := 0) {
-        iconAttr := ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}"'
+        iconAttr := ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}"'
         x := '<StackPanel Orientation="Horizontal" VerticalAlignment="Center">'
             . '<TextBlock Text="&#xE945;"' iconAttr '/>'
             . '<TextBlock Text="&#xE72C;" Margin="1,0,0,0"' iconAttr '/>'
@@ -4616,7 +4628,7 @@ class MainWin {
         dotVis := forbidState ? "Visible" : "Collapsed"
         return '<Grid VerticalAlignment="Center" ClipToBounds="False">'
             . '<Button Name="Forbid_' t '_' i '" Tag="Forbid" Content="&#xE25B;" ToolTip="' GetLang("禁用") '" Style="{StaticResource RmtFoldToolBtn}"'
-            . ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"'
+            . ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}"'
             . ' Background="' actBg '" BorderBrush="' actBr '" Foreground="' actFg '"/>'
             . '<Grid Name="ForbidDot_' t '_' i '" Visibility="' dotVis '"><Ellipse Width="6" Height="6" Fill="{DynamicResource Accent}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,2,0" IsHitTestVisible="False"/></Grid>'
             . '</Grid>'
@@ -4808,7 +4820,7 @@ class MainWin {
             . this._BuildSeqNoXaml(true)
             . this._BuildItemRemarkFieldXaml(0, 0, "", true)
             . '<StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Left">'
-            . '<Button Tag="NetHelp" Visibility="{Binding NetHelpVis}" Style="{StaticResource RmtItemFieldBtn}" Width="24" Margin="0,0,2,0" Content="&#xE946;" ToolTip="' GetLang("网络触发说明") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"/>'
+            . '<Button Tag="NetHelp" Visibility="{Binding NetHelpVis}" Style="{StaticResource RmtItemFieldBtn}" Width="24" Margin="0,0,2,0" Content="&#xE946;" ToolTip="' GetLang("网络触发说明") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}"/>'
             . '<Button Tag="TKBtn" IsEnabled="{Binding TKBtnEnabled}" Style="{StaticResource RmtItemFieldBtn}" Margin="0,0,4,0" ToolTip="' GetLang("触发键") '">' this._BuildTKBtnInnerXaml("", true) '</Button>'
             . '</StackPanel>'
             . '<ComboBox Grid.Column="5" Tag="TKType" Visibility="{Binding NetTypeVis}" SelectedIndex="{Binding TKType}" IsEnabled="{Binding TKTypeEnabled}" Style="{StaticResource RmtItemCombo}" Margin="0" ToolTip="' GetLang("触发类型") '">'
@@ -4818,28 +4830,27 @@ class MainWin {
             . '<ComboBox Grid.Column="8" Tag="Loop" Text="{Binding LoopText}" IsEditable="True" IsEnabled="{Binding LoopEnabled}" Style="{StaticResource RmtItemCombo}" Margin="0,0,4,0" ToolTip="' GetLang("循环次数") '">'
             . '<ComboBoxItem Content="' GetLang("无限") '"/>'
             . '</ComboBox>'
-            . '<Button Grid.Column="9" Tag="Setting" Style="{StaticResource RmtItemPrimaryBtn}" Margin="0" Content="&#xE713;" ToolTip="' GetLang("设置") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"/>'
+            . '<Button Grid.Column="9" Tag="Setting" Style="{StaticResource RmtItemPrimaryBtn}" Margin="0" Content="&#xE713;" ToolTip="' GetLang("设置") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontSize}"/>'
             . '<StackPanel Grid.Column="11" Orientation="Horizontal" VerticalAlignment="Center">'
-            . '<Button Tag="Copy" Style="{StaticResource RmtFoldToolBtn}" Content="&#xE8C8;" ToolTip="' GetLang("复制") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"/>'
+            . '<Button Tag="Copy" Style="{StaticResource RmtFoldToolBtn}" Content="&#xE8C8;" ToolTip="' GetLang("复制") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}"/>'
             . this._BuildItemForbidBtnXaml(0, 0, false, true)
-            . '<Button Tag="Del" Style="{StaticResource RmtFoldToolBtn}" Content="&#xE74D;" ToolTip="' GetLang("删除") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Margin="0"/>'
+            . '<Button Tag="Del" Style="{StaticResource RmtFoldToolBtn}" Content="&#xE74D;" ToolTip="' GetLang("删除") '" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}" Margin="0"/>'
             . '</StackPanel>'
             . this._ItemCardClose() '</DataTemplate>'
-        foldFs := XAMLHost.FormatFontSize(XAMLHost.ScaleFontSize(11))
         fold := '<DataTemplate x:Key="RmtFoldHeader' suf '">'
             . this._BuildFoldCardBorderOpen()
-            . '<StackPanel VerticalAlignment="Center" TextElement.FontSize="' foldFs '">'
+            . '<StackPanel VerticalAlignment="Center" TextElement.FontSize="{DynamicResource VlFontSm}">'
             . '<StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Opacity" Value="1"/>'
             . '<Style.Triggers><DataTrigger Binding="{Binding FoldForbid}" Value="True"><Setter Property="Opacity" Value="' this._ForbidContentOpacity() '"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>'
             . this._BuildFoldDividerXaml(true)
             . this._BuildFoldHeaderRowXaml(0, 0, "", true)
             . '<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,0" Visibility="{Binding ShowTKRowVisibility}">'
             . '<TextBlock Text="' GetLang("菜单触发键：") '" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}"/>'
-            . '<ComboBox Tag="FoldTKType" SelectedIndex="{Binding FoldTKType}" IsEnabled="{Binding FoldTKTypeEnabled}" Width="70" Height="24" MinHeight="24" Margin="2,0,10,0">'
+            . '<ComboBox Tag="FoldTKType" SelectedIndex="{Binding FoldTKType}" IsEnabled="{Binding FoldTKTypeEnabled}" MinWidth="{DynamicResource FoldTkTypeW}" MinHeight="24" Margin="2,0,10,0">'
             . '<ComboBoxItem Content="' GetLang("按下") '"/><ComboBoxItem Content="' GetLang("松开") '"/><ComboBoxItem Content="' GetLang("松止") '"/><ComboBoxItem Content="' GetLang("开关") '"/><ComboBoxItem Content="' GetLang("长按") '"/><ComboBoxItem Content="' GetLang("双击") '"/>'
             . '</ComboBox>'
-            . '<TextBox Tag="FoldTK" Text="{Binding FoldTK}" Width="100" Height="24" VerticalContentAlignment="Center" TextAlignment="Center"/>'
-            . '<Button Tag="FoldTKEdit" Content="' GetLang("编辑") '" Height="24" MinHeight="24" Padding="8,0" Margin="6,0,0,0"/>'
+            . '<TextBox Tag="FoldTK" Text="{Binding FoldTK}" MinWidth="{DynamicResource FoldTkW}" MinHeight="24" VerticalContentAlignment="Center" TextAlignment="Center"/>'
+            . '<Button Tag="FoldTKEdit" Content="' GetLang("编辑") '" MinHeight="24" Padding="8,0" Margin="6,0,0,0"/>'
             . '</StackPanel>'
             . '</StackPanel></Border></DataTemplate>'
         addFold := '<DataTemplate x:Key="RmtAddFold">'
@@ -4860,7 +4871,7 @@ class MainWin {
 
     _BuildFoldIconBtn(tag, name, t, f, content, tip, vlMode, isIcon := true, last := false) {
         margin := last ? "" : ' Margin="0,0,4,0"'
-        font := isIcon ? ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"' : ' FontSize="14"'
+        font := isIcon ? ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}"' : ' FontSize="{DynamicResource VlFontSize}"'
         attrs := ' Style="{StaticResource RmtFoldToolBtn}" Content="' content '" ToolTip="' tip '"' . font
         if (last)
             attrs .= ' Margin="0"'
@@ -4896,7 +4907,7 @@ class MainWin {
         dotVis := forbidState ? "Visible" : "Collapsed"
         return '<Grid VerticalAlignment="Center" ClipToBounds="False">'
             . '<Button Name="FoldForbidBtn_' t '_' f '" Tag="FoldForbidBtn" Content="' icon '" ToolTip="' tip '" Style="{StaticResource RmtFoldToolBtn}"'
-            . ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"'
+            . ' FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="{DynamicResource VlFontIcon}"'
             . ' Background="' actBg '" BorderBrush="' actBr '" Foreground="' actFg '"/>'
             . '<Grid Name="FoldForbidDot_' t '_' f '" Visibility="' dotVis '">' dot '</Grid>'
             . '</Grid>'
@@ -5020,12 +5031,16 @@ class MainWin {
 
     ; 两列行：label1+TextBox1 | label2+TextBox2，复刻旧布局「一行两列」
     _TwoColRow(ns, label1, name1, val1, label2, name2, val2) {
-        return '<StackPanel ' ns ' Orientation="Horizontal" Margin="0,4,0,4">'
-            . '<TextBlock Text="' this._XmlEsc(label1) '" Width="120" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
-            . '<TextBox Name="' name1 '" Text="' this._XmlEsc(val1) '" Width="220" Height="24" MinHeight="24" Padding="4,0" VerticalContentAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/>'
-            . '<TextBlock Text="' this._XmlEsc(label2) '" Width="120" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
-            . '<TextBox Name="' name2 '" Text="' this._XmlEsc(val2) '" Width="220" Height="24" MinHeight="24" Padding="4,0" VerticalContentAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/>'
-            . '</StackPanel>'
+        ; 阶段 C 弹性化：Grid [S(120)|*|S(120)|*]，信息字段 Stretch+MaxWidth=420 随窗延伸
+        ; （标签列随字号缩放兜底；标签 TextWrapping 换行——大字号溢出列宽会被输入框盖住）
+        lw := UILayout.S(120)
+        return '<Grid ' ns ' Margin="0,4,0,4">'
+            . '<Grid.ColumnDefinitions><ColumnDefinition Width="' lw '"/><ColumnDefinition Width="*"/><ColumnDefinition Width="' lw '"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>'
+            . '<TextBlock Grid.Column="0" Text="' this._XmlEsc(label1) '" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
+            . '<TextBox Grid.Column="1" Name="' name1 '" Text="' this._XmlEsc(val1) '" Height="24" MinHeight="24" MaxWidth="420" HorizontalAlignment="Stretch" Padding="4,0" VerticalContentAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/>'
+            . '<TextBlock Grid.Column="2" Text="' this._XmlEsc(label2) '" TextWrapping="Wrap" Margin="16,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
+            . '<TextBox Grid.Column="3" Name="' name2 '" Text="' this._XmlEsc(val2) '" Height="24" MinHeight="24" MaxWidth="420" HorizontalAlignment="Stretch" Padding="4,0" VerticalContentAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/>'
+            . '</Grid>'
     }
 
     ; ============ 设置页（§12 按「作用范围」重组：通用设置 / 宏设置 / 功能选项） ============
@@ -5060,8 +5075,8 @@ class MainWin {
                 , GetLang("宏手柄类型说明"))
             . this._ComboRow(GetLang("软件字体："), "CmbFont", MainSoftData.FontList, MainSoftData.FontType
                 , GetLang("软件界面使用的字体，修改后保存设置生效。"))
-            . '<StackPanel ' ns ' Orientation="Horizontal" Margin="0,4,16,4"><TextBlock Text="' GetLang("软件背景颜色：") '" Width="120" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/><TextBox Name="EditSoftBGColor" Text="' MainSoftData.SoftBGColor '" Width="100" Height="24" MinHeight="24" Padding="4,0" VerticalContentAlignment="Center" TextAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/></StackPanel>'
-            . '<StackPanel ' ns ' Orientation="Horizontal" Margin="0,4,16,4"><TextBlock Text="' GetLang("背景图：") '" Width="120" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/><TextBox Name="EditBackImage" Text="' this._XmlEsc(MainSoftData.BackImagePath) '" Width="220" Height="24" MinHeight="24" Padding="4,0" VerticalContentAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/><Button Name="BtnBackImageBrowse" Content="' GetLang("浏览") '" Height="24" MinHeight="24" Padding="8,0" Margin="4,0,0,0"/><Button Name="BtnBackImageClear" Content="' GetLang("清空") '" Height="24" MinHeight="24" Padding="8,0" Margin="4,0,0,0"/></StackPanel>'
+            . '<StackPanel ' ns ' Orientation="Horizontal" Margin="0,4,16,4"><TextBlock Text="' GetLang("软件背景颜色：") '" MinWidth="' UILayout.S(120) '" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/><TextBox Name="EditSoftBGColor" Text="' MainSoftData.SoftBGColor '" MinWidth="' UILayout.S(100) '" Height="24" MinHeight="24" Padding="4,0" VerticalContentAlignment="Center" TextAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/></StackPanel>'
+            . '<StackPanel ' ns ' Orientation="Horizontal" Margin="0,4,16,4"><TextBlock Text="' GetLang("背景图：") '" MinWidth="' UILayout.S(120) '" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/><TextBox Name="EditBackImage" Text="' this._XmlEsc(MainSoftData.BackImagePath) '" MinWidth="' UILayout.S(220) '" Height="24" MinHeight="24" Padding="4,0" VerticalContentAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/><Button Name="BtnBackImageBrowse" Content="' GetLang("浏览") '" Height="24" MinHeight="24" Padding="8,0" Margin="4,0,0,0"/><Button Name="BtnBackImageClear" Content="' GetLang("清空") '" Height="24" MinHeight="24" Padding="8,0" Margin="4,0,0,0"/></StackPanel>'
             . '</WrapPanel>')
 
         ; ---- 宏设置：时间/间隔/坐标浮动 + 无变量提醒（多线程数已在通用设置，去重） ----
@@ -5232,7 +5247,7 @@ class MainWin {
 
     ; 业务日志开关：写 MainSoftData + 同步 LogUtil global + 持久化
     OnBusinessLogToggle(state, ctrl, event) {
-        global RMTLogBusinessEnabled
+        global RMTLogBusinessEnabled, MainSoftData
         MainSoftData.BusinessLog := this.ui.Query(ctrl) == "True"
         RMTLogBusinessEnabled := MainSoftData.BusinessLog
         IniWrite(MainSoftData.BusinessLog, IniFile, IniSection, "BusinessLog")
@@ -5250,8 +5265,8 @@ class MainWin {
         ns := 'xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"'
         tipAttr := tip == "" ? "" : ' ToolTip="' this._XmlEsc(tip) '"'
         return '<StackPanel ' ns ' Orientation="Horizontal" Margin="0,4,16,4"' tipAttr '>'
-            . '<TextBlock Text="' this._XmlEsc(label) '" Width="120" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
-            . '<TextBox Name="' name '" Text="' val '" Width="100" Height="24" MinHeight="24" Padding="4,0" VerticalContentAlignment="Center" TextAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/>'
+            . '<TextBlock Text="' this._XmlEsc(label) '" MinWidth="' UILayout.S(120) '" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
+            . '<TextBox Name="' name '" Text="' val '" MinWidth="' UILayout.S(100) '" Height="24" MinHeight="24" Padding="4,0" VerticalContentAlignment="Center" TextAlignment="Center" FontSize="11" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/>'
             . '</StackPanel>'
     }
 
@@ -5277,8 +5292,8 @@ class MainWin {
         selAttr := (selIdx == "") ? "" : ' SelectedIndex="' selIdx '"'
         tipAttr := tip == "" ? "" : ' ToolTip="' this._XmlEsc(tip) '"'
         return '<StackPanel ' ns ' Orientation="Horizontal" Margin="0,4,16,4"' tipAttr '>'
-            . '<TextBlock Text="' this._XmlEsc(label) '" Width="80" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
-            . '<ComboBox Name="' name '" Width="130" Height="24" MinHeight="24" VerticalContentAlignment="Center" FontSize="12" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"' selAttr '>' itemsXaml '</ComboBox>'
+            . '<TextBlock Text="' this._XmlEsc(label) '" MinWidth="' UILayout.S(80) '" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
+            . '<ComboBox Name="' name '" MinWidth="' UILayout.S(130) '" Height="24" MinHeight="24" VerticalContentAlignment="Center" FontSize="12" Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"' selAttr '>' itemsXaml '</ComboBox>'
             . '</StackPanel>'
     }
 
@@ -5320,7 +5335,7 @@ class MainWin {
         name := "Link_" this._linkCounter
         this._linkQueue.Push({ name: name, url: url })
         return '<StackPanel ' ns ' Orientation="Horizontal" Margin="0,3,0,3">'
-            . '<TextBlock Text="' this._XmlEsc(label) '" Width="130" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
+            . '<TextBlock Text="' this._XmlEsc(label) '" MinWidth="' UILayout.S(130) '" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}" FontSize="12"/>'
             . '<TextBlock Name="' name '" Text="' this._XmlEsc(text) '" TextDecorations="Underline" Foreground="#2D6CDF" Cursor="Hand" FontSize="12" TextWrapping="Wrap"/>'
             . '</StackPanel>'
     }

@@ -1,10 +1,10 @@
 #Requires AutoHotkey v2.0
 
 ; =====================================================================
-; 输入指令统一通信（输入框/按钮条）：
-; Worker 跨进程请求主进程弹窗（IP/IB → WorkPool 弹窗 → IPR/IBR 回传）；
+; 输入指令统一通信（输入框/按钮条/自定义弹窗）：
+; Worker 跨进程请求主进程弹窗（直发 opcode → WorkPool 注册表分发 → 回传 opcode+"R"）；
 ; 主进程宏经 WorkPool.RequestLocalInput 由主线程异步弹窗（结果写本地槽位）。
-; 返回 args 数组（IPR: [ok, value]；IBR: [button]）；失败/超时返回 ""
+; 返回 args 数组（IPR: [ok, value]；IBR: [button]；CMR: [button]）；失败/超时返回 ""
 ; =====================================================================
 InputRequest(opcode, args*) {
     global MyWorkPool
@@ -12,31 +12,19 @@ InputRequest(opcode, args*) {
         return WorkerInputRequest(opcode, args*)
     ; 主进程宏：交由主线程 WorkPool 弹窗
     if (MyWorkPool != "" && IsObject(MyWorkPool))
-        return MyWorkPool.RequestLocalInput(opcode == "IB", args*)
+        return MyWorkPool.RequestLocalInput(opcode, args*)
     return ""
 }
 
+; Worker 跨进程弹窗请求：委托 Thread\WorkUtil.ahk 的统一阻塞代理 WorkerDialog_Request
+; （本文件为主/Worker 共享，主进程编译链无 WorkUtil，动态名解析避免裸引用触发 #Warn）
 WorkerInputRequest(opcode, args*) {
-    global rx, workIndex, parentHwnd, _workerInputResult
-    if (!IsSet(rx) || !IsSet(parentHwnd))
-        return ""
-    cmd := EncodeCommand(opcode, args*)
-    payload := EncodeBatch(cmd)
-    rx.Push(MsgType.EVENT, 0, payload)
-    PostMessage(WM_WORKER_TO_MASTER, workIndex, 0, , "ahk_id " parentHwnd)
-    _workerInputResult := ""
-    ; 阻塞等待主进程回传，超时兜底
-    deadline := A_TickCount + 300000
-    loop {
-        Sleep(100)
-        if (IsObject(_workerInputResult))
-            break
-        if (A_TickCount > deadline)
-            return ""
+    fnName := "WorkerDialog_Request"
+    if (IsSet(%fnName%)) {
+        impl := %fnName%
+        return impl(opcode, args*)
     }
-    r := _workerInputResult
-    _workerInputResult := ""
-    return r
+    return ""   ; 理论不可达：仅 Worker 进程调用（InputRequest 已判 workIndex>0）
 }
 
 InputPopUp(Data, tableItem, index) {

@@ -144,7 +144,7 @@ class RightClickMenuSettingGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("右键菜单设置")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         winW := 680
         winH := 540
 
@@ -163,38 +163,38 @@ class RightClickMenuSettingGui {
         ; ===== 模块1：一般右键 =====
         body.Add("TextBlock").Text(GetLang("一般右键显示")).Foreground("{DynamicResource TextMain}").FontSize(13).FontWeight("SemiBold").Margin("0,0,0,8")
         genPanel := body.Add("Grid").Margin("0,0,0,14")
-        genPanel.Cols("*", "50", "*")
+        genPanel.Cols("*", UILayout.S(50), "*")
 
         ; 左：已启用
         genLeft := genPanel.Add("Border").Grid_Column(0).BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").CornerRadius("4").Background("{DynamicResource InputBg}")
         genLeftStack := genLeft.Add("StackPanel")
         genLeftStack.Add("TextBlock").Text(GetLang("显示项目")).Foreground("{DynamicResource TextSub}").FontSize(11).Margin("6,4,6,2")
-        genActiveList := genLeftStack.Add("ListBox").Name("GenActiveList").Height(140)
+        genActiveList := genLeftStack.Add("ListBox").Name("GenActiveList").Height(UILayout.S(140))
             .Background("Transparent").BorderThickness("0")
             .Foreground("{DynamicResource TextMain}").FontSize(12)
 
         ; 中间按钮
         genMid := genPanel.Add("StackPanel").Grid_Column(1).VerticalAlignment("Center").HorizontalAlignment("Center")
         genUpBtn := genMid.Add("Button").Name("BtnGenUp").Content(Chr(0xE70E))
-            .Width(30).Height(28).Margin("0,0,0,4").Cursor("Hand")
+            .Width(30).Height(UILayout.CtrlH.RowSm).Margin("0,0,0,4").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(11)
         genUpBtn.InjectResources(this._editBtnStyle)
         genDownBtn := genMid.Add("Button").Name("BtnGenDown").Content(Chr(0xE70D))
-            .Width(30).Height(28).Margin("0,0,0,8").Cursor("Hand")
+            .Width(30).Height(UILayout.CtrlH.RowSm).Margin("0,0,0,8").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(11)
         genDownBtn.InjectResources(this._editBtnStyle)
         genAddBtn := genMid.Add("Button").Name("BtnGenAdd").Content(Chr(0xE76B))
-            .Width(30).Height(28).Margin("0,0,0,4").Cursor("Hand")
+            .Width(30).Height(UILayout.CtrlH.RowSm).Margin("0,0,0,4").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(11)
         genAddBtn.InjectResources(this._editBtnStyle)
         genRemBtn := genMid.Add("Button").Name("BtnGenRemove").Content(Chr(0xE76C))
-            .Width(30).Height(28).Cursor("Hand")
+            .Width(30).Height(UILayout.CtrlH.RowSm).Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(11)
@@ -204,45 +204,45 @@ class RightClickMenuSettingGui {
         genRight := genPanel.Add("Border").Grid_Column(2).BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").CornerRadius("4").Background("{DynamicResource InputBg}")
         genRightStack := genRight.Add("StackPanel")
         genRightStack.Add("TextBlock").Text(GetLang("可用项目")).Foreground("{DynamicResource TextSub}").FontSize(11).Margin("6,4,6,2")
-        genAvailList := genRightStack.Add("ListBox").Name("GenAvailList").Height(140)
+        genAvailList := genRightStack.Add("ListBox").Name("GenAvailList").Height(UILayout.S(140))
             .Background("Transparent").BorderThickness("0")
             .Foreground("{DynamicResource TextMain}").FontSize(12)
 
         ; ===== 模块2：分支循环体右键 =====
         body.Add("TextBlock").Text(GetLang("分支循环体右键显示")).Foreground("{DynamicResource TextMain}").FontSize(13).FontWeight("SemiBold").Margin("0,0,0,8")
         branchPanel := body.Add("Grid").Margin("0,0,0,16")
-        branchPanel.Cols("*", "50", "*")
+        branchPanel.Cols("*", UILayout.S(50), "*")
 
         ; 左：已启用
         branchLeft := branchPanel.Add("Border").Grid_Column(0).BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").CornerRadius("4").Background("{DynamicResource InputBg}")
         branchLeftStack := branchLeft.Add("StackPanel")
         branchLeftStack.Add("TextBlock").Text(GetLang("显示项目")).Foreground("{DynamicResource TextSub}").FontSize(11).Margin("6,4,6,2")
-        branchActiveList := branchLeftStack.Add("ListBox").Name("BranchActiveList").Height(120)
+        branchActiveList := branchLeftStack.Add("ListBox").Name("BranchActiveList").Height(UILayout.S(120))
             .Background("Transparent").BorderThickness("0")
             .Foreground("{DynamicResource TextMain}").FontSize(12)
 
         ; 中间按钮
         branchMid := branchPanel.Add("StackPanel").Grid_Column(1).VerticalAlignment("Center").HorizontalAlignment("Center")
         branchUpBtn := branchMid.Add("Button").Name("BtnBranchUp").Content(Chr(0xE70E))
-            .Width(30).Height(28).Margin("0,0,0,4").Cursor("Hand")
+            .Width(30).Height(UILayout.CtrlH.RowSm).Margin("0,0,0,4").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(11)
         branchUpBtn.InjectResources(this._editBtnStyle)
         branchDownBtn := branchMid.Add("Button").Name("BtnBranchDown").Content(Chr(0xE70D))
-            .Width(30).Height(28).Margin("0,0,0,8").Cursor("Hand")
+            .Width(30).Height(UILayout.CtrlH.RowSm).Margin("0,0,0,8").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(11)
         branchDownBtn.InjectResources(this._editBtnStyle)
         branchAddBtn := branchMid.Add("Button").Name("BtnBranchAdd").Content(Chr(0xE76B))
-            .Width(30).Height(28).Margin("0,0,0,4").Cursor("Hand")
+            .Width(30).Height(UILayout.CtrlH.RowSm).Margin("0,0,0,4").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(11)
         branchAddBtn.InjectResources(this._editBtnStyle)
         branchRemBtn := branchMid.Add("Button").Name("BtnBranchRemove").Content(Chr(0xE76C))
-            .Width(30).Height(28).Cursor("Hand")
+            .Width(30).Height(UILayout.CtrlH.RowSm).Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(11)
@@ -252,7 +252,7 @@ class RightClickMenuSettingGui {
         branchRight := branchPanel.Add("Border").Grid_Column(2).BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").CornerRadius("4").Background("{DynamicResource InputBg}")
         branchRightStack := branchRight.Add("StackPanel")
         branchRightStack.Add("TextBlock").Text(GetLang("可用项目")).Foreground("{DynamicResource TextSub}").FontSize(11).Margin("6,4,6,2")
-        branchAvailList := branchRightStack.Add("ListBox").Name("BranchAvailList").Height(120)
+        branchAvailList := branchRightStack.Add("ListBox").Name("BranchAvailList").Height(UILayout.S(120))
             .Background("Transparent").BorderThickness("0")
             .Foreground("{DynamicResource TextMain}").FontSize(12)
 
@@ -261,25 +261,22 @@ class RightClickMenuSettingGui {
         okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(90).Height(32).Margin("0,0,16,0")
+            .FontSize(13).Cursor("Hand").Width(90).Height(UILayout.S(32)).Margin("0,0,16,0")
         okBtn.InjectResources(this._btnStyle)
         cancelBtn := btnRow.Add("Button").Name("BtnCancel").Content(GetLang("取消"))
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(90).Height(32)
+            .FontSize(13).Cursor("Hand").Width(90).Height(UILayout.S(32))
         cancelBtn.InjectResources(this._editBtnStyle)
 
         pos := GetCenterPosOnActiveMonitor(winW, winH)
-        dipX := PhysToDip(pos.x)
-        dipY := PhysToDip(pos.y)
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"',
             Format('Title="{}" ShowInTaskbar="False" Width="{}" Height="{}" Left="{}" Top="{}" Opacity="0"',
-                title, winW, winH, dipX, dipY))
+                title, winW, winH, pos.x, pos.y))
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"', 'WindowStartupLocation="Manual"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))
@@ -497,7 +494,7 @@ class RightClickMenuSettingGui {
     }
 
     OnConfirmClick(state := unset, ctrl := unset, event := unset) {
-        global IniFile, IniSection
+        global IniFile, MainSoftData, IniSection
         ; 保存到 MainSoftData
         genStr := ""
         for i, k in this._generalActive {

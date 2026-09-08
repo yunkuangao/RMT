@@ -63,7 +63,7 @@ class MenuMacroSettingGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("菜单宏配置 - 扇区") " " this.CurrentIndex
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         winW := 420
         winH := 200
         this._editBtnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource EditHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource EditHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
@@ -82,16 +82,15 @@ class MenuMacroSettingGui {
         content := body.Add("StackPanel").Margin("18,44,18,14")
         content.Add("TextBlock").Text(GetLang("图标文件：")).Foreground("{DynamicResource TextMain}").FontSize(13).Margin("0,0,0,8")
 
-        pathRow := content.Add("Grid").Margin("0,0,0,18").Height(28)
+        pathRow := content.Add("Grid").Margin("0,0,0,18").Height(UILayout.CtrlH.RowSm)
         pathRow.Cols("*", "Auto")
-        pathRow.Add("TextBox").Name("IcoPathCon").Text("").Height(28).MinHeight(28)
-            .FontSize(12).FontFamily(MainSoftData.FontType)
+        pathRow.Add("TextBox").Name("IcoPathCon").Text("").Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm)
+            .FontSize(12)
             .VerticalAlignment("Center").VerticalContentAlignment("Center")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").Padding("6,0")
+            .Style("{DynamicResource InputBoxStyle}").Padding("6,0")
             .Grid_Column(0)
         browseBtn := pathRow.Add("Button").Name("BtnBrowse").Content(GetLang("选择"))
-            .Width(72).Height(28).MinHeight(28).Margin("8,0,0,0").FontSize(12).Cursor("Hand")
+            .Width(72).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Margin("8,0,0,0").FontSize(12).Cursor("Hand")
             .VerticalAlignment("Center")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
@@ -102,25 +101,22 @@ class MenuMacroSettingGui {
         okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(28).Margin("0,0,100,0")
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.CtrlH.RowSm).Margin("0,0,100,0")
         okBtn.InjectResources(this._editBtnStyle)
         cancelBtn := btnRow.Add("Button").Name("BtnCancel").Content(GetLang("取消"))
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(28)
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.CtrlH.RowSm)
         cancelBtn.InjectResources(this._editBtnStyle)
 
         pos := GetCenterPosOnActiveMonitor(winW, winH)
-        dipX := PhysToDip(pos.x)
-        dipY := PhysToDip(pos.y)
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"',
             Format('Title="{}" ShowInTaskbar="False" Width="{}" Height="{}" Left="{}" Top="{}" Opacity="0"',
-                title, winW, winH, dipX, dipY))
+                title, winW, winH, pos.x, pos.y))
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"', 'WindowStartupLocation="Manual"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))

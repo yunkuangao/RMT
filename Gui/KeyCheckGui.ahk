@@ -42,7 +42,7 @@ class KeyCheckGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -56,7 +56,7 @@ class KeyCheckGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         ; 实例复用：重建前清空按键映射，避免 _btnKeyMap/_keySeq 累积导致事件重复绑定
         this.ConMap := Map()
@@ -64,7 +64,7 @@ class KeyCheckGui {
         this._keySeq := 0
         title := this.ParentTile GetLang("按键检测")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*", "34", "44")
@@ -82,20 +82,20 @@ class KeyCheckGui {
         ; === 底部参数行 ===
         bottom := main.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").Margin("10,2").VerticalAlignment("Center")
         bottom.Add("TextBlock").Text(GetLang("检测模式:")).VerticalAlignment("Center")
-        cc := bottom.Add("ComboBox").Name("CheckTypeCon").Width(120).Height(26).MinHeight(26).Margin("4,0,0,0")
+        cc := bottom.Add("ComboBox").Name("CheckTypeCon").Width(UILayout.S(120)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         for t in GetLangArr(["同时按下", "有一个按下"])
             cc.Add("ComboBoxItem").Content(t)
         bottom.Add("TextBlock").Text(GetLang("检测类型:")).VerticalAlignment("Center").Margin("20,0,0,0")
-        st := bottom.Add("ComboBox").Name("StateTypeCon").Width(120).Height(26).MinHeight(26).Margin("4,0,0,0")
+        st := bottom.Add("ComboBox").Name("StateTypeCon").Width(UILayout.S(120)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         for t in GetLangArr(["物理状态", "逻辑状态"])
             st.Add("ComboBoxItem").Content(t)
         bottom.Add("TextBlock").Text(GetLang("结果变量：")).VerticalAlignment("Center").Margin("20,0,0,0")
-        bottom.Add("ComboBox").Name("VarNameCon").Width(130).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        bottom.Add("ComboBox").Name("VarNameCon").Width(UILayout.S(130)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
 
         ; === 底部按钮行 ===
         btnRow := main.Add("StackPanel").Grid_Row(3).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnClear").Content(GetLang("清空")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnClear").Content(GetLang("清空")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
 
         ; === 生成按键网格 ===
         this._BuildKeyGrid()
@@ -103,8 +103,7 @@ class KeyCheckGui {
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="1280" Height="555" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(1280) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 注册按键事件 ===
@@ -129,7 +128,7 @@ class KeyCheckGui {
     _PlaceKey(value, display, x, y, width) {
         this._keySeq += 1
         name := "KeyBtn_" this._keySeq
-        btn := this._keyGrid.Add("Button").Name(name).Width(width).Height(25)
+        btn := this._keyGrid.Add("Button").Name(name).Width(width).Height(UILayout.S(25))
             .SetProp("Canvas.Left", String(x)).SetProp("Canvas.Top", String(y))
             .Content(display).FontSize(11).Cursor("Hand").Padding("2,0")
             .Background("{DynamicResource InputBg}").Foreground("{DynamicResource TextMain}")

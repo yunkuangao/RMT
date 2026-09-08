@@ -144,7 +144,7 @@ class ReplaceKeyGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         ; 实例复用：重建前清空按键映射，避免 _btnKeyMap/_keySeq 累积导致事件重复绑定
         this.ConMap := Map()
@@ -152,7 +152,7 @@ class ReplaceKeyGui {
         this._keySeq := 0
         title := GetLang("替换按键")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*", "44")
@@ -172,8 +172,8 @@ class ReplaceKeyGui {
         bottom.Cols("*", "Auto")
         bottom.Add("TextBlock").Name("CheckedInfoCon").Text(GetLang("当前配置：")).VerticalAlignment("Center").Grid_Column(0)
         btnStack := bottom.Add("StackPanel").Grid_Column(1).Orientation("Horizontal")
-        btnStack.Add("Button").Name("BtnClear").Content(GetLang("清空")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
-        btnStack.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnStack.Add("Button").Name("BtnClear").Content(GetLang("清空")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnStack.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
 
         ; === 生成按键网格 ===
         this._BuildKeyGrid()
@@ -181,8 +181,7 @@ class ReplaceKeyGui {
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="1280" Height="515" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(1280) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 注册按键事件 ===
@@ -207,7 +206,7 @@ class ReplaceKeyGui {
     _PlaceKey(value, display, x, y, width) {
         this._keySeq += 1
         name := "KeyBtn_" this._keySeq
-        btn := this._keyGrid.Add("Button").Name(name).Width(width).Height(25)
+        btn := this._keyGrid.Add("Button").Name(name).Width(width).Height(UILayout.S(25))
             .SetProp("Canvas.Left", String(x)).SetProp("Canvas.Top", String(y))
             .Content(display).FontSize(11).Cursor("Hand").Padding("2,0")
             .Background("{DynamicResource InputBg}").Foreground("{DynamicResource TextMain}")

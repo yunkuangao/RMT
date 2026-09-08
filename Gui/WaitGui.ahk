@@ -1,19 +1,17 @@
 #Requires AutoHotkey v2.0
 
 ; =====================================================================
-; 等待编辑器（§16）—— XAML 迁移版（独立实现）
+; 等待编辑器（§16）—— UiWindow 基类迁移版（P0.9 验证窗口）
+; 详见《deliverables/统一UI管理器设计方案.md》：
+;   - 骨架（ShowGui 五步 / 关闭三路径 / 模态恢复 / 防重入）由 UiWindow 提供
+;   - 子类只写：Name/Title/Build/Events/OnInit/AfterShow/OnValidate/OnSave
 ; 公开接口保持：ShowGui(cmd) / SureBtnAction / OwnerHwnd / ParentTile
 ; 19 种等待类型共用「检测间隔 + 轮询」骨架，参数区按类型显隐
 ; =====================================================================
 
-class WaitGui {
+class WaitGui extends UiWindow {
     __new() {
-        this.ParentTile := ""
-        this.ui := ""
-        this.Gui := ""
-        this.SureBtnAction := ""
-        this.OwnerHwnd := ""
-        this._closed := true
+        super.__new()
         this.Data := ""
         this.SerialStr := ""
         this.DLVariableArr := []
@@ -24,57 +22,32 @@ class WaitGui {
             "等待文件存在", "等待文件删除", "等待文件变化", "等待日期"]
     }
 
-    ShowGui(cmd) {
-        global MySoftData
-        if (IsObject(this.ui) && !this._closed)
-            this._CloseWindow()
-        this._BuildAndShow()
-        if (this.OwnerHwnd != "" && MainSoftData.IsModalSubGui) {
-            try SafeGuiFromHwnd(this.OwnerHwnd).Opt("+Disabled")
-        }
-        this.Init(cmd)
-        this.OnTypeChange()
-        this._ShowWindow()
+    ; ---- 基类钩子实现 ----
+    Name() => "WaitGui"
+    Title() => GetLang("等待编辑器")
+
+    Events() {
+        return [
+            {ctrl: "WaitTypeCon", ev: "SelectionChanged", handler: ObjBindMethod(this, "OnTypeChange")},
+            {ctrl: "BtnWinEdit", ev: "Click", handler: ObjBindMethod(this, "OnClickWinEdit")},
+            {ctrl: "BtnFileBrowse", ev: "Click", handler: ObjBindMethod(this, "OnClickFileBrowse")}
+        ]
     }
 
-    Hwnd() {
-        return (IsObject(this.ui) && this.ui.HasProp("wpfHwnd")) ? this.ui.wpfHwnd : 0
-    }
-
-    _EscapeXml(s) {
-        s := StrReplace(s, "&", "&amp;")
-        s := StrReplace(s, "<", "&lt;")
-        s := StrReplace(s, ">", "&gt;")
-        s := StrReplace(s, '"', "&quot;")
-        return s
-    }
-
-    _BuildAndShow() {
-        global MySoftData
-        this._closed := false
-        title := this.ParentTile GetLang("等待编辑器")
-        this._title := title
-        titleHeight := "30"
-
-        main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
-        main.Rows(titleHeight, "34", "Auto", "40")
-
-        ; === 标题栏 ===
-        chrome := XAMLHost.AddTitleBar(main, title, titleHeight)
-
-        ; === 内容 ===
-        body := main.Add("Grid").Grid_Row(1).Margin("10,8")
+    Build(body) {
+        ; body 已由基类建好：Row(1) Grid + Margin("10,8")，业务只往里加内容
         body.Rows("34", "Auto", "40")
         body.Cols("*")
 
-        ; 行0：备注 + 等待类型
-        row0 := body.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").VerticalAlignment("Center")
-        row0.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center")
-        row0.Add("TextBox").Name("RemarkCon").Width(140).Height(24).MinHeight(24).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
-        row0.Add("TextBlock").Text(GetLang("等待类型：")).VerticalAlignment("Center").Margin("16,0,0,0")
-        wt := row0.Add("ComboBox").Name("WaitTypeCon").Width(160).Height(26).MinHeight(26).Margin("4,0,0,0")
+        ; 行0：备注 + 等待类型（弹性：备注输入吸收余宽，防长文本/大字号溢出）
+        row0 := body.Add("Grid").Grid_Row(0).VerticalAlignment("Center")
+        row0.Cols("Auto", "*", "Auto", "Auto")
+        row0.Add("TextBlock").Grid_Column(0).Text(GetLang("备注：")).VerticalAlignment("Center").Margin("0,0,4,0")
+        UILayout.Input(row0.Add("TextBox").Name("RemarkCon").Grid_Column(1)
+            .MaxWidth("240").HorizontalAlignment("Stretch"), UILayout.CtrlH.Input)
+        row0.Add("TextBlock").Grid_Column(2).Text(GetLang("等待类型：")).VerticalAlignment("Center").Margin("16,0,4,0")
+        wt := row0.Add("ComboBox").Name("WaitTypeCon").Grid_Column(3).Width(160)
+            .Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         for t in GetLangArr(this.WaitTypeKeys)
             wt.Add("ComboBoxItem").Content(t)
 
@@ -83,123 +56,71 @@ class WaitGui {
             .BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1").Foreground("{DynamicResource TextMain}").Margin("0,6,0,2")
         pStack := pg.Add("StackPanel").Margin("10,8")
 
-        ; 变量值面板：变量名 + 期望值
-        vp := pStack.Add("StackPanel").Name("VarPanel").Orientation("Horizontal")
-        vp.Add("TextBlock").Text(GetLang("变量名：")).VerticalAlignment("Center")
-        vp.Add("ComboBox").Name("VarNameCon").Width(140).Height(24).MinHeight(24).Margin("4,0,0,0").IsEditable("True")
-        vp.Add("TextBlock").Text(GetLang("期望值：")).VerticalAlignment("Center").Margin("14,0,0,0")
-        vp.Add("ComboBox").Name("VarValCon").Width(140).Height(24).MinHeight(24).Margin("4,0,0,0").IsEditable("True")
+        ; 变量值面板：变量名 + 期望值（双字段弹性行）
+        vp := UILayout.FormRow2(pStack, "VarPanel", GetLang("变量名："), GetLang("期望值："))
+        vp.Add("ComboBox").Name("VarNameCon").Grid_Column(1).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
+            .MaxWidth("240").HorizontalAlignment("Stretch").IsEditable("True")
+        vp.Add("ComboBox").Name("VarValCon").Grid_Column(3).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
+            .MaxWidth("240").HorizontalAlignment("Stretch").IsEditable("True")
 
         ; 按键面板
-        kp := pStack.Add("StackPanel").Name("KeyPanel").Orientation("Horizontal").Visibility("Collapsed")
-        kp.Add("TextBlock").Text(GetLang("按键：")).VerticalAlignment("Center")
-        kp.Add("TextBox").Name("KeyCon").Width(160).Height(24).MinHeight(24).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
+        kp := UILayout.FormRow(pStack, "KeyPanel", GetLang("按键：")).Visibility("Collapsed")
+        UILayout.Input(kp.Add("TextBox").Name("KeyCon").Grid_Column(1)
+            .MaxWidth("260").HorizontalAlignment("Stretch"), UILayout.CtrlH.Input)
 
-        ; 范围面板：起始X/Y、终止X/Y
-        rp := pStack.Add("StackPanel").Name("RangePanel").Visibility("Collapsed")
-        rangeRowA := rp.Add("StackPanel").Orientation("Horizontal")
-        rangeRowA.Add("TextBlock").Text(GetLang("起始坐标X：")).VerticalAlignment("Center")
-        rangeRowA.Add("ComboBox").Name("StartPosX").Width(90).Height(24).MinHeight(24).Margin("4,0,0,0").IsEditable("True")
-        rangeRowA.Add("TextBlock").Text(GetLang("起始坐标Y：")).VerticalAlignment("Center").Margin("12,0,0,0")
-        rangeRowA.Add("ComboBox").Name("StartPosY").Width(90).Height(24).MinHeight(24).Margin("4,0,0,0").IsEditable("True")
-        rangeRowB := rp.Add("StackPanel").Orientation("Horizontal").Margin("0,6,0,0")
-        rangeRowB.Add("TextBlock").Text(GetLang("终止坐标X：")).VerticalAlignment("Center")
-        rangeRowB.Add("ComboBox").Name("EndPosX").Width(90).Height(24).MinHeight(24).Margin("4,0,0,0").IsEditable("True")
-        rangeRowB.Add("TextBlock").Text(GetLang("终止坐标Y：")).VerticalAlignment("Center").Margin("12,0,0,0")
-        rangeRowB.Add("ComboBox").Name("EndPosY").Width(90).Height(24).MinHeight(24).Margin("4,0,0,0").IsEditable("True")
+        ; 范围面板：起始X/Y、终止X/Y（两行双字段）
+        rp := pStack.Add("Grid").Name("RangePanel").Visibility("Collapsed")
+        rp.Rows("Auto", "Auto")
+        rangeRowA := UILayout.FormRow2(rp, "", GetLang("起始坐标X："), GetLang("起始坐标Y："), 12)
+        rangeRowA.Grid_Row(0)
+        rangeRowA.Add("ComboBox").Name("StartPosX").Grid_Column(1).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
+            .MaxWidth("200").HorizontalAlignment("Stretch").IsEditable("True")
+        rangeRowA.Add("ComboBox").Name("StartPosY").Grid_Column(3).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
+            .MaxWidth("200").HorizontalAlignment("Stretch").IsEditable("True")
+        rangeRowB := UILayout.FormRow2(rp, "", GetLang("终止坐标X："), GetLang("终止坐标Y："), 12)
+        rangeRowB.Grid_Row(1).Margin("0,6,0,0")
+        rangeRowB.Add("ComboBox").Name("EndPosX").Grid_Column(1).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
+            .MaxWidth("200").HorizontalAlignment("Stretch").IsEditable("True")
+        rangeRowB.Add("ComboBox").Name("EndPosY").Grid_Column(3).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
+            .MaxWidth("200").HorizontalAlignment("Stretch").IsEditable("True")
 
         ; 进程面板
-        pp := pStack.Add("StackPanel").Name("ProcPanel").Orientation("Horizontal").Visibility("Collapsed")
-        pp.Add("TextBlock").Text(GetLang("进程名：")).VerticalAlignment("Center")
-        pp.Add("TextBox").Name("ProcCon").Width(200).Height(24).MinHeight(24).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
+        pp := UILayout.FormRow(pStack, "ProcPanel", GetLang("进程名：")).Visibility("Collapsed")
+        UILayout.Input(pp.Add("TextBox").Name("ProcCon").Grid_Column(1)
+            .MaxWidth("320").HorizontalAlignment("Stretch"), UILayout.CtrlH.Input)
 
-        ; 窗口面板
-        wp := pStack.Add("StackPanel").Name("WinPanel").Orientation("Horizontal").Visibility("Collapsed")
-        wp.Add("TextBlock").Text(GetLang("窗口信息：")).VerticalAlignment("Center")
-        wp.Add("TextBox").Name("WinInfoCon").Width(220).Height(24).MinHeight(24).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
-        wp.Add("Button").Name("BtnWinEdit").Content(GetLang("编辑")).Height(24).MinHeight(24).Margin("6,0,0,0").Cursor("Hand")
+        ; 窗口面板：信息 + 编辑按钮
+        wp := pStack.Add("Grid").Name("WinPanel").Visibility("Collapsed")
+        wp.Cols("Auto", "*", "Auto")
+        wp.Add("TextBlock").Grid_Column(0).Text(GetLang("窗口信息：")).VerticalAlignment("Center").Margin("0,0,4,0")
+        UILayout.Input(wp.Add("TextBox").Name("WinInfoCon").Grid_Column(1), UILayout.CtrlH.Input)
+        UILayout.RowButton(wp, 2, "BtnWinEdit", GetLang("编辑"))
 
-        ; 文件面板
-        fp := pStack.Add("StackPanel").Name("FilePanel").Orientation("Horizontal").Visibility("Collapsed")
-        fp.Add("TextBlock").Text(GetLang("文件路径：")).VerticalAlignment("Center")
-        fp.Add("TextBox").Name("FilePathCon").Width(240).Height(24).MinHeight(24).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
-        fp.Add("Button").Name("BtnFileBrowse").Content(GetLang("浏览")).Height(24).MinHeight(24).Margin("6,0,0,0").Cursor("Hand")
+        ; 文件面板：路径 + 浏览按钮
+        fp := pStack.Add("Grid").Name("FilePanel").Visibility("Collapsed")
+        fp.Cols("Auto", "*", "Auto")
+        fp.Add("TextBlock").Grid_Column(0).Text(GetLang("文件路径：")).VerticalAlignment("Center").Margin("0,0,4,0")
+        UILayout.Input(fp.Add("TextBox").Name("FilePathCon").Grid_Column(1), UILayout.CtrlH.Input)
+        UILayout.RowButton(fp, 2, "BtnFileBrowse", GetLang("浏览"))
 
         ; 日期面板：值 + 单位
-        dp := pStack.Add("StackPanel").Name("DatePanel").Orientation("Horizontal").Visibility("Collapsed")
-        dp.Add("TextBlock").Text(GetLang("日期值：")).VerticalAlignment("Center")
-        dp.Add("TextBox").Name("DateValCon").Width(180).Height(24).MinHeight(24).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
-        dp.Add("TextBlock").Text(GetLang("单位：")).VerticalAlignment("Center").Margin("12,0,0,0")
-        dunit := dp.Add("ComboBox").Name("DateUnitCon").Width(110).Height(24).MinHeight(24).Margin("4,0,0,0")
+        dp := pStack.Add("Grid").Name("DatePanel").Visibility("Collapsed")
+        dp.Cols("Auto", "*", "Auto", "Auto")
+        dp.Add("TextBlock").Grid_Column(0).Text(GetLang("日期值：")).VerticalAlignment("Center").Margin("0,0,4,0")
+        UILayout.Input(dp.Add("TextBox").Name("DateValCon").Grid_Column(1), UILayout.CtrlH.Input)
+        dp.Add("TextBlock").Grid_Column(2).Text(GetLang("单位：")).VerticalAlignment("Center").Margin("12,0,4,0")
+        dunit := dp.Add("ComboBox").Name("DateUnitCon").Grid_Column(3).Width(110)
+            .Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
         for t in GetLangArr(["分钟", "小时", "天", "具体时间", "时间变量"])
             dunit.Add("ComboBoxItem").Content(t)
 
-        ; 行2：检测间隔 + 确定
+        ; 行2：检测间隔 + 确定（确定由基类壳级事件 BtnOk 接管）
         btnRow := body.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
         btnRow.Add("TextBlock").Text(GetLang("检测间隔(ms)：")).VerticalAlignment("Center")
-        btnRow.Add("TextBox").Name("IntervalCon").Width(80).Height(24).MinHeight(24).Margin("4,0,0,0")
-            .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(34).MinHeight(34).Margin("16,0,0,0")
-
-        ; === 创建 XAMLHost ===
-        tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
-        this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="700" Height="300" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
-        this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
-
-        ; === 事件 ===
-        this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))
-        this.ui.OnEvent("Window", "LoadedHwnd", ObjBindMethod(this, "OnWindowLoad"))
-        this.ui.OnEvent("BtnClosePanel", "Click", ObjBindMethod(this, "OnCancelClick"))
-        this.ui.OnEvent("WaitTypeCon", "SelectionChanged", ObjBindMethod(this, "OnTypeChange"))
-        this.ui.OnEvent("BtnWinEdit", "Click", ObjBindMethod(this, "OnClickWinEdit"))
-        this.ui.OnEvent("BtnFileBrowse", "Click", ObjBindMethod(this, "OnClickFileBrowse"))
-        this.ui.OnEvent("BtnOk", "Click", ObjBindMethod(this, "OnClickSureBtn"))
-    }
-
-    _ShowWindow() {
-        if (!XamlWin.Open(this.ui, "", XamlWin.Owner(this)))
-            this._closed := true
-    }
-
-    OnWindowLoad(state, ctrl, event) {
-        XamlWin.OnLoadTheme(this.ui)
-    }
-
-    OnWindowClosing(state, ctrl, event) {
-        if (this.OwnerHwnd != "" && MainSoftData.IsModalSubGui) {
-            try SafeGuiFromHwnd(this.OwnerHwnd).Opt("-Disabled")
-        }
-        this.ui := ""
-        this._closed := true
-    }
-
-    OnCancelClick(state, ctrl, event) {
-        this._CloseWindow()
-    }
-
-    _CloseWindow() {
-        if (IsObject(this.ui)) {
-            try this.ui.Update("Window", "Close", "")
-        }
-        if (this.OwnerHwnd != "" && MainSoftData.IsModalSubGui) {
-            try SafeGuiFromHwnd(this.OwnerHwnd).Opt("-Disabled")
-        }
-        this.ui := ""
-        this._closed := true
+        UILayout.Input(btnRow.Add("TextBox").Name("IntervalCon").Width(80).Margin("4,0,0,0"), UILayout.CtrlH.Input)
+            .TextAlignment("Center")
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100)
+            .Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Margin("16,0,0,0")
     }
 
     _SetCombo(comboName, items, text) {
@@ -217,6 +138,11 @@ class WaitGui {
     _TypeValue() {
         v := IsObject(this.ui) ? this.ui.Query("WaitTypeCon>SelectedIndex") : ""
         return IsNumber(v) ? Integer(v) + 1 : 1
+    }
+
+    ; ---- 数据回填（基类 OnInit 钩子委托）----
+    OnInit(cmd) {
+        this.Init(cmd)
     }
 
     Init(cmd) {
@@ -257,7 +183,11 @@ class WaitGui {
             this.ui.Update("DateUnitCon", "SelectedIndex", String(unitIdx))
     }
 
-    ; 按类型显隐参数面板
+    ; ---- 揭盖前联动（基类 AfterShow 钩子）：按类型显隐参数面板 ----
+    AfterShow() {
+        this.OnTypeChange()
+    }
+
     OnTypeChange(state := "", ctrl := "", event := "") {
         if (!IsObject(this.ui))
             return
@@ -279,6 +209,7 @@ class WaitGui {
     }
 
     OnClickWinEdit(state := "", ctrl := "", event := "") {
+        global MainSoftData
         if (MainSoftData.IsModalSubGui && this.ui != "") {
             MyFrontInfoGui.OwnerHwnd := this.Hwnd()
         }
@@ -302,15 +233,13 @@ class WaitGui {
         return CommandStr
     }
 
-    OnClickSureBtn(state, ctrl, event) {
-        if (!this.CheckIfValid())
-            return
+    OnValidate() {
+        return this.CheckIfValid()
+    }
+
+    OnSave() {
         this.SaveWaitData()
-        CommandStr := this.GetCommandStr()
-        action := this.SureBtnAction
-        this._CloseWindow()
-        if (action != "")
-            action(CommandStr)
+        return this.GetCommandStr()
     }
 
     CheckIfValid() {

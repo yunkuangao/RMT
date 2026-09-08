@@ -62,7 +62,7 @@ class ToolRecordSettingGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("录制选项")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -108,16 +108,14 @@ class ToolRecordSettingGui {
         rowMouse1.Add("TextBlock").Name("TrailSpeedTipCon").Text(GetLang("速度(0~100)："))
             .Foreground(labelFg).FontSize(labelFs).VerticalAlignment("Center").Margin("120,0,0,0")
         rowMouse1.Add("TextBox").Name("MouseTrailSpeedCon")
-            .Width(60).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(60).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11).Margin("6,0,0,0")
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         rowMouse2 := mouseInner.Add("StackPanel").Orientation("Horizontal").Margin("0,10,0,0")
         rowMouse2.Add("TextBlock").Text(GetLang("鼠标轨迹") "：")
             .Foreground(labelFg).FontSize(labelFs).VerticalAlignment("Center")
-        trailCombo := rowMouse2.Add("ComboBox").Name("MouseTrailModeCon").Width(140).Height(26).MinHeight(26).Margin("6,0,0,0")
+        trailCombo := rowMouse2.Add("ComboBox").Name("MouseTrailModeCon").Width(140).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,0")
         for modeName in ToolRecordSettingGui.TrailModes
             trailCombo.Add("ComboBoxItem").Content(GetLang(modeName))
 
@@ -132,31 +130,28 @@ class ToolRecordSettingGui {
         rowJoy.Add("TextBlock").Name("JoyIntervalTipCon").Text(GetLang("检测间隔(ms)："))
             .Foreground(labelFg).FontSize(labelFs).VerticalAlignment("Center").Margin("120,0,0,0")
         rowJoy.Add("TextBox").Name("JoyIntervalCon")
-            .Width(60).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(60).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11).Margin("6,0,0,0")
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         PrimaryBtnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
         btnRow := panel.Add("StackPanel").Orientation("Horizontal").HorizontalAlignment("Center").Margin("0,16,0,6")
         revertBtn := btnRow.Add("Button").Name("BtnRevert").Content(GetLang("恢复默认"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(90).Height(32).Margin("0,0,16,0")
+            .FontSize(13).Cursor("Hand").Width(90).Height(UILayout.S(32)).Margin("0,0,16,0")
             .IsDefault("False").IsCancel("False")
         revertBtn.InjectResources(PrimaryBtnStyle)
         okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(32)
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.S(32))
             .IsDefault("False").IsCancel("False")
         okBtn.InjectResources(PrimaryBtnStyle)
 
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" ShowInTaskbar="False" Width="480" Height="450" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 

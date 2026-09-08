@@ -40,6 +40,11 @@ class VirtualListHost {
     Init(t, tableItem, refreshFonts := "") {
         this.EnsureEvents(t)
         this._ui.Update("FoldList_" t, "VL_INIT", this._BuildRecords(t, tableItem))
+        ; 行字号子树补刷：VL_INIT 重建的行声明字号烘焙自构建期（模板 11+delta），容器继承基准
+        ; 会被行自身声明覆盖（Update TextElement.FontSize 无效，2026-09-08 实测）。必须像整窗
+        ; ApplyFonts 一样逐行平移：行声明恒小于主题字号 → max 下限钳制必然抬到当前主题字号，
+        ; change=0 幂等、拉大拉小都对。子树范围不整窗重排，切页无抖动。
+        try this._ui.Update("FoldList_" t, "ApplyFonts", XAMLHost.BuildApplyFontsPayload(0, XAMLHost.GetThemeFontSize()))
         ; 只在本窗第一次 VL 填充时刷字号。每个页签首切都 ApplyFonts 会整窗重测，切页偶发抖动
         doFonts := refreshFonts == "" ? !this._vlFonts.Has(0) : refreshFonts
         if (doFonts) {

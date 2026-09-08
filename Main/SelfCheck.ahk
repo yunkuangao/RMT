@@ -3,8 +3,8 @@
 SelfCheckMissingFiles() {
     ; 带 F 后缀的测试版（如 1.2F23）无对应资源 tag，不提供自动下载
     if (RegExMatch(RMT_VERSION, "i)\d+\.\d+F")) {
-        MsgBox(GetLang("带 F 后缀的测试版本不支持文件校验自动下载") "`n"
-            . GetLang("资源仓库仅对应正式版本 tag（如 v1.2_x64）"), GetLang("RMT 资源自检"), 64)
+        RmtDialog.Info(GetLang("带 F 后缀的测试版本不支持文件校验自动下载") "`n"
+            . GetLang("资源仓库仅对应正式版本 tag（如 v1.2_x64）"), GetLang("RMT 资源自检"))
         return
     }
 
@@ -95,7 +95,7 @@ SelfCheckMissingFiles() {
 
     totalMissing := allMissing.Length
     if (totalMissing == 0) {
-        MsgBox(GetLang("资源文件校验通过，未发现缺失文件"), GetLang("RMT 资源自检"), 64)
+        RmtDialog.Info(GetLang("资源文件校验通过，未发现缺失文件"), GetLang("RMT 资源自检"))
         return
     }
 
@@ -111,32 +111,22 @@ SelfCheckMissingFiles() {
         detailStr .= "⚠ 关键文件 (" missingCritical.Length ")`n"
     if (missingOptional.Length > 0)
         detailStr .= "可选文件 (" missingOptional.Length ")"
-    tipMsg := "检测到 " totalMissing " 个资源文件缺失`n" detailStr "`n`n" fileListStr "`n版本：" tag "`n点击【是】从 GitHub 自动下载`n点击【否】跳过（部分功能可能不可用）"
+    tipMsg := "检测到 " totalMissing " 个资源文件缺失`n" detailStr "`n`n" fileListStr "`n版本：" tag "`n点击【确定】从 GitHub 自动下载，点击【取消】跳过（部分功能可能不可用）"
 
-    btnStyle := missingCritical.Length > 0 ? (4 + 256 + 48) : (4 + 256 + 64)
-    result := MsgBox(tipMsg, "RMT 资源自检", btnStyle)
-    if (result != "Yes") {
+    if (!RmtDialog.Confirm(tipMsg, "RMT 资源自检")) {
         if (missingCritical.Length > 0) {
             criticalNames := ""
             for item in missingCritical
                 criticalNames .= item[2] "`n"
-            MsgBox("以下关键文件缺失，软件可能无法正常运行：`n`n" criticalNames "`n`n请在QQ群 837661891 或者项目仓库寻求帮助", "RMT 警告", 16)
+            RmtDialog.Info("以下关键文件缺失，软件可能无法正常运行：`n`n" criticalNames "`n`n请在QQ群 837661891 或者项目仓库寻求帮助", "RMT 警告")
         }
         return
     }
 
-    pg := Gui("+AlwaysOnTop +ToolWindow -MinimizeBox -MaximizeBox", "RMT 资源下载")
-    pg.SetFont("s10")
-    pg.AddText("xm y+8 w380 h28 vStatusText", "准备下载...")
-    pg.AddProgress("xm w380 h20 vProgressBar Range0-" totalMissing)
-    pg.SetFont("s9")
-    pg.AddText("xm y+6 w380 h22 vDetailText", "")
-    btnCancel := pg.AddButton("xm y+12 w100 h30", "取消下载")
+    ; 下载进度窗（XAML 迁移版）：pg["StatusText"].Value 等调用语法经 facade 保持不变
+    pg := _RmtDownloadProgress(totalMissing)
 
     global _dlCancelled := false
-    btnCancel.OnEvent("Click", (*) => (_dlCancelled := true))
-
-    pg.Show("AutoSize Center")
 
     successCount := 0
     failList := []
@@ -203,7 +193,7 @@ SelfCheckMissingFiles() {
         cancelMsg := "下载已取消。`n已成功下载 " successCount "/" total " 个文件。`n可再次点击「文件校验」继续下载。"
         if (stillCritical)
             cancelMsg .= "`n`n存在关键文件未下载完成，软件可能无法正常工作。`n`n请在QQ群 837661891 或者项目仓库寻求帮助"
-        MsgBox(cancelMsg, "RMT 资源自检", 64)
+        RmtDialog.Info(cancelMsg, "RMT 资源自检")
         return
     }
 
@@ -217,11 +207,10 @@ SelfCheckMissingFiles() {
                     stillCritical := true
             }
         }
-        iconType := stillCritical ? 16 : 48
-        MsgBox("下载完成：成功 " successCount "/" total "`n`n以下文件下载失败（可能是网络问题）：`n" failStr, "RMT 资源自检", iconType)
+        RmtDialog.Info("下载完成：成功 " successCount "/" total "`n`n以下文件下载失败（可能是网络问题）：`n" failStr, "RMT 资源自检")
 
         if (stillCritical) {
-            MsgBox("存在关键文件下载失败，软件可能无法正常工作。`n`n请检查网络连接后重启软件重试。`n`n如仍无法解决，请在QQ群 837661891 或者项目仓库寻求帮助", "RMT 警告", 16)
+            RmtDialog.Info("存在关键文件下载失败，软件可能无法正常工作。`n`n请检查网络连接后重启软件重试。`n`n如仍无法解决，请在QQ群 837661891 或者项目仓库寻求帮助", "RMT 警告")
         }
     }
 }
@@ -369,5 +358,112 @@ DownloadAndUnzipIco(downloadUrl, zipPath, targetDir, expectedFiles, &pgGui) {
         pgGui["DetailText"].Value := "✗ 异常: " e.Message
         try FileDelete(zipPath)
         return false
+    }
+}
+
+; =====================================================================
+; 下载进度窗 —— XAML 迁移版（原传统 Gui + AddProgress）
+; facade 保持原调用语法：pg["StatusText"].Value := ... / pg["ProgressBar"].Value
+;                       / pg.Destroy()
+; 窗口仅在主界面（XAML 框架已就绪）触发「文件校验」时出现，可安全用 XAMLHost
+; =====================================================================
+
+class _RmtDownloadProgress {
+    __New(total) {
+        this.ui := ""
+        this._BuildAndShow(total)
+    }
+
+    __Item[name] {
+        get => _RmtDownloadCtrl(this.ui, name)
+    }
+
+    _BuildAndShow(total) {
+        global MainSoftData
+        title := GetLang("RMT 资源下载")
+        titleHeight := UILayout.TitleH
+
+        main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
+        main.Rows(titleHeight, "*")
+
+        ; === 标题栏 ===
+        XAMLHost.AddTitleBar(main, title, titleHeight)
+
+        ; === 内容区 ===
+        body := main.Add("Grid").Grid_Row(1).Margin("16,12,16,14")
+        body.Rows("Auto", "Auto", "Auto", "Auto")
+        body.Add("TextBlock").Name("StatusText").Grid_Row(0)
+            .Text(GetLang("准备下载...")).TextWrapping("Wrap")
+            .Foreground("{DynamicResource TextMain}")
+        body.Add("ProgressBar").Name("ProgressBar").Grid_Row(1)
+            .Minimum("0").Maximum(String(total)).Value("0")
+            .Height("18").Margin("0,10,0,0")
+        body.Add("TextBlock").Name("DetailText").Grid_Row(2)
+            .Text("").TextWrapping("Wrap")
+            .Foreground("{DynamicResource TextSub}").Margin("0,8,0,0")
+        btnRow := body.Add("StackPanel").Grid_Row(3).Orientation("Horizontal")
+            .HorizontalAlignment("Right").Margin("0,14,0,0")
+        btnRow.Add("Button").Name("BtnCancelDownload")
+            .Content(GetLang("取消下载")).Width("100").Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn)
+
+        ; === 创建 XAMLHost（+AlwaysOnTop → Topmost，居中显示）===
+        tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
+        this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", 0)
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"'
+            , 'Title="' title '" Width="420" Height="220" Topmost="True" Opacity="0"')
+        this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
+
+        ; === 事件 ===
+        this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))
+        this.ui.OnEvent("Window", "LoadedHwnd", ObjBindMethod(this, "OnWindowLoad"))
+        this.ui.OnEvent("BtnCancelDownload", "Click", ObjBindMethod(this, "OnCancelClick"))
+
+        XamlWin.Open(this.ui, "", "", true)
+    }
+
+    OnWindowLoad(state, ctrl, event) {
+        XamlWin.OnLoadTheme(this.ui)
+    }
+
+    ; 手动关闭窗口 = 取消下载（原版关窗会令后续赋值抛异常，这里做成优雅取消）
+    OnWindowClosing(state, ctrl, event) {
+        global _dlCancelled
+        _dlCancelled := true
+        this.ui := ""
+    }
+
+    OnCancelClick(state, ctrl, event) {
+        global _dlCancelled
+        _dlCancelled := true
+    }
+
+    Destroy() {
+        if (IsObject(this.ui))
+            try this.ui.Update("Window", "Close", "")
+        this.ui := ""
+    }
+}
+
+; 控件值代理：TextBlock → Text，ProgressBar → Value；读取走 Query
+class _RmtDownloadCtrl {
+    __New(ui, name) {
+        this._ui := ui
+        this._name := name
+    }
+
+    Value {
+        get {
+            ui := this._ui
+            if (IsObject(ui) && ui.HasProp("wpfHwnd") && ui.wpfHwnd)
+                return ui.Query(this._name)
+            return ""
+        }
+        set {
+            ui := this._ui
+            if (!IsObject(ui))
+                return
+            prop := (this._name == "ProgressBar") ? "Value" : "Text"
+            ui.Update(this._name, prop, String(value))
+        }
     }
 }

@@ -61,7 +61,7 @@ class AiHistoryGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("对话记录")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -72,7 +72,7 @@ class AiHistoryGui {
         body.Rows("Auto", "*", "Auto")
 
         top := body.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").Margin("0,0,0,8")
-        top.Add("Button").Name("BtnNewChat").Content(GetLang("新建对话")).Height(28).MinHeight(28).Padding("12,0").Margin("0,0,8,0")
+        top.Add("Button").Name("BtnNewChat").Content(GetLang("新建对话")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("12,0").Margin("0,0,8,0")
         top.Add("TextBlock").Name("TxtHistHint").Text("").VerticalAlignment("Center")
             .Foreground("{DynamicResource TextSub}").FontSize("11")
 
@@ -91,7 +91,6 @@ class AiHistoryGui {
         }
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", owner)
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="380" Height="460" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))

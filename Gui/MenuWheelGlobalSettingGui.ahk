@@ -48,7 +48,7 @@ class MenuWheelGlobalSettingGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("轮盘选项")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -67,13 +67,13 @@ class MenuWheelGlobalSettingGui {
 
         row2 := panel.Add("StackPanel").Orientation("Horizontal").Margin("0,8,0,0")
         row2.Add("TextBlock").Text(GetLang("选择模式") "：").Foreground("{DynamicResource TextMain}").FontSize(13).VerticalAlignment("Center").Width(70)
-        modeCombo := row2.Add("ComboBox").Name("SelectModeCon").Width(140).Height(26).MinHeight(26).Margin("8,0,0,0")
+        modeCombo := row2.Add("ComboBox").Name("SelectModeCon").Width(140).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0")
         modeCombo.Add("ComboBoxItem").Content(GetLang("点击选择"))
         modeCombo.Add("ComboBoxItem").Content(GetLang("划线选择"))
 
         row4 := panel.Add("StackPanel").Orientation("Horizontal").Margin("0,10,0,0")
         row4.Add("TextBlock").Text(GetLang("轮盘大小") "：").Foreground("{DynamicResource TextMain}").FontSize(13).VerticalAlignment("Center").Width(70)
-        row4.Add("Slider").Name("WheelScaleCon").Width(160).Height(28).Margin("8,0,8,0").Minimum(50).Maximum(200).Value(100).IsSnapToTickEnabled("True").TickFrequency("10").Tag("Throttle:50")
+        row4.Add("Slider").Name("WheelScaleCon").Width(160).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0").Minimum(50).Maximum(200).Value(100).IsSnapToTickEnabled("True").TickFrequency("10").Tag("Throttle:50")
         row4.Add("TextBlock").Name("WheelScaleValText").Foreground("{DynamicResource TextMain}").FontSize(13).VerticalAlignment("Center").Width(40)
 
         PrimaryBtnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
@@ -81,19 +81,18 @@ class MenuWheelGlobalSettingGui {
         revertBtn := btnRow.Add("Button").Name("BtnRevert").Content(GetLang("恢复默认"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(32).Margin("0,0,16,0")
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.S(32)).Margin("0,0,16,0")
         revertBtn.InjectResources(PrimaryBtnStyle)
         okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(32)
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.S(32))
         okBtn.InjectResources(PrimaryBtnStyle)
 
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" ShowInTaskbar="False" Width="340" Height="250" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))

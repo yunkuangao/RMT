@@ -36,7 +36,7 @@ class OperationSubGui {
     }
 
     ShowGui(Index, ExpressStr) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)   ; XAML 窗口不支持隐藏复用：关旧重建
             this._CloseWindow()
         this._BuildAndShow()
@@ -58,11 +58,11 @@ class OperationSubGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("运算编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -80,46 +80,43 @@ class OperationSubGui {
 
         ; 当前运算表达式（可编辑）
         body.Add("TextBlock").Text(GetLang("当前运算表达式（可编辑）")).Margin("0,8,0,0").Foreground("{DynamicResource TextMain}").FontSize("12")
-        body.Add("TextBox").Name("ExpressionCon").Height(26).MinHeight(26).Margin("0,4,0,0")
+        body.Add("TextBox").Name("ExpressionCon").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("0,4,0,0")
             .VerticalContentAlignment("Center").Padding("4,0").FontSize("11")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; 操作运算符：第一行 + - * / % ^
         body.Add("TextBlock").Text(GetLang("操作运算符")).Margin("0,8,0,0").Foreground("{DynamicResource TextMain}").FontSize("12")
         opRow1 := body.Add("StackPanel").Orientation("Horizontal").Margin("0,4,0,0")
         loop 6 {
             pair := this._OpBtnPairs[A_Index]
-            opRow1.Add("Button").Name(pair[2]).Content(pair[1]).Width(50).Height(30).MinHeight(30).Margin("0,0,8,0").Cursor("Hand")
+            opRow1.Add("Button").Name(pair[2]).Content(pair[1]).Width(UILayout.S(50)).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Margin("0,0,8,0").Cursor("Hand")
         }
         ; 操作运算符：第二行 ( )
         opRow2 := body.Add("StackPanel").Orientation("Horizontal").Margin("0,8,0,0")
         loop 2 {
             pair := this._OpBtnPairs[A_Index + 6]
-            opRow2.Add("Button").Name(pair[2]).Content(pair[1]).Width(50).Height(30).MinHeight(30).Margin("0,0,8,0").Cursor("Hand")
+            opRow2.Add("Button").Name(pair[2]).Content(pair[1]).Width(UILayout.S(50)).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Margin("0,0,8,0").Cursor("Hand")
         }
 
         ; 变量：恢复下拉框 + 添加
         varRow := body.Add("StackPanel").Orientation("Horizontal").Margin("0,8,0,0")
         varRow.Add("TextBlock").Text(GetLang("变量：")).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        varRow.Add("ComboBox").Name("OperaVariableCon").Width(150).Height(26).MinHeight(26).Margin("8,0,0,0")
+        varRow.Add("ComboBox").Name("OperaVariableCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0")
             .VerticalContentAlignment("Center").FontSize("11")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
-        varRow.Add("Button").Name("BtnAddVariable").Content(GetLang("添加")).Height(26).MinHeight(26).Margin("8,0,0,0").Cursor("Hand")
+            .Style("{DynamicResource InputBoxStyle}")
+        varRow.Add("Button").Name("BtnAddVariable").Content(GetLang("添加")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").Cursor("Hand")
 
         ; 底部按钮：计算结果 / 退格 / 确定
         btnRow := body.Add("StackPanel").Orientation("Horizontal").HorizontalAlignment("Center").Margin("0,10,0,0")
-        btnRow.Add("Button").Name("BtnCalcResult").Content(GetLang("计算结果")).Width(100).Height(36).MinHeight(36).Margin("4,0").Cursor("Hand")
-        btnRow.Add("Button").Name("BtnBackspace").Content(GetLang("退格")).Width(100).Height(36).MinHeight(36).Margin("4,0").Cursor("Hand")
-        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnCalcResult").Content(GetLang("计算结果")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnBackspace").Content(GetLang("退格")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36).Margin("4,0").Cursor("Hand")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
         this.Gui := this.ui   ; 兼容访问器：外部仅做空判断（MacroGraphFormal.ahk:576）
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="370" Height="330" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(370) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

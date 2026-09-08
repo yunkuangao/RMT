@@ -19,7 +19,7 @@ class VariableGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -44,11 +44,11 @@ class VariableGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("变量编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -64,16 +64,16 @@ class VariableGui {
         ; 行0：备注 + IsIgnoreExist + 帮助
         row0 := body.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").VerticalAlignment("Center")
         row0.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center")
-        row0.Add("TextBox").Name("RemarkCon").Width(150).Height(24).MinHeight(24).Margin("4,0,0,0")
+        row0.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0")
         row0.Add("CheckBox").Name("IsIgnoreExist").Content(GetLang("如果变量存在则不改变数值")).VerticalAlignment("Center").Margin("20,0,0,0")
-        row0.Add("Button").Name("BtnHelp").Content("?").Width(30).Height(26).MinHeight(26).Margin("8,0,0,0")
+        row0.Add("Button").Name("BtnHelp").Content("?").Width(30).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0")
 
         ; 行1：变量 GroupBox（§15.2 滚动区：行数不限，动态增删）
         vg := body.Add("GroupBox").Grid_Row(1).Header(GetLang("变量："))
             .BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1").Foreground("{DynamicResource TextMain}").Margin("0,2,0,2")
         vGrid := vg.Add("Grid").Margin("8,4")
         ; §21.3：第5列「编辑」按钮（字符类型用）；§15.2：第6列「删除」按钮
-        vGrid.Cols("45", "105", "75", "90", "40", "40", "90", "90")
+        vGrid.Cols("45", UILayout.S(105), UILayout.S(75), UILayout.S(90), "40", "40", UILayout.S(110), UILayout.S(110))
         vGrid.Rows("26", "190")
         vGrid.Add("TextBlock").Grid_Row(0).Grid_Column(0).Text(GetLang("开关")).HorizontalAlignment("Center").VerticalAlignment("Center")
         vGrid.Add("TextBlock").Grid_Row(0).Grid_Column(1).Text(GetLang("变量名")).VerticalAlignment("Center")
@@ -90,14 +90,13 @@ class VariableGui {
 
         ; 行2：添加 + 确定
         btnRow := body.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnAddVar").Content(GetLang("添加变量")).Width(90).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36).Margin("8,0")
+        btnRow.Add("Button").Name("BtnAddVar").Content(GetLang("添加变量")).Width(UILayout.S(90)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36).Margin("8,0")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="720" Height="360" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(720) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

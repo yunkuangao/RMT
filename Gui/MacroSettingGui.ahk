@@ -43,11 +43,11 @@ class MacroSettingGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := GetLang("宏高级设置")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -62,7 +62,7 @@ class MacroSettingGui {
         ; 按键类型
         tkRow := body.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").VerticalAlignment("Center")
         tkRow.Add("TextBlock").Text(GetLang("按键类型：")).Width(90).VerticalAlignment("Center")
-        tk := tkRow.Add("ComboBox").Name("TKTypeCombo").Width(125).Height(26).MinHeight(26)
+        tk := tkRow.Add("ComboBox").Name("TKTypeCombo").Width(125).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         for t in GetLangArr(["AHK Send", "keybd_event", "罗技", "AHI"])
             tk.Add("ComboBoxItem").Content(t)
         toolHover := FrontInfoGui._ToolBtnHoverStyle()
@@ -72,30 +72,29 @@ class MacroSettingGui {
 
         ; 结束提示音右推：下拉右缘与下方「编辑」右缘对齐
         tipGrid := body.Add("Grid").Grid_Row(1).VerticalAlignment("Center")
-        tipGrid.Cols("90", "125", "*", "90", "125")
+        tipGrid.Cols(UILayout.S(90), UILayout.S(125), "*", UILayout.S(90), UILayout.S(125))
         tipGrid.Add("TextBlock").Grid_Column(0).Text(GetLang("开始提示音：")).VerticalAlignment("Center")
-        st := tipGrid.Add("ComboBox").Grid_Column(1).Name("StartTipCombo").Height(26).MinHeight(26)
+        st := tipGrid.Add("ComboBox").Grid_Column(1).Name("StartTipCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         for t in GetLangArr(["无", "触发提示", "循环首次提示"])
             st.Add("ComboBoxItem").Content(t)
         tipGrid.Add("TextBlock").Grid_Column(3).Text(GetLang("结束提示音：")).VerticalAlignment("Center").HorizontalAlignment("Right").Margin("0,0,8,0")
-        et := tipGrid.Add("ComboBox").Grid_Column(4).Name("EndTipCombo").Height(26).MinHeight(26).HorizontalAlignment("Stretch")
+        et := tipGrid.Add("ComboBox").Grid_Column(4).Name("EndTipCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).HorizontalAlignment("Stretch")
         for t in GetLangArr(["无", "结束提示", "循环结束提示"])
             et.Add("ComboBoxItem").Content(t)
 
         ; §22 窗口绑定：文本框吃剩余宽度，编辑按钮 Auto，避免右侧被裁
         bwGrid := body.Add("Grid").Grid_Row(2).VerticalAlignment("Center")
-        bwGrid.Cols("90", "*", "Auto")
+        bwGrid.Cols(UILayout.S(90), "*", "Auto")
         bwGrid.Add("TextBlock").Grid_Column(0).Text(GetLang("窗口绑定：")).VerticalAlignment("Center")
-        bwGrid.Add("TextBox").Grid_Column(1).Name("BindWindowCon").Height(26).MinHeight(26).Margin("0,0,6,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
-        editBtn := bwGrid.Add("Button").Grid_Column(2).Name("BtnBindWinEdit").Content(GetLang("编辑")).Width(56).Height(26).MinHeight(26).Padding("12,0").Cursor("Hand")
+        bwGrid.Add("TextBox").Grid_Column(1).Name("BindWindowCon").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("0,0,6,0")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
+        editBtn := bwGrid.Add("Button").Grid_Column(2).Name("BtnBindWinEdit").Content(GetLang("编辑")).Width(56).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Padding("12,0").Cursor("Hand")
             .Background("{DynamicResource ControlBg}").BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1.25")
             .Foreground("{DynamicResource TextMain}")
         editBtn.InjectResources(toolHover)
 
         btnRow := body.Add("StackPanel").Grid_Row(3).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        okBtn := btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(80).Height(32).MinHeight(32).Cursor("Hand")
+        okBtn := btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(80).Height(UILayout.S(32)).MinHeight(32).Cursor("Hand")
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1").FontSize(13).FontWeight("Bold")
         okBtn.InjectResources(okStyle)
@@ -105,7 +104,6 @@ class MacroSettingGui {
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="480" Height="200" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

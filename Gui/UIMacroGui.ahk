@@ -397,7 +397,10 @@ class UIMacroGui {
         ui.xaml := StrReplace(ui.xaml, 'AllowsTransparency="False"', 'AllowsTransparency="True"')
         ui.xaml := StrReplace(ui.xaml, 'Background="Transparent"', 'Background="' bgColor '"')
 
-        ui.xaml := StrReplace(ui.xaml, '%resources%', '<CornerRadius x:Key="CloseBtnRadius">0,8,0,0</CornerRadius>')
+        ; 模板 Window.Resources 已硬编码 CloseBtnRadius=0,8,0,0（XAML_Host.ahk），再注入同键资源
+        ; → ResourceDictionary 重复键 XamlParseException，界面宏面板启动即崩（2026-09-08 实证）。
+        ; 与全仓 %resources% 标准用法对齐：置空，运行期圆角由 XAML_PanelManager Update 动态跟随。
+        ui.xaml := StrReplace(ui.xaml, '%resources%', '')
         ui.xaml := StrReplace(ui.xaml, '%components%', '')
 
         ; 绑定事件（对齐 floating_panel L246-249）

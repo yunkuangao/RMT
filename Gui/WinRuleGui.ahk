@@ -17,7 +17,7 @@ class WinRuleGui {
     }
 
     ShowGui() {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -46,11 +46,11 @@ class WinRuleGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := GetLang("窗口规格编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -61,31 +61,27 @@ class WinRuleGui {
         ; === 内容 ===
         body := main.Add("Grid").Grid_Row(1).Margin("10,14")
         body.Rows("36", "36", "36", "*")
-        body.Cols("100", "100")
+        body.Cols(UILayout.S(100), UILayout.S(100))
 
         body.Add("TextBlock").Grid_Row(0).Grid_Column(0).Text(GetLang("屏幕宽度：")).VerticalAlignment("Center")
-        body.Add("TextBox").Grid_Row(0).Grid_Column(1).Name("WidthCon").Height(26).MinHeight(26).VerticalContentAlignment("Center")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        body.Add("TextBox").Grid_Row(0).Grid_Column(1).Name("WidthCon").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).VerticalContentAlignment("Center")
+            .Style("{DynamicResource InputBoxStyle}")
 
         body.Add("TextBlock").Grid_Row(1).Grid_Column(0).Text(GetLang("屏幕高度：")).VerticalAlignment("Center")
-        body.Add("TextBox").Grid_Row(1).Grid_Column(1).Name("HeightCon").Height(26).MinHeight(26).VerticalContentAlignment("Center")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        body.Add("TextBox").Grid_Row(1).Grid_Column(1).Name("HeightCon").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).VerticalContentAlignment("Center")
+            .Style("{DynamicResource InputBoxStyle}")
 
         body.Add("TextBlock").Grid_Row(2).Grid_Column(0).Text(GetLang("备注：")).VerticalAlignment("Center")
-        body.Add("TextBox").Grid_Row(2).Grid_Column(1).Name("RemarkCon").Height(26).MinHeight(26).VerticalContentAlignment("Center")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        body.Add("TextBox").Grid_Row(2).Grid_Column(1).Name("RemarkCon").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).VerticalContentAlignment("Center")
+            .Style("{DynamicResource InputBoxStyle}")
 
         btnRow := body.Add("StackPanel").Grid_Row(3).Grid_ColumnSpan(2).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(80).Height(32).MinHeight(32)
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(80)).Height(UILayout.S(32)).MinHeight(32)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="230" Height="185" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(230) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

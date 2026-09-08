@@ -20,7 +20,7 @@ class ArrayGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -66,11 +66,11 @@ class ArrayGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("数组编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -80,66 +80,65 @@ class ArrayGui {
 
         ; === 内容 ===
         body := main.Add("Grid").Grid_Row(1).Margin("10,6")
-        body.Cols("70", "120", "90", "160")
+        body.Cols(UILayout.S(70), UILayout.S(120), UILayout.S(90), UILayout.S(160))
 
         ; 行0：备注 + IsIgnoreExist
         row0 := body.Add("StackPanel").Grid_Row(0).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
         row0.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center")
-        row0.Add("TextBox").Name("RemarkCon").Width(150).Height(24).MinHeight(24).Margin("4,0,0,0")
+        row0.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0")
         row0.Add("CheckBox").Name("IsIgnoreExist").Content(GetLang("如果变量存在则不改变数据")).VerticalAlignment("Center").Margin("20,0,0,0")
 
         ; 行1：类型 + 数组名 + 子索引
         row1 := body.Add("StackPanel").Grid_Row(1).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
         row1.Add("TextBlock").Text(GetLang("类型：")).VerticalAlignment("Center")
-        tc := row1.Add("ComboBox").Name("TypeCombo").Width(100).Height(26).MinHeight(26).Margin("4,0,0,0")
+        tc := row1.Add("ComboBox").Name("TypeCombo").Width(UILayout.S(100)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         for t in GetLangArr(["创建", "克隆", "删除", "包含", "取值", "赋值", "插入", "追加", "移除", "移除最后", "反转", "长度"])
             tc.Add("ComboBoxItem").Content(t)
         row1.Add("TextBlock").Text(GetLang("数组名：")).VerticalAlignment("Center").Margin("14,0,0,0")
-        row1.Add("ComboBox").Name("NameCon").Width(100).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        row1.Add("ComboBox").Name("NameCon").Width(UILayout.S(100)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
         mainIndexRow := row1.Add("StackPanel").Name("MainIndexRow").Orientation("Horizontal").Margin("14,0,0,0")
         mainIndexRow.Add("TextBlock").Text(GetLang("子索引：")).VerticalAlignment("Center")
-        mainIndexRow.Add("ComboBox").Name("MainIndexCon").Width(90).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-        mainIndexRow.Add("Button").Name("BtnIndexHelp").Content("?").Width(28).Height(26).MinHeight(26).Margin("4,0,0,0")
+        mainIndexRow.Add("ComboBox").Name("MainIndexCon").Width(UILayout.S(90)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+        mainIndexRow.Add("Button").Name("BtnIndexHelp").Content("?").Width(28).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
 
         ; 行2：创建参数 + 类型参数（两个 GroupBox 并排）
-        body.Rows("34", "38", "Auto", "Auto", "40", "*")
+        body.Rows("34", "38", "Auto", "Auto", "Auto", "*")
         createGroup := body.Add("GroupBox").Grid_Row(2).Grid_ColumnSpan(4).Name("CreateGroup").Header(GetLang("创建参数"))
             .BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1").Foreground("{DynamicResource TextMain}").Margin("0,2,0,2")
         cr := createGroup.Add("StackPanel").Orientation("Horizontal").Margin("10,6")
         cr.Add("TextBlock").Text(GetLang("初始数据：")).VerticalAlignment("Center")
-        cr.Add("TextBox").Name("InitArrCon").Width(400).Height(26).MinHeight(26).Margin("4,0,0,0").Text("1, 2, 3")
-        cr.Add("Button").Name("BtnInitHelp").Content("?").Width(28).Height(26).MinHeight(26).Margin("4,0,0,0")
+        cr.Add("TextBox").Name("InitArrCon").Width(UILayout.S(400)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").Text("1, 2, 3")
+        cr.Add("Button").Name("BtnInitHelp").Content("?").Width(28).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
 
         argsGroup := body.Add("GroupBox").Grid_Row(3).Grid_ColumnSpan(4).Name("ArgsGroup").Header(GetLang("类型参数"))
             .BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1").Foreground("{DynamicResource TextMain}").Margin("0,2,0,2")
         ar := argsGroup.Add("StackPanel").Orientation("Horizontal").Margin("10,6")
         argsIndexRow := ar.Add("StackPanel").Name("ArgsIndexRow").Orientation("Horizontal")
         argsIndexRow.Add("TextBlock").Text(GetLang("索引：")).VerticalAlignment("Center")
-        argsIndexRow.Add("ComboBox").Name("ArgsIndexCon").Width(100).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        argsIndexRow.Add("ComboBox").Name("ArgsIndexCon").Width(UILayout.S(100)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
         argsDataRow := ar.Add("StackPanel").Name("ArgsDataRow").Orientation("Horizontal").Margin("14,0,0,0")
         argsDataRow.Add("TextBlock").Text(GetLang("数据：")).VerticalAlignment("Center")
-        at := argsDataRow.Add("ComboBox").Name("ArgsTypeCon").Width(90).Height(26).MinHeight(26).Margin("4,0,0,0")
+        at := argsDataRow.Add("ComboBox").Name("ArgsTypeCon").Width(UILayout.S(90)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         at.Add("ComboBoxItem").Content(GetLang("变量或值"))
         at.Add("ComboBoxItem").Content(GetLang("数组"))
-        argsDataRow.Add("ComboBox").Name("ArgsNameCon").Width(100).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        argsDataRow.Add("ComboBox").Name("ArgsNameCon").Width(UILayout.S(100)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
 
         ; 行4：结果
-        resRow := body.Add("StackPanel").Grid_Row(4).Grid_ColumnSpan(4).Name("ResultRow").Orientation("Horizontal").VerticalAlignment("Center")
+        resRow := body.Add("StackPanel").Grid_Row(4).Grid_ColumnSpan(4).Name("ResultRow").Orientation("Horizontal").VerticalAlignment("Center").Margin("0,7,0,7")
         resRow.Add("TextBlock").Text(GetLang("结果：")).VerticalAlignment("Center")
-        st := resRow.Add("ComboBox").Name("SaveTypeCon").Width(90).Height(26).MinHeight(26).Margin("4,0,0,0")
+        st := resRow.Add("ComboBox").Name("SaveTypeCon").Width(UILayout.S(90)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         st.Add("ComboBoxItem").Content(GetLang("变量"))
         st.Add("ComboBoxItem").Content(GetLang("数组"))
-        resRow.Add("ComboBox").Name("SaveNameCon").Width(130).Height(26).MinHeight(26).Margin("10,0,0,0").IsEditable("True")
+        resRow.Add("ComboBox").Name("SaveNameCon").Width(UILayout.S(130)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("10,0,0,0").IsEditable("True")
 
         ; 行5：确定
         btnRow := body.Add("StackPanel").Grid_Row(5).Grid_ColumnSpan(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36)
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="600" Height="290" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(600) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

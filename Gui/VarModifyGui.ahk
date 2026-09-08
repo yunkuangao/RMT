@@ -40,7 +40,7 @@ class VarModifyGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("修改")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         winW := 400
         winH := 280
 
@@ -67,13 +67,9 @@ class VarModifyGui {
             .VerticalContentAlignment("Top")
             .VerticalScrollBarVisibility("Auto")
             .HorizontalScrollBarVisibility("Disabled")
-            .Height(100)
+            .Height(UILayout.S(100))
             .FontSize(13)
-            .FontFamily(MainSoftData.FontType)
-            .Background("{DynamicResource InputBg}")
-            .Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}")
-            .BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .Padding("6,4")
 
         PrimaryBtnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
@@ -81,21 +77,18 @@ class VarModifyGui {
         okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(90).Height(32)
+            .FontSize(13).Cursor("Hand").Width(UILayout.S(90)).Height(UILayout.S(32))
         okBtn.InjectResources(PrimaryBtnStyle)
 
         pos := GetCenterPosOnActiveMonitor(winW, winH)
-        dipX := PhysToDip(pos.x)
-        dipY := PhysToDip(pos.y)
 
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"',
-            Format('Title="{}" ShowInTaskbar="False" Width="{}" Height="{}" Left="{}" Top="{}" Opacity="0"',
-                title, winW, winH, dipX, dipY))
+            Format('Title="{}" ShowInTaskbar="False" Width="{}" SizeToContent="Height" Left="{}" Top="{}" Opacity="0"',
+                title, winW, winH, pos.x, pos.y))
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"', 'WindowStartupLocation="Manual"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))

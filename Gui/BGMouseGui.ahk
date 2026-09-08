@@ -21,7 +21,7 @@ class BGMouseGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -68,11 +68,11 @@ class BGMouseGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("后台鼠标编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -82,17 +82,17 @@ class BGMouseGui {
 
         ; === 内容 ===
         body := main.Add("Grid").Grid_Row(1).Margin("10,6")
-        body.Rows("34", "26", "40", "22", "34", "34", "36", "36", "34", "*")
-        body.Cols("90", "120", "90", "120")
+        body.Rows("34", "26", "40", "22", "34", "34", "36", "Auto", "Auto", "*")
+        body.Cols(UILayout.S(90), UILayout.S(120), UILayout.S(90), UILayout.S(120))
 
         ; 行0：快捷方式 + 执行指令 + 备注
         row0 := body.Add("StackPanel").Grid_Row(0).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
         row0.Add("TextBlock").Text(GetLang("快捷方式：")).VerticalAlignment("Center")
-        row0.Add("TextBox").Width(60).Height(24).MinHeight(24).Margin("4,0,0,0").Text("!l").IsReadOnly("True")
-        row0.Add("Button").Name("BtnExecute").Content(GetLang("执行指令")).Height(26).MinHeight(26).Margin("6,0,0,0")
-        row0.Add("Button").Name("BtnHelp").Content("?").Width(30).Height(26).MinHeight(26).Margin("4,0,0,0")
+        row0.Add("TextBox").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0").Text("!l").IsReadOnly("True")
+        row0.Add("Button").Name("BtnExecute").Content(GetLang("执行指令")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,0")
+        row0.Add("Button").Name("BtnHelp").Content("?").Width(30).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         row0.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center").Margin("12,0,0,0")
-        row0.Add("TextBox").Name("RemarkCon").Width(150).Height(24).MinHeight(24).Margin("4,0,0,0")
+        row0.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0")
 
         ; 行1：F1
         body.Add("TextBlock").Grid_Row(1).Grid_ColumnSpan(4).Text(GetLang("F1:确定信息")).VerticalAlignment("Center")
@@ -103,48 +103,47 @@ class BGMouseGui {
 
         ; 行4：窗口信息
         row4 := body.Add("StackPanel").Grid_Row(4).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
-        row4.Add("TextBlock").Text(GetLang("窗口信息:")).VerticalAlignment("Center").Width(70)
-        row4.Add("TextBox").Name("TargetTitleCon").Width(240).Height(24).MinHeight(24)
-        row4.Add("Button").Name("BtnEdit").Content(GetLang("编辑")).Height(26).MinHeight(26).Margin("4,0,0,0")
+        row4.Add("TextBlock").Text(GetLang("窗口信息:")).VerticalAlignment("Center").Width(UILayout.S(70))
+        row4.Add("TextBox").Name("TargetTitleCon").Width(UILayout.S(240)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
+        row4.Add("Button").Name("BtnEdit").Content(GetLang("编辑")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
 
         ; 行5：鼠标按键 + 操作类型
         body.Add("TextBlock").Grid_Row(5).Grid_Column(0).Text(GetLang("鼠标按键:")).VerticalAlignment("Center")
-        mt := body.Add("ComboBox").Grid_Row(5).Grid_Column(1).Name("MouseTypeCombo").Height(26).MinHeight(26)
+        mt := body.Add("ComboBox").Grid_Row(5).Grid_Column(1).Name("MouseTypeCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         for m in GetLangArr(["左键", "中键", "右键", "滚轮"])
             mt.Add("ComboBoxItem").Content(m)
         operRow := body.Add("StackPanel").Name("OperateRow").Grid_Row(5).Grid_Column(2).Grid_ColumnSpan(2).Orientation("Horizontal").VerticalAlignment("Center")
         operRow.Add("TextBlock").Text(GetLang("操作类型:")).VerticalAlignment("Center")
-        ot := operRow.Add("ComboBox").Name("OperateTypeCombo").Width(100).Height(26).MinHeight(26).Margin("4,0,0,0")
+        ot := operRow.Add("ComboBox").Name("OperateTypeCombo").Width(UILayout.S(100)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         for o in GetLangArr(["点击", "双击", "按下", "松开"])
             ot.Add("ComboBoxItem").Content(o)
 
         ; 行6：坐标X/Y
         body.Add("TextBlock").Grid_Row(6).Grid_Column(0).Text(GetLang("窗口坐标X:")).VerticalAlignment("Center")
-        body.Add("ComboBox").Grid_Row(6).Grid_Column(1).Name("PosVarX").Height(26).MinHeight(26).IsEditable("True")
+        body.Add("ComboBox").Grid_Row(6).Grid_Column(1).Name("PosVarX").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).IsEditable("True")
         body.Add("TextBlock").Grid_Row(6).Grid_Column(2).Text(GetLang("窗口坐标Y:")).VerticalAlignment("Center")
-        body.Add("ComboBox").Grid_Row(6).Grid_Column(3).Name("PosVarY").Height(26).MinHeight(26).IsEditable("True")
+        body.Add("ComboBox").Grid_Row(6).Grid_Column(3).Name("PosVarY").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).IsEditable("True")
 
         ; 行7：滚动
-        scrollRow := body.Add("StackPanel").Grid_Row(7).Grid_ColumnSpan(4).Name("ScrollRow").Orientation("Horizontal").VerticalAlignment("Center")
-        scrollRow.Add("TextBlock").Text(GetLang("垂直滚动:")).VerticalAlignment("Center").Width(70)
-        scrollRow.Add("TextBox").Name("ScrollV").Width(90).Height(24).MinHeight(24)
+        scrollRow := body.Add("StackPanel").Grid_Row(7).Grid_ColumnSpan(4).Name("ScrollRow").Orientation("Horizontal").VerticalAlignment("Center").Margin("0,6,0,6")
+        scrollRow.Add("TextBlock").Text(GetLang("垂直滚动:")).VerticalAlignment("Center").Width(UILayout.S(70))
+        scrollRow.Add("TextBox").Name("ScrollV").Width(UILayout.S(90)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
         scrollRow.Add("TextBlock").Text(GetLang("水平滚动:")).VerticalAlignment("Center").Margin("14,0,0,0")
-        scrollRow.Add("TextBox").Name("ScrollH").Width(90).Height(24).MinHeight(24)
+        scrollRow.Add("TextBox").Name("ScrollH").Width(UILayout.S(90)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
 
         ; 行8：点击时间
-        clickRow := body.Add("StackPanel").Grid_Row(8).Grid_ColumnSpan(4).Name("ClickTimeRow").Orientation("Horizontal").VerticalAlignment("Center")
-        clickRow.Add("TextBlock").Text(GetLang("点击时间:")).VerticalAlignment("Center").Width(70)
-        clickRow.Add("TextBox").Name("ClickTimeCon").Width(70).Height(24).MinHeight(24)
+        clickRow := body.Add("StackPanel").Grid_Row(8).Grid_ColumnSpan(4).Name("ClickTimeRow").Orientation("Horizontal").VerticalAlignment("Center").Margin("0,5,0,5")
+        clickRow.Add("TextBlock").Text(GetLang("点击时间:")).VerticalAlignment("Center").Width(UILayout.S(70))
+        clickRow.Add("TextBox").Name("ClickTimeCon").Width(UILayout.S(70)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
 
         ; 行9：确定
         btnRow := body.Add("StackPanel").Grid_Row(9).Grid_ColumnSpan(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36)
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="520" Height="350" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(520) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

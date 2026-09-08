@@ -398,10 +398,15 @@ public partial class AhkWpfEngine
             try
             {
                 var rootContent = win.Content as FrameworkElement;
+                // Viewbox 白名单制（2026-09-08 范式反转）：只有 Tag="ZoomViewbox" 显式声明的
+                // 画布窗（MacroGraph 节点图 / TriggerKey 键位图 / MenuWheel 圆盘）才包裹——
+                // 拉伸=画布等比缩放（zoom 模式）。表单对话框一律真实弹性布局（elastic 范式）：
+                // 字号跟主题、拉伸=内容延伸；历史默认包裹造成的 ~70 窗照片式缩放全部清出。
+                // （此前还要求 win.SizeToContent==Manual：SizeToContent 自适应窗与 Viewbox 互斥）
                 if (rootContent != null && !(rootContent is System.Windows.Controls.Viewbox)
-                    && !double.IsNaN(win.Width))
+                    && (win.Tag as string) == "ZoomViewbox")
                 {
-                    if (double.IsNaN(rootContent.Width))
+                    if (!double.IsNaN(win.Width) && double.IsNaN(rootContent.Width))
                         rootContent.Width = win.Width;
                     // SizeToContent=Height 时窗口高度为 NaN，只钉宽度，Viewbox 按宽把字号拉到与其它弹窗一致
                     if (!double.IsNaN(win.Height) && double.IsNaN(rootContent.Height))
@@ -445,6 +450,29 @@ public partial class AhkWpfEngine
         // Bind standard window chrome handlers
         var dragArea = win.FindName("DragArea") as UIElement;
         if (dragArea != null) dragArea.MouseLeftButtonDown += (s, e) => { try { win.DragMove(); } catch { } };
+
+        // R1 钉死已废弃（2026-09-08 用户拍板「窗口自适应撑开」）：SizeToContent=Height 窗口保持
+        // 持续自适应——动态显隐（Loaded 后 AHK 侧 Update Visibility）与字号预览广播时窗口高度实时
+        // 跟随内容。钉死时序（Loaded）天然早于 IPC 显隐 Update，曾导致 RMTCMDGui 折叠参数行收起后
+        // 底部留白。塌缩风险由内容件 MinHeight 保底兜底（多行 TextBox/ListBox 必须声明 MinHeight）。
+        /*
+        try
+        {
+            if (win.SizeToContent == SizeToContent.Height)
+            {
+                win.Loaded += (s, e) =>
+                {
+                    try
+                    {
+                        win.Height = win.ActualHeight;
+                        win.SizeToContent = SizeToContent.Manual;
+                    }
+                    catch { }
+                };
+            }
+        }
+        catch { }
+        */
         var btnClose = win.FindName("BtnClose") as ButtonBase;
         if (btnClose != null) btnClose.Click += (s, e) => { try { win.Close(); } catch { } };
         var btnMaximize = win.FindName("BtnMaximize") as ButtonBase;

@@ -385,7 +385,7 @@ OnStartRecordInner(*) {
 }
 
 OnWMInput_Raw(wParam, lParam, msg, hwnd) {
-    global RI_isActive, RI_accumX, RI_accumY, RI_hwnd, RI_headerSize, RI_lastEmitX, RI_lastEmitY, RI_lastSnapX, RI_lastSnapY
+    global RI_isActive, MainSoftData, RI_accumX, RI_accumY, RI_hwnd, RI_headerSize, RI_lastEmitX, RI_lastEmitY, RI_lastSnapX, RI_lastSnapY
     if (!RI_isActive || hwnd != RI_hwnd)
         return
 
@@ -485,7 +485,7 @@ OnWMInput_Raw(wParam, lParam, msg, hwnd) {
 }
 
 RecordConsumeRI() {
-    global RI_eventQueue
+    global RI_eventQueue, MainSoftData
 
     if (RI_eventQueue.Length > 1) {
         loop RI_eventQueue.Length - 1 {
@@ -564,7 +564,7 @@ OnRecordAddMacroStr(keyName, isDown, eventTime?) {
 }
 
 OnFinishRecordMacro() {
-    global RI_isActive
+    global RI_isActive, MainSoftData
     RI_isActive := false
     if (MainSoftData.RecordAutoLoosen) {
         for Key, Value in MainSoftData.RecordHoldKeyMap {
@@ -596,7 +596,7 @@ OnFinishRecordMacro() {
             macroLineStr := StrReplace(macroStr, ",", "`n")
             UIControls.ToolText.Value := macroLineStr
             SetClipboard(macroLineStr)
-            MsgBox(GetLang("录制指令已复制到剪切板！`n`n请在【按键宏】页签下粘贴宏，`n配置触发键后，即可通过按键回放指令。"), GetLang("录制完成提示"))
+            RmtDialog.Info(GetLang("录制指令已复制到剪切板！`n`n请在【按键宏】页签下粘贴宏，`n配置触发键后，即可通过按键回放指令。"), GetLang("录制完成提示"))
             return
         }
 
@@ -615,7 +615,7 @@ OnFinishRecordMacro() {
     macroLineStr := StrReplace(macroStr, ",", "`n")
     UIControls.ToolText.Value := macroLineStr
     SetClipboard(macroLineStr)
-    MsgBox(GetLang("录制指令已复制到剪切板！`n`n请在【按键宏】页签下粘贴宏，`n配置触发键后，即可通过按键回放指令。"), GetLang("录制完成提示"))
+    RmtDialog.Info(GetLang("录制指令已复制到剪切板！`n`n请在【按键宏】页签下粘贴宏，`n配置触发键后，即可通过按键回放指令。"), GetLang("录制完成提示"))
 }
 
 FilterMoveCmd(macroStr) {
@@ -823,7 +823,7 @@ OnToolRecordMacro(isHotkey, *) {
 }
 
 OnForceEndRecord() {
-    global RI_isActive, RI_eventQueue, CD_canceled
+    global RI_isActive, MainSoftData, RI_eventQueue, CD_canceled
     wasCountingDown := IsSet(CD_canceled) && !CD_canceled && (IsSet(RecordCountdownGui) && RecordCountdownGui != "")
     isRecording := RI_isActive
 
@@ -850,7 +850,7 @@ OnForceEndRecord() {
 }
 
 ShowRecordBorder() {
-    global RecordBorder, RecordBorder_frame
+    global RecordBorder, MainSoftData, RecordBorder_frame
 
     if (!MainSoftData.RecordShowBorder)
         return

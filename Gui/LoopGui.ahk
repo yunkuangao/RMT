@@ -44,7 +44,7 @@ class LoopGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)   ; XAML 窗口不支持隐藏复用：关旧重建
             this._CloseWindow()
         this._BuildAndShow()
@@ -59,11 +59,11 @@ class LoopGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("循环编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "34", "32", "*", "Auto", "48")
@@ -75,18 +75,16 @@ class LoopGui {
         top := main.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").Margin("10,4")
         top.Add("TextBlock").Text(GetLang("快捷方式：")).VerticalAlignment("Center")
         top.Add("TextBlock").Text("!l").VerticalAlignment("Center").Margin("4,0,0,0").Opacity("0.6")
-        top.Add("Button").Name("BtnTrigger").Content(GetLang("执行指令")).Width(80).Height(26).MinHeight(26).Margin("8,0,0,0").Cursor("Hand")
+        top.Add("Button").Name("BtnTrigger").Content(GetLang("执行指令")).Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").Cursor("Hand")
         top.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center").Margin("12,0,0,0")
-        top.Add("TextBox").Name("RemarkCon").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
+        top.Add("TextBox").Name("RemarkCon").Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
 
         ; === 循环次数行 ===
         countRow := main.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").Margin("10,2")
         countRow.Add("TextBlock").Text(GetLang("循环次数：")).VerticalAlignment("Center")
-        countRow.Add("ComboBox").Name("CountCon").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        countRow.Add("ComboBox").Name("CountCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
 
         ; === 循环条件 GroupBox ===
         cg := main.Add("GroupBox").Grid_Row(3).Margin("10,2,10,6").Header(GetLang("循环条件:"))
@@ -97,15 +95,13 @@ class LoopGui {
 
         hd := condiGrid.Add("StackPanel").Grid_Row(0).Grid_ColumnSpan(5).Orientation("Horizontal").VerticalAlignment("Center")
         hd.Add("TextBlock").Text(GetLang("类型:")).VerticalAlignment("Center")
-        condiCon := hd.Add("ComboBox").Name("CondiCon").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        condiCon := hd.Add("ComboBox").Name("CondiCon").Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["无", "继续条件", "退出条件"])
             condiCon.Add("ComboBoxItem").Content(t)
         hd.Add("TextBlock").Text(GetLang("条件逻辑关系:")).VerticalAlignment("Center").Margin("14,0,0,0")
-        logicCon := hd.Add("ComboBox").Name("LogicCon").Width(60).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        logicCon := hd.Add("ComboBox").Name("LogicCon").Width(UILayout.S(60)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["且", "或"])
             logicCon.Add("ComboBoxItem").Content(t)
 
@@ -116,21 +112,19 @@ class LoopGui {
         body := main.Add("StackPanel").Grid_Row(4).Orientation("Vertical").Margin("10,4,10,0")
         lbRow := body.Add("StackPanel").Orientation("Horizontal")
         lbRow.Add("TextBlock").Text(GetLang("循环体:")).VerticalAlignment("Center")
-        lbRow.Add("Button").Name("BtnEditMacro").Content(GetLang("编辑")).Width(70).Height(26).MinHeight(26).Margin("10,0,0,0").Cursor("Hand")
-        body.Add("TextBox").Name("LoopBodyCon").Height(90).Margin("0,4,0,0").AcceptsReturn("True").TextWrapping("Wrap")
+        lbRow.Add("Button").Name("BtnEditMacro").Content(GetLang("编辑")).Width(UILayout.S(70)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("10,0,0,0").Cursor("Hand")
+        body.Add("TextBox").Name("LoopBodyCon").Height(UILayout.S(90)).Margin("0,4,0,0").AcceptsReturn("True").TextWrapping("Wrap")
             .VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; === 底部按钮 ===
         btnRow := main.Add("StackPanel").Grid_Row(5).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="480" Height="520" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(480) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===
@@ -148,17 +142,14 @@ class LoopGui {
 
     _AddCondiRow(grid, idx) {
         grid.Add("CheckBox").Name(this.ToggleConArr[idx]).Grid_Row(idx).Grid_Column(0).VerticalAlignment("Center")
-        grid.Add("ComboBox").Name(this.NameConArr[idx]).Grid_Row(idx).Grid_Column(1).Width(140).Height(26).MinHeight(26).Margin("8,0,0,0").IsEditable("True")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
-        cc := grid.Add("ComboBox").Name(this.CompareTypeConArr[idx]).Grid_Row(idx).Grid_Column(2).Width(90).Height(26).MinHeight(26).Margin("8,0,0,0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        grid.Add("ComboBox").Name(this.NameConArr[idx]).Grid_Row(idx).Grid_Column(1).Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").IsEditable("True")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
+        cc := grid.Add("ComboBox").Name(this.CompareTypeConArr[idx]).Grid_Row(idx).Grid_Column(2).Width(UILayout.S(90)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["大于", "大于等于", "等于", "小于等于", "小于", "字符包含", "变量存在", "正则匹配"])
             cc.Add("ComboBoxItem").Content(t)
-        grid.Add("ComboBox").Name(this.VariableConArr[idx]).Grid_Row(idx).Grid_Column(3).Width(140).Height(26).MinHeight(26).Margin("8,0,0,0").IsEditable("True")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        grid.Add("ComboBox").Name(this.VariableConArr[idx]).Grid_Row(idx).Grid_Column(3).Width(UILayout.S(140)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").IsEditable("True")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
     }
 
     ; ---------------- 数据读写辅助 ----------------

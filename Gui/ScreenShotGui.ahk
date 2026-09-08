@@ -25,7 +25,7 @@ class ScreenShotGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -71,11 +71,11 @@ class ScreenShotGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("抓图编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -86,46 +86,46 @@ class ScreenShotGui {
         ; === 内容 ===
         body := main.Add("Grid").Grid_Row(1).Margin("10,6")
         body.Rows("34", "30", "34", "34", "34", "34", "Auto", "*")
-        body.Cols("90", "120", "100", "130")
+        body.Cols(UILayout.S(90), UILayout.S(120), UILayout.S(100), UILayout.S(130))
 
         ; 行0：快捷方式 + 执行指令 + 备注
         row0 := body.Add("StackPanel").Grid_Row(0).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
         row0.Add("TextBlock").Text(GetLang("快捷方式：")).VerticalAlignment("Center")
-        row0.Add("TextBox").Width(60).Height(24).MinHeight(24).Margin("4,0,0,0").Text("!l").IsReadOnly("True")
-        row0.Add("Button").Name("BtnExecute").Content(GetLang("执行指令")).Height(26).MinHeight(26).Margin("10,0,0,0")
+        row0.Add("TextBox").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0").Text("!l").IsReadOnly("True")
+        row0.Add("Button").Name("BtnExecute").Content(GetLang("执行指令")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("10,0,0,0")
         row0.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center").Margin("14,0,0,0")
-        row0.Add("TextBox").Name("RemarkCon").Width(150).Height(24).MinHeight(24).Margin("4,0,0,0")
+        row0.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0")
 
         ; 行1：F1 框选 + 坐标
         row1 := body.Add("StackPanel").Grid_Row(1).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
-        row1.Add("TextBox").Width(25).Height(22).MinHeight(22).Text("F1").IsReadOnly("True")
+        row1.Add("TextBox").Width(25).Height(UILayout.S(22)).MinHeight(22).Text("F1").IsReadOnly("True")
         row1.Add("CheckBox").Name("SelectToggle").Content(GetLang("左键框选截图范围")).VerticalAlignment("Center").Margin("4,0,0,0")
         row1.Add("TextBlock").Name("MousePosCon").Text(GetLang("屏幕坐标：0,0")).VerticalAlignment("Center").Margin("12,0,0,0")
         row1.Add("TextBlock").Name("MouseWinPosCon").Text(GetLang("窗口坐标：0,0")).VerticalAlignment("Center").Margin("12,0,0,0")
 
         ; 行2：抓图类型 + 固定名称
         body.Add("TextBlock").Grid_Row(2).Grid_Column(0).Text(GetLang("抓图类型：")).VerticalAlignment("Center")
-        st := body.Add("ComboBox").Grid_Row(2).Grid_Column(1).Name("ScreenShotTypeCombo").Height(26).MinHeight(26)
+        st := body.Add("ComboBox").Grid_Row(2).Grid_Column(1).Name("ScreenShotTypeCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         st.Add("ComboBoxItem").Content(GetLang("屏幕抓图")).Tag("1")
         st.Add("ComboBoxItem").Content(GetLang("窗口抓图")).Tag("2")
         body.Add("CheckBox").Grid_Row(2).Grid_Column(2).Name("NameType").Content(GetLang("固定名称：")).VerticalAlignment("Center")
-        body.Add("TextBox").Grid_Row(2).Grid_Column(3).Name("FixedNameCon").Height(24).MinHeight(24).VerticalContentAlignment("Center")
+        body.Add("TextBox").Grid_Row(2).Grid_Column(3).Name("FixedNameCon").Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center")
 
         ; 行3：窗口信息
         winRow := body.Add("StackPanel").Name("WinInfoRow").Grid_Row(3).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
-        winRow.Add("TextBlock").Text(GetLang("窗口信息:")).VerticalAlignment("Center").Width(75)
-        winRow.Add("TextBox").Name("WinInfoCon").Width(275).Height(24).MinHeight(24)
-        winRow.Add("Button").Name("BtnWinEdit").Content(GetLang("编辑")).Height(26).MinHeight(26).Margin("4,0,0,0")
+        winRow.Add("TextBlock").Text(GetLang("窗口信息:")).VerticalAlignment("Center").Width(UILayout.S(75))
+        winRow.Add("TextBox").Name("WinInfoCon").Width(UILayout.S(275)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
+        winRow.Add("Button").Name("BtnWinEdit").Content(GetLang("编辑")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
 
         ; 行4-5：起始/终止坐标
         body.Add("TextBlock").Grid_Row(4).Grid_Column(0).Text(GetLang("起始坐标X：")).VerticalAlignment("Center")
-        body.Add("ComboBox").Grid_Row(4).Grid_Column(1).Name("StartPosX").Height(26).MinHeight(26).IsEditable("True")
+        body.Add("ComboBox").Grid_Row(4).Grid_Column(1).Name("StartPosX").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).IsEditable("True")
         body.Add("TextBlock").Grid_Row(4).Grid_Column(2).Text(GetLang("起始坐标Y：")).VerticalAlignment("Center")
-        body.Add("ComboBox").Grid_Row(4).Grid_Column(3).Name("StartPosY").Height(26).MinHeight(26).IsEditable("True")
+        body.Add("ComboBox").Grid_Row(4).Grid_Column(3).Name("StartPosY").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).IsEditable("True")
         body.Add("TextBlock").Grid_Row(5).Grid_Column(0).Text(GetLang("终止坐标X：")).VerticalAlignment("Center")
-        body.Add("ComboBox").Grid_Row(5).Grid_Column(1).Name("EndPosX").Height(26).MinHeight(26).IsEditable("True")
+        body.Add("ComboBox").Grid_Row(5).Grid_Column(1).Name("EndPosX").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).IsEditable("True")
         body.Add("TextBlock").Grid_Row(5).Grid_Column(2).Text(GetLang("终止坐标Y：")).VerticalAlignment("Center")
-        body.Add("ComboBox").Grid_Row(5).Grid_Column(3).Name("EndPosY").Height(26).MinHeight(26).IsEditable("True")
+        body.Add("ComboBox").Grid_Row(5).Grid_Column(3).Name("EndPosY").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).IsEditable("True")
 
         ; 行6：结果保存 GroupBox
         rGroup := body.Add("GroupBox").Name("ResultGroup").Grid_Row(6).Grid_ColumnSpan(4).Header(GetLang("结果保存"))
@@ -134,17 +134,16 @@ class ScreenShotGui {
         r.Cols("30", "*")
         r.Rows("30")
         r.Add("CheckBox").Grid_Row(0).Grid_Column(0).Name("ResultToggle").VerticalAlignment("Center")
-        r.Add("ComboBox").Grid_Row(0).Grid_Column(1).Name("ResultSaveNameCombo").Width(200).Height(24).MinHeight(24).HorizontalAlignment("Left").IsEditable("True")
+        r.Add("ComboBox").Grid_Row(0).Grid_Column(1).Name("ResultSaveNameCombo").Width(UILayout.S(200)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).HorizontalAlignment("Left").IsEditable("True")
 
         ; 行7：确定
         btnRow := body.Add("StackPanel").Grid_Row(7).Grid_ColumnSpan(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36)
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="520" Height="360" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(520) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

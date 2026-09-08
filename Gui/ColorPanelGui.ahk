@@ -111,7 +111,7 @@ class ColorPanelGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
 
         main := XAML_Generator("Grid").Background("#EEAA99").Width("160").Height("150")
@@ -151,11 +151,9 @@ class ColorPanelGui {
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", "30")
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="RMT-Target" Width="160" Height="150" Opacity="0" Topmost="True" ShowInTaskbar="False"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'ResizeMode="CanResize"', 'ResizeMode="NoResize"')
         ; 去掉 WindowChrome：本窗口无标题栏需求，且原生面板是直角矩形
         this.ui.xaml := RegExReplace(this.ui.xaml, "s)<WindowChrome\.WindowChrome>.*?</WindowChrome\.WindowChrome>")
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
 
         ; 事件（回调异步，勿做阻塞操作）
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing", this.ui))

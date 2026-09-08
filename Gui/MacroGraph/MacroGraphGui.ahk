@@ -204,6 +204,8 @@ class MacroGraphGui {
         win := XAML_Generator("Window")
         win.SetProp("xmlns", "http://schemas.microsoft.com/winfx/2006/xaml/presentation")
         win.SetProp("xmlns:x", "http://schemas.microsoft.com/winfx/2006/xaml")
+        ; 画布窗显式声明 zoom 范式（引擎 Viewbox 白名单制，2026-09-08）：整体等比缩放
+        win.SetProp("Tag", "ZoomViewbox")
         ; 画布/窗口背景固定深色（不随浅色主题变白）
         win.Title(GetLang("节点编辑器")).Width(1100).Height(700).WindowStartupLocation("CenterScreen").WindowState("Maximized").Background("#FF1E1E1E")
         iconPath := StrReplace(A_WorkingDir "\Images\Soft\rabit.ico", "\", "/")

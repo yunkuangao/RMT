@@ -128,7 +128,7 @@ class TimingGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("定时编辑器")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         winW := 420
         winH := 240
         this._btnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
@@ -158,7 +158,7 @@ class TimingGui {
         this._AddTextBox(formBlock, "StartTimeCon", "", timeBoxW, true, true)
             .Grid_Row(0).Grid_Column(2).Margin("0,0,0,8")
         startCalBtn := formBlock.Add("Button").Name("BtnStartCal")
-            .Width(28).Height(26).MinHeight(26).Margin("6,0,0,8").Cursor("Hand")
+            .Width(28).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,8").Cursor("Hand")
             .VerticalAlignment("Center").Grid_Row(0).Grid_Column(3)
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
@@ -179,7 +179,7 @@ class TimingGui {
         this._AddTextBox(formBlock, "EndTimeCon", "", timeBoxW, true, true)
             .Grid_Row(1).Grid_Column(2).Margin("0,0,0,8")
         endCalBtn := formBlock.Add("Button").Name("BtnEndCal")
-            .Width(28).Height(26).MinHeight(26).Margin("6,0,0,8").Cursor("Hand")
+            .Width(28).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,8").Cursor("Hand")
             .VerticalAlignment("Center").Grid_Row(1).Grid_Column(3)
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
@@ -188,7 +188,7 @@ class TimingGui {
             .FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets")
             .FontSize(12).HorizontalAlignment("Center").VerticalAlignment("Center")
         helpBtn := formBlock.Add("Button").Name("BtnEndHelp").Content("?")
-            .Width(28).Height(26).MinHeight(26).Margin("6,0,0,8").Cursor("Hand").FontSize(13)
+            .Width(28).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,8").Cursor("Hand").FontSize(13)
             .VerticalAlignment("Center").Grid_Row(1).Grid_Column(4)
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
@@ -201,10 +201,9 @@ class TimingGui {
             .VerticalAlignment("Center").Margin("0,0,4,8").Grid_Row(2).Grid_Column(1)
 
         typeNames := GetLangArr(["单次", "软件启动时", "自定义"])
-        typeCmb := formBlock.Add("ComboBox").Name("TypeCon").Width(timeBoxW).Height(26).MinHeight(26)
+        typeCmb := formBlock.Add("ComboBox").Name("TypeCon").Width(timeBoxW).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
             .Grid_Row(2).Grid_Column(2).Margin("0,0,0,8").VerticalAlignment("Center")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .IsEditable("False")
         for n in typeNames
             typeCmb.Add("ComboBoxItem").Content(n)
@@ -220,10 +219,9 @@ class TimingGui {
         this._AddTextBox(intervalRow, "IntervalCon", "10", "70").Grid_Column(2)
 
         unitNames := GetLangArr(["秒", "分钟", "小时", "天", "周", "月"])
-        unitCmb := intervalRow.Add("ComboBox").Name("UnitCon").Width(82).Height(26).MinHeight(26)
+        unitCmb := intervalRow.Add("ComboBox").Name("UnitCon").Width(82).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
             .Grid_Column(3).Margin("6,0,0,0").VerticalAlignment("Center")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .IsEditable("False")
         for n in unitNames
             unitCmb.Add("ComboBoxItem").Content(n)
@@ -232,20 +230,17 @@ class TimingGui {
         okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(90).Height(32)
+            .FontSize(13).Cursor("Hand").Width(90).Height(UILayout.S(32))
         okBtn.InjectResources(this._btnStyle)
 
         pos := GetCenterPosOnActiveMonitor(winW, winH)
-        dipX := PhysToDip(pos.x)
-        dipY := PhysToDip(pos.y)
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"',
             Format('Title="{}" ShowInTaskbar="False" Width="{}" Height="{}" Left="{}" Top="{}" Opacity="0"',
-                title, winW, winH, dipX, dipY))
+                title, winW, winH, pos.x, pos.y))
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"', 'WindowStartupLocation="Manual"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))
@@ -272,11 +267,10 @@ class TimingGui {
     }
 
     _AddTextBox(parent, name, text, width, readOnly := false, centerText := false) {
-        tb := parent.Add("TextBox").Name(name).Text(text).Height(26).MinHeight(26)
-            .FontSize(12).FontFamily(MainSoftData.FontType)
+        tb := parent.Add("TextBox").Name(name).Text(text).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
+            .FontSize(12)
             .VerticalAlignment("Center").VerticalContentAlignment("Center")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").Padding("6,0")
+            .Style("{DynamicResource InputBoxStyle}").Padding("6,0")
         if (width != "*")
             tb.Width(width)
         if (readOnly)
@@ -464,7 +458,7 @@ class TimingGui {
         dateStr := year "-" month "-" day
 
         title := GetLang("选择时间")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         winW := 360
         winH := 320
 
@@ -479,13 +473,12 @@ class TimingGui {
         body.Add("TextBlock").Name("HiddenDateText").SetMarkup("Text", "{Binding SelectedDate, ElementName=CalendarCon, StringFormat='{}{0:yyyy-MM-dd}'}").Visibility("Collapsed")
 
         timeGrid := body.Add("Grid").Margin("0,8,0,8").HorizontalAlignment("Center")
-        timeGrid.Cols("Auto", "5", "62", "3", "62", "3", "62")
+        timeGrid.Cols("Auto", "5", UILayout.S(62), "3", UILayout.S(62), "3", UILayout.S(62))
 
         timeGrid.Add("TextBlock").Text(GetLang("时间：")).Foreground("{DynamicResource TextMain}").FontSize(13).VerticalAlignment("Center").Grid_Column(0)
 
-        hourCmb := timeGrid.Add("ComboBox").Name("HourCon").Height(26).MinHeight(26).Grid_Column(2)
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalAlignment("Center")
+        hourCmb := timeGrid.Add("ComboBox").Name("HourCon").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Grid_Column(2)
+            .Style("{DynamicResource InputBoxStyle}").VerticalAlignment("Center")
             .IsEditable("True")
         loop 24 {
             v := Format("{:02}", A_Index - 1)
@@ -494,9 +487,8 @@ class TimingGui {
 
         timeGrid.Add("TextBlock").Text(":").Foreground("{DynamicResource TextMain}").FontSize(13).VerticalAlignment("Center").HorizontalAlignment("Center").Grid_Column(3)
 
-        minCmb := timeGrid.Add("ComboBox").Name("MinCon").Height(26).MinHeight(26).Grid_Column(4)
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalAlignment("Center")
+        minCmb := timeGrid.Add("ComboBox").Name("MinCon").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Grid_Column(4)
+            .Style("{DynamicResource InputBoxStyle}").VerticalAlignment("Center")
             .IsEditable("True")
         loop 60 {
             v := Format("{:02}", A_Index - 1)
@@ -505,9 +497,8 @@ class TimingGui {
 
         timeGrid.Add("TextBlock").Text(":").Foreground("{DynamicResource TextMain}").FontSize(13).VerticalAlignment("Center").HorizontalAlignment("Center").Grid_Column(5)
 
-        secCmb := timeGrid.Add("ComboBox").Name("SecCon").Height(26).MinHeight(26).Grid_Column(6)
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalAlignment("Center")
+        secCmb := timeGrid.Add("ComboBox").Name("SecCon").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Grid_Column(6)
+            .Style("{DynamicResource InputBoxStyle}").VerticalAlignment("Center")
             .IsEditable("True")
         loop 60 {
             v := Format("{:02}", A_Index - 1)
@@ -519,27 +510,24 @@ class TimingGui {
         okBtn := btnRow.Add("Button").Name("BtnPickerConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(12).Cursor("Hand").Width(80).Height(28).Margin("0,0,10,0")
+            .FontSize(12).Cursor("Hand").Width(80).Height(UILayout.CtrlH.RowSm).Margin("0,0,10,0")
         okBtn.InjectResources(this._btnStyle)
 
         cancelBtn := btnRow.Add("Button").Name("BtnPickerCancel").Content(GetLang("取消"))
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
-            .FontSize(12).Cursor("Hand").Width(80).Height(28)
+            .FontSize(12).Cursor("Hand").Width(80).Height(UILayout.CtrlH.RowSm)
         cancelBtn.InjectResources(this._editBtnStyle)
 
         pos := GetCenterPosOnActiveMonitor(winW, winH)
-        dipX := PhysToDip(pos.x)
-        dipY := PhysToDip(pos.y)
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
 
         picker := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", owner)
         picker.xaml := StrReplace(picker.xaml, 'Width="940" Height="700"',
             Format('Title="{}" ShowInTaskbar="False" Width="{}" Height="{}" Left="{}" Top="{}" Opacity="0"',
-                title, winW, winH, dipX, dipY))
+                title, winW, winH, pos.x, pos.y))
         picker.xaml := StrReplace(picker.xaml, 'WindowStartupLocation="CenterScreen"', 'WindowStartupLocation="Manual"')
         picker.xaml := StrReplace(picker.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
-        picker.xaml := StrReplace(picker.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         picker.xaml := StrReplace(picker.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
         picker.OnEvent("Window", "Closing", ObjBindMethod(this, "_OnPickerClosing"))

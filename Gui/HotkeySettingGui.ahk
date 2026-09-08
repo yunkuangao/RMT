@@ -83,7 +83,7 @@ class HotkeySettingGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("快捷键")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -110,15 +110,14 @@ class HotkeySettingGui {
 
         PrimaryBtnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
         btnRow := panel.Add("StackPanel").Orientation("Horizontal").HorizontalAlignment("Center").Margin("0,18,0,6")
-        revertBtn := btnRow.Add("Button").Name("BtnRevert").Content(GetLang("恢复默认")).Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold").BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1").FontSize(13).Cursor("Hand").Width(90).Height(32).Margin("0,0,16,0").IsDefault("False").IsCancel("False")
+        revertBtn := btnRow.Add("Button").Name("BtnRevert").Content(GetLang("恢复默认")).Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold").BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1").FontSize(13).Cursor("Hand").Width(90).Height(UILayout.S(32)).Margin("0,0,16,0").IsDefault("False").IsCancel("False")
         revertBtn.InjectResources(PrimaryBtnStyle)
-        okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定")).Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold").BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1").FontSize(13).Cursor("Hand").Width(80).Height(32).IsDefault("False").IsCancel("False")
+        okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定")).Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold").BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1").FontSize(13).Cursor("Hand").Width(80).Height(UILayout.S(32)).IsDefault("False").IsCancel("False")
         okBtn.InjectResources(PrimaryBtnStyle)
 
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" ShowInTaskbar="False" Width="630" Height="330" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
@@ -145,7 +144,7 @@ class HotkeySettingGui {
         item.Add("TextBlock").Text(GetLang(def.Label) "：")
             .Foreground("{DynamicResource TextMain}").FontSize(13)
             .VerticalAlignment("Center").Width(72)
-        box := item.Add("Border").Width(120).Height(28).CornerRadius("3")
+        box := item.Add("Border").Width(120).Height(UILayout.CtrlH.RowSm).CornerRadius("3")
             .Background("{DynamicResource InputBg}")
             .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
             .VerticalAlignment("Center")
@@ -154,7 +153,7 @@ class HotkeySettingGui {
             .Foreground("{DynamicResource InputText}")
             .HorizontalAlignment("Center").VerticalAlignment("Center")
         editBtn := item.Add("Button").Name("BtnEdit_" def.Field).Content(GetLang("编辑"))
-            .Width(52).Height(28).Margin("8,0,0,0").Padding("0").FontSize(12).Cursor("Hand")
+            .Width(52).Height(UILayout.CtrlH.RowSm).Margin("8,0,0,0").Padding("0").FontSize(12).Cursor("Hand")
             .Background("{DynamicResource EditBg}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
             .Foreground("{DynamicResource EditText}")

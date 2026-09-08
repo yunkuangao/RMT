@@ -33,6 +33,10 @@ public partial class AhkWpfEngine
         // Handled（canScroll=false 分支会这么做），仍要在更深层的 MenuItem 上收到并滚动，
         // 否则右键二级菜单永远收不到有效滚轮。
         EventManager.RegisterClassHandler(typeof(System.Windows.Controls.MenuItem), UIElement.PreviewMouseWheelEvent, new System.Windows.Input.MouseWheelEventHandler(OnMenuItemPreviewMouseWheel), true);
+        // ComboBox 滚轮穿透（2026-09-08）：悬停在下拉上滚轮默认被 ComboBox 捕获（改变选中项/内部滚动），
+        // 外层 ListBox/ScrollViewer 滚不动——列表内多下拉时整卡区域无法滚轮浏览（搜索 Pro 目标卡片实证）。
+        // Preview 阶段标记 Handled 并重新冒泡 MouseWheel：外层列表正常滚动；下拉展开时让位给下拉自身滚动。
+        EventManager.RegisterClassHandler(typeof(System.Windows.Controls.ComboBox), UIElement.PreviewMouseWheelEvent, new System.Windows.Input.MouseWheelEventHandler(OnComboBoxPreviewMouseWheel), false);
         // 子菜单定位：给我们右键菜单(MG_*)的子菜单 Popup 设 CustomPopupPlacementCallback，
         // 顶部对齐、向右下展开，避免 WPF 在屏幕下方把子菜单整体上翻（下方还有空间却太靠上）。
         EventManager.RegisterClassHandler(typeof(System.Windows.Controls.MenuItem), FrameworkElement.LoadedEvent, new RoutedEventHandler(OnMenuItemLoadedFixSubmenu), false);
@@ -76,6 +80,19 @@ public partial class AhkWpfEngine
                 f.SetValue(null, false);
         }
         catch { }
+    }
+
+    // ComboBox 滚轮穿透：悬停下拉时把滚轮转发给外层列表/ScrollViewer（详见类构造函数内注释）。
+    // 下拉展开时直接放行，让下拉自身列表滚动；多行 TextBox 不在处理范围（保留自身内容滚动语义）。
+    private static void OnComboBoxPreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs args)
+    {
+        var cb = sender as System.Windows.Controls.ComboBox;
+        if (cb == null || cb.IsDropDownOpen)
+            return;
+        args.Handled = true;
+        var fwd = new System.Windows.Input.MouseWheelEventArgs(args.MouseDevice, args.Timestamp, args.Delta)
+            { RoutedEvent = UIElement.MouseWheelEvent, Source = cb };
+        cb.RaiseEvent(fwd);
     }
 
     // 滚轮悬停菜单项时滚动其所属 ScrollViewer（修复 WPF 菜单/子菜单滚轮不生效）。

@@ -62,7 +62,7 @@ class CMDTipSettingGui {
         this.closed := false
 
         title := GetLang("指令显示")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -98,21 +98,17 @@ class CMDTipSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowPos.Add("TextBox").Name("PosXCon")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
         rowPos.Add("TextBlock").Text(GetLang("显示位置Y："))
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
             .Margin(yLabelGap ",0,0,0")
         rowPos.Add("TextBox").Name("PosYCon")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .Margin("2,0,0,0")
 
         ; 显示宽度：滑块最大 800，文本框可输入更大值
@@ -121,16 +117,14 @@ class CMDTipSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowW.Add("Slider").Name("WidthCon")
-            .Width(180).Height(28).Margin("8,0,8,0")
+            .Width(180).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(80).Maximum(CMDTipSettingGui.WidthSliderMax).Value(GetDefaultCMDTipWidth())
             .IsSnapToTickEnabled("True").TickFrequency("5")
             .Tag("Throttle:50")
         rowW.Add("TextBox").Name("WidthValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .Margin("2,0,0,0")
 
         ; 显示高度：滑块最大 600，文本框可输入更大值
@@ -139,16 +133,14 @@ class CMDTipSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowH.Add("Slider").Name("HeightCon")
-            .Width(180).Height(28).Margin("8,0,8,0")
+            .Width(180).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(40).Maximum(CMDTipSettingGui.HeightSliderMax).Value(300)
             .IsSnapToTickEnabled("True").TickFrequency("5")
             .Tag("Throttle:50")
         rowH.Add("TextBox").Name("HeightValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .Margin("2,0,0,0")
 
         ; 字体大小（输入框与宽高一致）
@@ -157,16 +149,14 @@ class CMDTipSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowF.Add("Slider").Name("FontSizeCon")
-            .Width(180).Height(28).Margin("8,0,8,0")
+            .Width(180).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(8).Maximum(36).Value(12)
             .IsSnapToTickEnabled("True").TickFrequency("1")
             .Tag("Throttle:50")
         rowF.Add("TextBox").Name("FontSizeValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .Margin("2,0,0,0")
 
         ; 背景透明度（输入框与宽高一致）
@@ -175,16 +165,14 @@ class CMDTipSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowT.Add("Slider").Name("TransparencyCon")
-            .Width(180).Height(28).Margin("8,0,8,0")
+            .Width(180).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(0).Maximum(100).Value(50)
             .IsSnapToTickEnabled("True").TickFrequency("1")
             .Tag("Throttle:50")
         rowT.Add("TextBox").Name("TransparencyValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .Margin("2,0,0,0")
 
         tip2 := panel.Add("TextBlock").Text(GetLang("透明度(0~100)：0不透明，100完全透明"))
@@ -209,13 +197,11 @@ class CMDTipSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowPath.Add("TextBox").Name("LogFilePathCon")
-            .Width(180).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(180).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Left").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
         browseBtn := rowPath.Add("Button").Name("BtnBrowseLogPath")
-            .Content("...").Width(28).Height(24).Margin("4,0,0,0")
+            .Content("...").Width(28).Height(UILayout.CtrlH.Input).Margin("4,0,0,0")
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
             .FontSize(12).Cursor("Hand")
@@ -226,10 +212,8 @@ class CMDTipSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         clearCombo := rowClear.Add("ComboBox").Name("AutoClearCon")
-            .Width(120).Height(24).MinHeight(24).VerticalAlignment("Center")
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Width(120).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalAlignment("Center")
+            .Style("{DynamicResource InputBoxStyle}")
         clearNames := GetLangArr(["从不", "每天", "每周"])
         for n in clearNames
             clearCombo.Add("ComboBoxItem").Content(n)
@@ -241,19 +225,18 @@ class CMDTipSettingGui {
         revertBtn := btnRow.Add("Button").Name("BtnRevert").Content(GetLang("恢复默认"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(32).Margin("0,0,16,0")
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.S(32)).Margin("0,0,16,0")
         revertBtn.InjectResources(PrimaryBtnStyle)
         okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(32)
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.S(32))
         okBtn.InjectResources(PrimaryBtnStyle)
 
         ; 编译 XAML
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" ShowInTaskbar="False" Width="420" Height="430" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
@@ -600,7 +583,7 @@ class CMDTipSettingGui {
     }
 
     SaveData() {
-        global IniFile, IniSection
+        global IniFile, MainSoftData, IniSection
 
         MainSoftData.CMDPosX := this._posX
         MainSoftData.CMDPosY := this._posY

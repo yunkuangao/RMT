@@ -52,7 +52,7 @@ class LogSettingGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("日志与错误")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -66,10 +66,9 @@ class LogSettingGui {
 
         ; 行0：日志级别
         row0 := body.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").VerticalAlignment("Center")
-        row0.Add("TextBlock").Text(GetLang("日志级别：")).Width(110).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
-        lvCombo := row0.Add("ComboBox").Name("CmbLogLevel").Width(110).Height(26).MinHeight(26).VerticalContentAlignment("Center").Margin("4,0,0,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        row0.Add("TextBlock").Text(GetLang("日志级别：")).Width(UILayout.S(110)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        lvCombo := row0.Add("ComboBox").Name("CmbLogLevel").Width(UILayout.S(110)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).VerticalContentAlignment("Center").Margin("4,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}")
             .ToolTip(GetLang("系统日志的最低级别：低于此级别的日志不写入 System.log。")
                 . "`n" GetLang("debug：记录所有调试信息（建议排查问题时开启）")
                 . "`n" GetLang("info：记录正常事件（默认）")
@@ -79,21 +78,21 @@ class LogSettingGui {
 
         ; 行1：warn 气泡
         row1 := body.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").VerticalAlignment("Center")
-        row1.Add("TextBlock").Text(GetLang("warn 气泡：")).Width(110).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        row1.Add("TextBlock").Text(GetLang("warn 气泡：")).Width(UILayout.S(110)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
         chkBubble := row1.Add("CheckBox").Name("ChkLogWarnBubble").VerticalAlignment("Center").Margin("4,0,0,0")
             .ToolTip(GetLang("开启后：warn 级错误在托盘显示气泡通知（2 秒自动消失），不打断操作。")
                 . "`n" GetLang("关闭后：warn 只写入 System.log，不弹气泡。"))
 
         ; 行2：error 错误中心
         row2 := body.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").VerticalAlignment("Center")
-        row2.Add("TextBlock").Text(GetLang("错误中心：")).Width(110).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        row2.Add("TextBlock").Text(GetLang("错误中心：")).Width(UILayout.S(110)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
         chkBadge := row2.Add("CheckBox").Name("ChkLogErrorBadge").VerticalAlignment("Center").Margin("4,0,0,0")
             .ToolTip(GetLang("开启后：error 级错误在错误中心聚合显示（可复制/清空）。")
                 . "`n" GetLang("关闭后：error 只写入 System.log，不打开错误中心。"))
 
         ; 行3：业务日志
         row3 := body.Add("StackPanel").Grid_Row(3).Orientation("Horizontal").VerticalAlignment("Center")
-        row3.Add("TextBlock").Text(GetLang("业务日志：")).Width(110).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
+        row3.Add("TextBlock").Text(GetLang("业务日志：")).Width(UILayout.S(110)).VerticalAlignment("Center").Foreground("{DynamicResource TextMain}").FontSize("12")
         chkBiz := row3.Add("CheckBox").Name("ChkBusinessLog").VerticalAlignment("Center").Margin("4,0,0,0")
             .ToolTip(GetLang("开启后：记录宏运行流水到 Log\\Business.log（宏触发/每指令/宏结束）。")
                 . "`n" GetLang("关闭后：不记录业务流水（默认）。")
@@ -101,13 +100,12 @@ class LogSettingGui {
 
         ; 行4：确定
         btnRow := body.Add("StackPanel").Grid_Row(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Height(28).MinHeight(28).Padding("14,0")
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("14,0")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", 0)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="360" SizeToContent="Height" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(360) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===
@@ -126,7 +124,7 @@ class LogSettingGui {
     }
 
     _ApplyCurrent() {
-        global RMTLogSysMinLevel
+        global RMTLogSysMinLevel, MainSoftData
         level := IsSet(MainSoftData) && MainSoftData.HasOwnProp("SysLogMinLevel") ? MainSoftData.SysLogMinLevel : RMTLogSysMinLevel
         this._curLevel := level
         idx := 0
@@ -161,7 +159,7 @@ class LogSettingGui {
 
     ; 日志级别：即时同步 LogUtil global + 持久化
     OnLevelChanged(state, ctrl, event) {
-        global RMTLogSysMinLevel
+        global RMTLogSysMinLevel, MainSoftData
         lv := this.ui.Query("CmbLogLevel")
         if (lv == "")
             return
@@ -185,7 +183,7 @@ class LogSettingGui {
 
     ; 业务日志开关（同步 LogUtil global + 持久化）
     OnBusinessLogToggle(state, ctrl, event) {
-        global RMTLogBusinessEnabled
+        global RMTLogBusinessEnabled, MainSoftData
         MainSoftData.BusinessLog := this.ui.Query("ChkBusinessLog") == "True"
         RMTLogBusinessEnabled := MainSoftData.BusinessLog
         IniWrite(MainSoftData.BusinessLog, IniFile, IniSection, "BusinessLog")

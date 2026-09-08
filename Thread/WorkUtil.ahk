@@ -242,6 +242,35 @@
         MsgPostHandler(WM_WORKER_TO_MASTER, workIndex, 0)
     }
 
+    ; Worker 弹窗统一阻塞代理：清空结果槽位 → 直发 opcode 请求（不经 MsgSendHandler/actionMap，
+    ; 新增弹窗无需加映射行）→ 轮询等主进程回传。返回原始结果数组（超时返回 ""），格式转换交给各业务壳
+    WorkerDialog_Request(opcode, args*) {
+        global rx, workIndex, _workerInputResult
+        _workerInputResult := ""
+        cmd := EncodeCommand(opcode, args*)
+        payload := EncodeBatch(cmd)
+        rx.Push(MsgType.EVENT, 0, payload)
+        MsgPostHandler(WM_WORKER_TO_MASTER, workIndex, 0)
+        deadline := A_TickCount + 300000
+        while (!IsObject(_workerInputResult)) {
+            Sleep(50)
+            if (A_TickCount > deadline) {
+                GraphPoolLog("弹窗请求等待超时", Format("300s 无 {1} 回传", opcode "R"))
+                return ""
+            }
+        }
+        r := _workerInputResult
+        _workerInputResult := ""
+        return r
+    }
+
+    ; Worker 自定义弹窗壳：统一代理拿原始数组 → 按原语义转换
+    ; 返回语义与 CustomMsgBox_Native 一致：命中按钮=1 基索引；超时/异常=0
+    CustomMsgBox_Worker(Text := "", Title := "", Buttons := "") {
+        r := WorkerDialog_Request("CM", Text, Title, Buttons)
+        return IsObject(r) ? (r[1] == "" ? 0 : Integer(r[1])) : 0
+    }
+
 }
 
 ;接受主程序指令后回调
@@ -371,15 +400,12 @@
 
             try {
                 switch opcode {
-                    case "IPR":
-                        ; 主进程回传输入框结果：[ok, value]
-                        ; 只写首次（主进程可能因 SureAction+HideAction 回传多条，CheckTxBuffer 一次消费，防止覆盖首次结果）
+                    case "IPR", "IBR", "CMR":
+                        ; 主进程回传弹窗结果（IPR:[ok,value] / IBR:[button] / CMR:[button]）
+                        ; 新增弹窗在此 opcode 列表加一个词即可；用显式列表而非 *R 通配（ER 也以 R 结尾）
+                        ; 只写首次：主进程可能因 SureAction+HideAction 回传多条，CheckTxBuffer 一次消费，防止覆盖首次结果
                         if (!IsObject(_workerInputResult))
-                            _workerInputResult := [args[1], args.Length >= 2 ? args[2] : ""]
-                    case "IBR":
-                        ; 主进程回传按钮条结果：[button]（true/false/continue/cancel）
-                        if (!IsObject(_workerInputResult))
-                            _workerInputResult := [args[1]]
+                            _workerInputResult := args
                     case "SV":
                         MySoftData.VariableMap[args[1]] := args[2]
                     case "DV":

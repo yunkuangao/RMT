@@ -23,7 +23,7 @@ global MyPToken := Gdip_Startup()
 ; 此处伪赋值占位，避免 Worker 编译期 #Warn UseUnsetGlobal 警告（MacroUtil 引用处有 IsObject 保护）
 global MyMainWin := ""
 
-; 主进程输入弹窗（输入框/按钮条）回传结果缓存：OnEventMessage 收到 IPR/IBR 写入，WorkerInputRequest 读取
+; 主进程弹窗回传结果缓存（IPR/IBR/CMR）：OnEventMessage 只写首次，WorkerDialog_Request 读取（经 InputUtil 动态名解析委托）
 global _workerInputResult := ""
 ; §17 热重载：主进程广播 CF 后待重载配置的标志（忙时置位，任务结束 finally 重载）
 global workerConfigDirty := false

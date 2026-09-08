@@ -580,9 +580,9 @@ NetworkShowHelpDialog(macroID := "") {
     tbInner := tb.Add("Grid")
     tbInner.Add("TextBlock").Text(GetLang("网络触发说明")).Foreground("{DynamicResource TitleBarForeground}")
         .FontSize(XAMLHost.TitleFontSize()).FontWeight("Bold").VerticalAlignment("Center").Margin("15,0,0,0").Padding("0")
-    btnGroup := tbInner.Add("StackPanel").Orientation("Horizontal").HorizontalAlignment("Right").VerticalAlignment("Stretch").Height(36)
+    btnGroup := tbInner.Add("StackPanel").Orientation("Horizontal").HorizontalAlignment("Right").VerticalAlignment("Stretch").Height(UILayout.S(36))
     closeBtn := btnGroup.Add("Button").Name("BtnClosePanel").Style("{StaticResource TitleBarCloseButton}")
-        .WindowChrome_IsHitTestVisibleInChrome("True").Width(46).Height(36).MinHeight(36).Padding("0")
+        .WindowChrome_IsHitTestVisibleInChrome("True").Width(46).Height(UILayout.S(36)).MinHeight(36).Padding("0")
         .VerticalAlignment("Stretch").Background("Transparent").Foreground("{DynamicResource TitleBarForeground}").BorderThickness(0)
     closeBtn.Add("TextBlock").Text(Chr(0xE8BB)).FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(10)
         .VerticalAlignment("Center").HorizontalAlignment("Center")
@@ -605,7 +605,7 @@ NetworkShowHelpDialog(macroID := "") {
             row.Add("TextBlock").Grid_Column(1).Text(rowDef.url).Foreground("{DynamicResource Accent}")
                 .VerticalAlignment("Center").TextWrapping("Wrap")
             row.Add("Button").Grid_Column(2).Name(rowDef.btn).Content(GetLang("复制"))
-                .Width(56).Height(24).MinHeight(24).Margin("8,0,0,0").Cursor("Hand")
+                .Width(56).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("8,0,0,0").Cursor("Hand")
         }
     }
 
@@ -624,7 +624,7 @@ NetworkShowHelpDialog(macroID := "") {
         exRow.Add("TextBlock").Grid_Column(0).Text(ex).Foreground("{DynamicResource TextMain}")
             .VerticalAlignment("Center").TextWrapping("Wrap")
         exRow.Add("Button").Grid_Column(1).Name("BtnEx" exIdx).Content(GetLang("复制"))
-            .Width(56).Height(24).MinHeight(24).Margin("8,0,0,0").Cursor("Hand")
+            .Width(56).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("8,0,0,0").Cursor("Hand")
     }
 
     ; —— 底部确定按钮 ——
@@ -632,7 +632,7 @@ NetworkShowHelpDialog(macroID := "") {
     okBtn := btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定"))
         .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}")
         .FontWeight("Bold").BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-        .FontSize(fs).Cursor("Hand").Width(80).Height(32)
+        .FontSize(fs).Cursor("Hand").Width(80).Height(UILayout.S(32))
     PrimaryBtnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionPressBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
     okBtn.InjectResources(PrimaryBtnStyle)
 
@@ -640,9 +640,7 @@ NetworkShowHelpDialog(macroID := "") {
     ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", owner)
     safeTitle := RmtDialog._XmlEsc(GetLang("网络触发说明"))
     ui.xaml := StrReplace(ui.xaml, 'Width="940" Height="700"', 'Title="' safeTitle '" ShowInTaskbar="False" Width="' winW '" SizeToContent="Height" Opacity="0"')
-    ui.xaml := StrReplace(ui.xaml, 'ResizeMode="CanResize"', 'ResizeMode="NoResize"')
     if (fontFamily != "")
-        ui.xaml := StrReplace(ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' fontFamily '"')
     ui.xaml := StrReplace(ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
     ui.xaml := StrReplace(ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 
@@ -716,9 +714,9 @@ NetworkShowSettingDialog() {
     tbInner := tb.Add("Grid")
     tbInner.Add("TextBlock").Text(GetLang("网络宏设置")).Foreground("{DynamicResource TitleBarForeground}")
         .FontSize(XAMLHost.TitleFontSize()).FontWeight("Bold").VerticalAlignment("Center").Margin("15,0,0,0").Padding("0")
-    btnGroup := tbInner.Add("StackPanel").Orientation("Horizontal").HorizontalAlignment("Right").VerticalAlignment("Stretch").Height(36)
+    btnGroup := tbInner.Add("StackPanel").Orientation("Horizontal").HorizontalAlignment("Right").VerticalAlignment("Stretch").Height(UILayout.S(36))
     closeBtn := btnGroup.Add("Button").Name("BtnClosePanel").Style("{StaticResource TitleBarCloseButton}")
-        .WindowChrome_IsHitTestVisibleInChrome("True").Width(46).Height(36).MinHeight(36).Padding("0")
+        .WindowChrome_IsHitTestVisibleInChrome("True").Width(46).Height(UILayout.S(36)).MinHeight(36).Padding("0")
         .VerticalAlignment("Stretch").Background("Transparent").Foreground("{DynamicResource TitleBarForeground}").BorderThickness(0)
     closeBtn.Add("TextBlock").Text(Chr(0xE8BB)).FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets").FontSize(10)
         .VerticalAlignment("Center").HorizontalAlignment("Center")
@@ -732,9 +730,8 @@ NetworkShowSettingDialog() {
     row1.Add("TextBlock").Grid_Column(0).Text(GetLang("监听端口：")).Foreground("{DynamicResource TextMain}")
         .VerticalAlignment("Center").Margin("0,0,6,0")
     row1.Add("TextBox").Grid_Column(1).Name("EditNetPort").Text(String(MainSoftData.NetworkPort))
-        .Width(100).Height(26).MinHeight(26).Padding("4,0").VerticalContentAlignment("Center")
-        .FontSize(12).Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-        .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        .Width(100).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Padding("4,0").VerticalContentAlignment("Center")
+        .FontSize(12).Style("{DynamicResource InputBoxStyle}")
 
     ; —— 监听地址（只读）——
     row2 := panel.Add("Grid").Margin("0,6,0,2")
@@ -742,9 +739,8 @@ NetworkShowSettingDialog() {
     row2.Add("TextBlock").Grid_Column(0).Text(GetLang("监听地址：")).Foreground("{DynamicResource TextMain}")
         .VerticalAlignment("Center").Margin("0,0,6,0")
     row2.Add("TextBox").Grid_Column(1).Text("127.0.0.1").IsReadOnly("True")
-        .Width(100).Height(26).MinHeight(26).Padding("4,0").VerticalContentAlignment("Center")
-        .FontSize(12).Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-        .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        .Width(100).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Padding("4,0").VerticalContentAlignment("Center")
+        .FontSize(12).Style("{DynamicResource InputBoxStyle}")
         .ToolTip(GetLang("默认仅监听本机回环地址，保证安全；外部设备无法访问"))
 
     ; —— 状态红字（端口冲突 / 校验错误，正常时隐藏）——
@@ -756,9 +752,9 @@ NetworkShowSettingDialog() {
     saveBtn := btnRow.Add("Button").Name("BtnNetSave").Content(GetLang("保存"))
         .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}")
         .FontWeight("Bold").BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-        .FontSize(fs).Cursor("Hand").Width(80).Height(32).Margin("0,0,12,0")
+        .FontSize(fs).Cursor("Hand").Width(80).Height(UILayout.S(32)).Margin("0,0,12,0")
     closeBtn2 := btnRow.Add("Button").Name("BtnNetClose").Content(GetLang("关闭"))
-        .FontSize(fs).Cursor("Hand").Width(80).Height(32)
+        .FontSize(fs).Cursor("Hand").Width(80).Height(UILayout.S(32))
     PrimaryBtnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource ActionPressBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ActionHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
     saveBtn.InjectResources(PrimaryBtnStyle)
 
@@ -766,9 +762,7 @@ NetworkShowSettingDialog() {
     ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", owner)
     safeTitle := RmtDialog._XmlEsc(GetLang("网络宏设置"))
     ui.xaml := StrReplace(ui.xaml, 'Width="940" Height="700"', 'Title="' safeTitle '" ShowInTaskbar="False" Width="' winW '" SizeToContent="Height" Opacity="0"')
-    ui.xaml := StrReplace(ui.xaml, 'ResizeMode="CanResize"', 'ResizeMode="NoResize"')
     if (fontFamily != "")
-        ui.xaml := StrReplace(ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' fontFamily '"')
     ui.xaml := StrReplace(ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
     ui.xaml := StrReplace(ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 

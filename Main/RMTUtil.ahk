@@ -19,7 +19,7 @@ global XAML_IN_PROCESS_PREVIEW := false
 
 ;资源保存（带脏检查优化：只写入实际发生变化的配置项）
 OnSaveSetting(*) {
-    global MySoftData, MyWorkPool, MyHotReloadBus
+    global MySoftData, MainSoftData, MyWorkPool, MyHotReloadBus
     isValid := CheckAllValueSettingValid()
     if (!isValid)
         return
@@ -213,10 +213,13 @@ SaveCurWinPos() {
     dipSW := A_ScreenWidth / dpi
     dipSH := A_ScreenHeight / dpi
     fs := Min(dipSW / 1920, dipSH / 1080)
+    ; 宽高系数分开存（第5段）：主窗口已放开自由缩放，宽高比不再恒定 1.78，
+    ; 只存宽度系数会在重启后把用户调整过的高度强制拉回设计比例
     scale := (w / dpi) / (1400 * fs)
+    scaleH := (h / dpi) / (787 * fs)
     if (scale <= 0)
         scale := 1
-    IniWrite(Format("{}π{}πSπ{:.2f}", x, y, scale), IniFile, IniSection, "LastWinPos")
+    IniWrite(Format("{}π{}πSπ{:.4f}π{:.4f}", x, y, scale, scaleH), IniFile, IniSection, "LastWinPos")
 
     ListenGui := MyVarListenGui.Gui
     if (MyVarListenGui.Gui != "") {
@@ -282,7 +285,7 @@ InitViGEmPlugin() {
     }
 
     isDS4 := MainSoftData.JoyType = "DS4"
-    global ViGJoy := isDS4 ? ViGEmDS4() : ViGEmXb360()
+    global ViGJoy := isDS4 ? ViGEmDS4() : ViGEmXb360(), MainSoftData
     global CurViGJoyType := isDS4 ? "DS4" : "Xbox"
 
     try instOk := (IsSet(ViGJoy) && ViGJoy.Instance != "")
@@ -869,7 +872,7 @@ ViGJoySetState(JoyType, Key, Value) {
             JoyDebugLog(Format("ViGJoySetState switch device {} -> {} (JoyType={})", CurViGJoyType, wantType, MainSoftData.JoyType), "vigem")
         else
             JoyDebugLog(Format("ViGJoySetState create {} (JoyType={})", wantType, MainSoftData.JoyType), "vigem")
-        global ViGJoy := isDS4 ? ViGEmDS4() : ViGEmXb360()
+        global ViGJoy := isDS4 ? ViGEmDS4() : ViGEmXb360(), MainSoftData
         global CurViGJoyType := wantType
     }
 
@@ -1078,7 +1081,7 @@ TogGetSelectArea(isEnable, action := "") {
 }
 
 OnGetSelectAreaDown(*) {
-    global SelectAreaState
+    global SelectAreaState, MainSoftData
     SelectAreaState.winPos := ""
     SelectAreaState.firstPos := false
     CoordMode("Mouse", "Screen")
@@ -1093,7 +1096,7 @@ OnGetSelectAreaUp(*) {
     TogGetSelectArea(false)
     if (action == "")
         return
-    global SelectAreaState
+    global SelectAreaState, MainSoftData
     if (SelectAreaState.winPos != "" && ObjHasOwnProp(SelectAreaState.winPos, "W") && SelectAreaState.winPos.W > 0 && SelectAreaState.winPos.H > 0) {
         x1 := SelectAreaState.winPos.X
         y1 := SelectAreaState.winPos.Y
@@ -1114,7 +1117,7 @@ OnGetSelectAreaCancel(*) {
 }
 
 TogSelectArea(isEnable, action := "") {
-    global SelectAreaState
+    global SelectAreaState, MainSoftData
     if (isEnable && action != "") {
         MainSoftData.SelectAreaAction := action
         ToolTipContent(GetLang("请框选截图范围"))
@@ -1158,7 +1161,7 @@ SelectAreaDown(*) {
 }
 
 SelectAreaUp(*) {
-    global SelectAreaState
+    global SelectAreaState, MainSoftData
     SetTimer(SelectAreaDraw, 0)
 
     action := MainSoftData.SelectAreaAction
@@ -1736,7 +1739,7 @@ OnTriggerSepcialItemMacro(MacroStr) {
 }
 
 HandleOpenArg() {
-    global MySoftData
+    global MySoftData, MainSoftData
     if (A_Args.Length <= 0) {
         if (MainSoftData.IsAdminStart && !A_IsAdmin)
             ElevateToAdmin()

@@ -161,15 +161,12 @@ class TargetGui {
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"'
             , 'Title="RMT-Target" Width="' wD '" Height="' hD '" Topmost="True" ShowInTaskbar="False"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'ResizeMode="CanResize"', 'ResizeMode="NoResize"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'AllowsTransparency="False"', 'AllowsTransparency="True"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"'
             , 'WindowStartupLocation="Manual" Left="' lD '" Top="' tD '"')
         ; 透明窗口不能带 WindowChrome（GlassFrame 与每像素 Alpha 冲突），移除整块
         this.ui.xaml := RegExReplace(this.ui.xaml, "s)<WindowChrome\.WindowChrome>.*?</WindowChrome\.WindowChrome>")
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"'
-            , 'FontFamily="' MainSoftData.FontType '"')
 
         ; 事件（回调异步，勿做阻塞操作）
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing", this.ui))

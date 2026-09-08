@@ -44,11 +44,11 @@ class EditHotkeyGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := GetLang("快捷方式编辑")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -58,14 +58,13 @@ class EditHotkeyGui {
 
         ; === 内容 ===
         btnRow := main.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnKey").Content(GetLang("快捷键")).Width(100).Height(50).MinHeight(50).Margin("0,0,30,0")
-        btnRow.Add("Button").Name("BtnStr").Content(GetLang("字串")).Width(100).Height(50).MinHeight(50)
+        btnRow.Add("Button").Name("BtnKey").Content(GetLang("快捷键")).Width(100).Height(UILayout.S(50)).MinHeight(50).Margin("0,0,30,0")
+        btnRow.Add("Button").Name("BtnStr").Content(GetLang("字串")).Width(100).Height(UILayout.S(50)).MinHeight(50)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", 0)
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="420" Height="120" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

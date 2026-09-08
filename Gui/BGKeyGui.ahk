@@ -43,7 +43,7 @@ class BGKeyGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -58,7 +58,7 @@ class BGKeyGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         ; 实例复用：重建前清空按键映射，避免 _btnKeyMap/_keySeq 累积导致事件重复绑定
         this.ConMap := Map()
@@ -66,7 +66,7 @@ class BGKeyGui {
         this._keySeq := 0
         title := this.ParentTile GetLang("后台按键编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "30", "30", "*", "34", "44")
@@ -76,29 +76,26 @@ class BGKeyGui {
 
         ; === 顶部行1：模拟/检测/窗口信息 ===
         top := main.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").Margin("10,4")
-        top.Add("Button").Name("BtnSim").Content(GetLang("模拟指令")).Width(80).Height(26).MinHeight(26).Cursor("Hand")
+        top.Add("Button").Name("BtnSim").Content(GetLang("模拟指令")).Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Cursor("Hand")
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-        top.Add("Button").Name("BtnHelp").Content("?").Width(30).Height(26).MinHeight(26).Margin("4,0,0,0").Cursor("Hand")
+        top.Add("Button").Name("BtnHelp").Content("?").Width(30).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1").Padding("0")
         top.Add("TextBlock").Text(GetLang("键盘按键检测：")).VerticalAlignment("Center").Margin("10,0,0,0")
-        top.Add("TextBox").Name("HotkeyCon").Width(100).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
-        top.Add("Button").Name("BtnDetect").Content(GetLang("确定")).Height(26).MinHeight(26).Margin("6,0,0,0").Cursor("Hand")
+        top.Add("TextBox").Name("HotkeyCon").Width(UILayout.S(100)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
+        top.Add("Button").Name("BtnDetect").Content(GetLang("确定")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,0").Cursor("Hand")
         top.Add("TextBlock").Text(GetLang("窗口信息:")).VerticalAlignment("Center").Margin("12,0,0,0")
-        top.Add("TextBox").Name("FrontCon").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
-        top.Add("Button").Name("BtnEdit").Content(GetLang("编辑")).Height(26).MinHeight(26).Margin("6,0,0,0").Cursor("Hand")
+        top.Add("TextBox").Name("FrontCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
+        top.Add("Button").Name("BtnEdit").Content(GetLang("编辑")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,0").Cursor("Hand")
 
         ; === 顶部行2：备注 ===
         remarkRow := main.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").Margin("10,2")
         remarkRow.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center")
-        remarkRow.Add("TextBox").Name("RemarkCon").Width(400).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
+        remarkRow.Add("TextBox").Name("RemarkCon").Width(UILayout.S(400)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
 
         ; === 按键网格 ===
         keyGroup := main.Add("GroupBox").Grid_Row(3).Header(GetLang("请从下面按钮中选择按键：")).Margin("8,2,8,4")
@@ -110,29 +107,26 @@ class BGKeyGui {
         ; === 底部参数行 ===
         bottom := main.Add("StackPanel").Grid_Row(4).Orientation("Horizontal").Margin("10,2").VerticalAlignment("Center")
         bottom.Add("TextBlock").Text(GetLang("类型:")).VerticalAlignment("Center")
-        kt := bottom.Add("ComboBox").Name("KeyTypeCon").Width(80).Height(26).MinHeight(26).Margin("4,0,0,0")
+        kt := bottom.Add("ComboBox").Name("KeyTypeCon").Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         for t in GetLangArr(["按下", "松开", "点击"])
             kt.Add("ComboBoxItem").Content(t)
         bottom.Add("TextBlock").Name("HoldTimeTipCon").Text(GetLang("点击时长:")).VerticalAlignment("Center").Margin("15,0,0,0")
-        bottom.Add("TextBox").Name("HoldTimeCon").Width(60).Height(24).MinHeight(24)
+        bottom.Add("TextBox").Name("HoldTimeCon").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11).Margin("6,0,0,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
         bottom.Add("TextBlock").Name("KeyCountTipCon").Text(GetLang("点击次数：")).VerticalAlignment("Center").Margin("15,0,0,0")
-        bottom.Add("TextBox").Name("KeyCountCon").Width(60).Height(24).MinHeight(24)
+        bottom.Add("TextBox").Name("KeyCountCon").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11).Margin("6,0,0,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
         bottom.Add("TextBlock").Name("PerIntervalTipCon").Text(GetLang("每次间隔：")).VerticalAlignment("Center").Margin("15,0,0,0")
-        bottom.Add("TextBox").Name("PerIntervalCon").Width(60).Height(24).MinHeight(24)
+        bottom.Add("TextBox").Name("PerIntervalCon").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11).Margin("6,0,0,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; === 底部按钮行 ===
         btnRow := main.Add("StackPanel").Grid_Row(5).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnClear").Content(GetLang("清空")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnClear").Content(GetLang("清空")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
 
         ; === 生成按键网格（加入 main，随后 main.ToString() 生效）===
         this._BuildKeyGrid()
@@ -140,8 +134,7 @@ class BGKeyGui {
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="1280" Height="470" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(1280) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 注册按键事件（ui 已建）===
@@ -172,7 +165,7 @@ class BGKeyGui {
     _PlaceKey(value, display, x, y, width) {
         this._keySeq += 1
         name := "KeyBtn_" this._keySeq
-        btn := this._keyGrid.Add("Button").Name(name).Width(width).Height(25)
+        btn := this._keyGrid.Add("Button").Name(name).Width(width).Height(UILayout.S(25))
             .SetProp("Canvas.Left", String(x)).SetProp("Canvas.Top", String(y))
             .Content(display).FontSize(11).Cursor("Hand").Padding("2,0")
             .Background("{DynamicResource InputBg}").Foreground("{DynamicResource TextMain}")

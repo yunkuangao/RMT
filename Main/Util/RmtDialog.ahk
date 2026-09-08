@@ -74,6 +74,74 @@ class RmtDialog {
         return { Tall: tall, WinW: w, Lines: nl }
     }
 
+    ; 物理像素 → DIP（注入 XAML 的 Left/Top 按 DIP 解释，见 MainWindowXaml/CustomMsgBox 先例）
+    static _PhysToDip(px, scale) {
+        return Round(px / scale)
+    }
+
+    ; 估算整窗高度（建窗前预算，配合 Manual 落位一次到位，误差 ≤80px 可接受）：
+    ; 标题栏 30 + 正文区（行数×fs×1.4 + margin；长文案边框 padding 16 + panel margin 24，MaxHeight 340 封顶）
+    ; + 按钮行（32 + Margin 0,14,0,4）+ 下 margin 4 + 安全余量 8
+    static _EstH(msg, fs, lay, winW) {
+        lines := 0
+        loop parse String(msg), "`n" {
+            line := StrReplace(A_LoopField, "`r", "")
+            ; 正文可用宽：短文案 panel margin 24 / 长文案 panel margin 24 + 边框 padding 16
+            areaW := lay.Tall ? winW - 40 : winW - 24
+            seg := Ceil(RmtDialog._LinePx(line, fs) / areaW)
+            if (seg < 1)
+                seg := 1
+            lines += seg
+        }
+        if (lines < 1)
+            lines := 1
+        if (lay.Tall)
+            bodyH := Min(lines * fs * 1.4, 340) + 16 + 24
+        else
+            bodyH := lines * fs * 1.4 + 32
+        return Round(30 + bodyH + 50 + 4 + 8)
+    }
+
+    ; 鼠标所在监视器工作区中心（DIP），返回 'WindowStartupLocation="Manual" Left="x" Top="y"'
+    ; GetCursorPos 物理坐标 → MonitorGetWorkArea 找所在屏 → 按系统 DPI 换算 DIP；
+    ; 找不到所在屏（含副屏负坐标遍历失败）回退监视器 1。与 CustomMsgBox_CenterAttr 同款实现，自足不跨文件。
+    static _CenterAttr(winW, winH) {
+        scale := 1.0
+        try scale := DllCall("GetDpiForSystem", "UInt") / 96.0
+        if (scale < 1.0)
+            scale := 1.0
+        ; 鼠标物理坐标（GetCursorPos 返回物理像素，进程 DPI aware）
+        pt := Buffer(8, 0)
+        try DllCall("GetCursorPos", "Ptr", pt)
+        mx := NumGet(pt, 0, "Int")
+        my := NumGet(pt, 4, "Int")
+        ; 找鼠标所在监视器的工作区（MonitorGetWorkArea 返回物理像素）
+        wl := 0, wt := 0, wr := 0, wb := 0
+        found := false
+        try {
+            loop MonitorGetCount() {
+                MonitorGetWorkArea(A_Index, &wl, &wt, &wr, &wb)
+                if (mx >= wl && mx < wr && my >= wt && my < wb) {
+                    found := true
+                    break
+                }
+            }
+            if (!found)
+                MonitorGetWorkArea(1, &wl, &wt, &wr, &wb)
+        }
+        l := RmtDialog._PhysToDip(wl, scale)
+        t := RmtDialog._PhysToDip(wt, scale)
+        r := RmtDialog._PhysToDip(wr, scale)
+        b := RmtDialog._PhysToDip(wb, scale)
+        x := l + ((r - l) - winW) // 2
+        y := t + ((b - t) - winH) // 2
+        if (x < l)
+            x := l
+        if (y < t)
+            y := t
+        return 'WindowStartupLocation="Manual" Left="' x '" Top="' y '"'
+    }
+
     static _Show(msg, title, buttons, iconChar, iconColor, offsetMsg := false) {
         owner := 0
         try {
@@ -82,10 +150,13 @@ class RmtDialog {
         }
         try XAMLHost.EnsureDaemonHealthy()
 
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         fs := XAMLHost.FontSize()
         lay := RmtDialog._MsgLayout(msg, fs)
         winW := lay.WinW
+        ; 建窗前估高并预算落位点：Manual + Left/Top 让引擎一次落位，无开窗后跳变
+        winH := RmtDialog._EstH(msg, fs, lay, winW)
+        centerAttr := RmtDialog._CenterAttr(winW, winH)
         fontFamily := ""
         try {
             if (IsSet(MainSoftData) && MainSoftData.HasProp("FontType") && MainSoftData.FontType != "")
@@ -153,9 +224,10 @@ class RmtDialog {
         ; 因此不设 skipFontScale：正文声明基准字号→缩放到主题字号，标题由补丁强制为主题字号+2。
         safeTitle := RmtDialog._XmlEsc(title)
         ui.xaml := StrReplace(ui.xaml, 'Width="940" Height="700"', 'Title="' safeTitle '" ShowInTaskbar="False" Width="' winW '" SizeToContent="Height" Topmost="True" Opacity="0"')
-        ui.xaml := StrReplace(ui.xaml, 'ResizeMode="CanResize"', 'ResizeMode="NoResize"')
+        ; 模板自带 WindowStartupLocation="CenterScreen"（落在主屏/光标屏垂直居中偏上），
+        ; 换成鼠标所在监视器工作区中心的 Manual Left/Top，与 CustomMsgBox 同款、引擎一次落位。
+        ui.xaml := StrReplace(ui.xaml, 'WindowStartupLocation="CenterScreen"', centerAttr)
         if (fontFamily != "")
-            ui.xaml := StrReplace(ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' fontFamily '"')
         ui.xaml := StrReplace(ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
         ui.xaml := StrReplace(ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>')
 

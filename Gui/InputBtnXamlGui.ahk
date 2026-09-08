@@ -5,7 +5,7 @@
 ; 公开接口保持：ShowGui(Type) / TrueAction / FalseAction / ContinueAction
 ;               / CancelAction / HideAction
 ; Type: 1 真值/假值  2 继续  3 继续&取消
-; 多实例：每请求独立实例（WorkPool._ShowInputDialog 每请求 new），互不阻塞
+; 多实例：每请求独立实例（WorkPool._ShowDialogReq 每请求 new），互不阻塞
 ; =====================================================================
 
 class InputBtnXamlGui {
@@ -44,11 +44,11 @@ class InputBtnXamlGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := GetLang("输入按钮")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -61,20 +61,19 @@ class InputBtnXamlGui {
         btnRow := body.Add("StackPanel").Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
         switch this.Type {
             case 1:
-                btnRow.Add("Button").Name("BtnTrue").Content(GetLang("真值")).Width(80).Height(30).MinHeight(30).Margin("8,0")
-                btnRow.Add("Button").Name("BtnFalse").Content(GetLang("假值")).Width(80).Height(30).MinHeight(30).Margin("8,0")
+                btnRow.Add("Button").Name("BtnTrue").Content(GetLang("真值")).Width(80).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Margin("8,0")
+                btnRow.Add("Button").Name("BtnFalse").Content(GetLang("假值")).Width(80).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Margin("8,0")
             case 2:
-                btnRow.Add("Button").Name("BtnContinue").Content(GetLang("继续")).Width(80).Height(30).MinHeight(30)
+                btnRow.Add("Button").Name("BtnContinue").Content(GetLang("继续")).Width(80).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn)
             case 3:
-                btnRow.Add("Button").Name("BtnContinue").Content(GetLang("继续")).Width(80).Height(30).MinHeight(30).Margin("8,0")
-                btnRow.Add("Button").Name("BtnCancel").Content(GetLang("取消")).Width(80).Height(30).MinHeight(30).Margin("8,0")
+                btnRow.Add("Button").Name("BtnContinue").Content(GetLang("继续")).Width(80).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Margin("8,0")
+                btnRow.Add("Button").Name("BtnCancel").Content(GetLang("取消")).Width(80).Height(UILayout.CtrlH.Btn).MinHeight(UILayout.CtrlH.Btn).Margin("8,0")
         }
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", 0)
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="300" Height="150" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

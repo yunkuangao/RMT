@@ -25,7 +25,7 @@ global RMT_VERSION_DISPLAY := A_IsCompiled
 
 ;窗口&UI刷新
 InitUI() {
-    global MySoftData
+    global MainSoftData
     ; 首次启动：先同意免责声明，再显示主界面
     if (!MainSoftData.AgreeAgreement) {
         if (!AgreementGui.ShowAndWait())
@@ -52,7 +52,7 @@ InitUI() {
 }
 
 OnOpen() {
-    global MySoftData
+    global MainSoftData
     if (MainSoftData.IsMinStart) {
         MainSoftData.IsMinStart := false
         MainSoftData.MyGui.Hide()
@@ -94,8 +94,10 @@ GetLastWinPos() {
                 dipSH := A_ScreenHeight / dpi
                 fs := Min(dipSW / 1920, dipSH / 1080)
                 scale := Float(WinPosArr[4])
+                ; 第5段=高度系数（自由缩放后宽高比不恒定）；旧 4 段格式回退用宽度系数
+                hScale := (WinPosArr.Length >= 5 && IsNumber(WinPosArr[5])) ? Float(WinPosArr[5]) : scale
                 w := Min(Round(1400 * fs * scale * dpi), VirtualWidth)
-                h := Min(Round(787 * fs * scale * dpi), VirtualHeight)
+                h := Min(Round(787 * fs * hScale * dpi), VirtualHeight)
                 return [WinPosArr[1], WinPosArr[2], w, h]
             }
             ; 旧格式 xπy 两段 → 默认 1070×590；旧 4 段含绝对 w/h（≥400×300 才采信，上界钳虚拟屏防存档超大值）

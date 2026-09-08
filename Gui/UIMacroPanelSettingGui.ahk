@@ -72,7 +72,7 @@ class UIMacroPanelSettingGui {
         this.closed := false
 
         title := GetLang("界面浮窗")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -99,7 +99,7 @@ class UIMacroPanelSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         posCombo := row2.Add("ComboBox").Name("DefaultPosCon")
-            .Width(140).Height(26).MinHeight(26).Margin("8,0,0,0")
+            .Width(140).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0")
         for opt in UIMacroPanelSettingGui.PosOptions
             posCombo.Add("ComboBoxItem").Content(GetLang(opt.label))
 
@@ -109,15 +109,13 @@ class UIMacroPanelSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowOffX.Add("Slider").Name("OffsetXCon")
-            .Width(sliderW).Height(28).Margin("8,0,8,0")
+            .Width(sliderW).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(0).Maximum(500).Value(100)
             .IsSnapToTickEnabled("True").TickFrequency("5")
         rowOffX.Add("TextBox").Name("OffsetXValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .SetMarkup("Text", "{Binding Value, ElementName=OffsetXCon}")
 
         rowOffY := panel.Add("StackPanel").Orientation("Horizontal").Margin("0,10,0,0")
@@ -125,15 +123,13 @@ class UIMacroPanelSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowOffY.Add("Slider").Name("OffsetYCon")
-            .Width(sliderW).Height(28).Margin("8,0,8,0")
+            .Width(sliderW).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(0).Maximum(500).Value(100)
             .IsSnapToTickEnabled("True").TickFrequency("5")
         rowOffY.Add("TextBox").Name("OffsetYValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .SetMarkup("Text", "{Binding Value, ElementName=OffsetYCon}")
 
         ; 按钮宽度
@@ -142,15 +138,13 @@ class UIMacroPanelSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         widthSlider := row6b.Add("Slider").Name("BtnWidthCon")
-            .Width(sliderW).Height(28).Margin("8,0,8,0")
+            .Width(sliderW).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(40).Maximum(250).Value(80)
             .IsSnapToTickEnabled("True").TickFrequency("5")
         widthValBox := row6b.Add("TextBox").Name("BtnWidthValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .SetMarkup("Text", "{Binding Value, ElementName=BtnWidthCon}")
 
         ; 按钮高度
@@ -159,15 +153,13 @@ class UIMacroPanelSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         heightSlider := row6.Add("Slider").Name("BtnHeightCon")
-            .Width(sliderW).Height(28).Margin("8,0,8,0")
+            .Width(sliderW).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(20).Maximum(60).Value(34)
             .IsSnapToTickEnabled("True").TickFrequency("2")
         heightValBox := row6.Add("TextBox").Name("BtnHeightValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .SetMarkup("Text", "{Binding Value, ElementName=BtnHeightCon}")
 
         ; 按钮字体大小
@@ -176,15 +168,13 @@ class UIMacroPanelSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         rowFont.Add("Slider").Name("FontSizeCon")
-            .Width(sliderW).Height(28).Margin("8,0,8,0")
+            .Width(sliderW).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(8).Maximum(24).Value(12)
             .IsSnapToTickEnabled("True").TickFrequency("1")
         rowFont.Add("TextBox").Name("FontSizeValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .SetMarkup("Text", "{Binding Value, ElementName=FontSizeCon}")
 
         ; 按钮每行最大个数
@@ -193,15 +183,13 @@ class UIMacroPanelSettingGui {
             .Foreground(labelStyle.fg).FontSize(labelStyle.fs)
             .VerticalAlignment("Center").Width(labelStyle.w)
         colsSlider := row7.Add("Slider").Name("ColsCon")
-            .Width(sliderW).Height(28).Margin("8,0,8,0")
+            .Width(sliderW).Height(UILayout.CtrlH.RowSm).Margin("8,0,8,0")
             .Minimum(1).Maximum(6).Value(3)
             .IsSnapToTickEnabled("True").TickFrequency("1")
         colsValBox := row7.Add("TextBox").Name("ColsValText")
-            .Width(valBoxW).Height(24).MinHeight(24).VerticalContentAlignment("Center").Padding("4,0")
+            .Width(valBoxW).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).VerticalContentAlignment("Center").Padding("4,0")
             .TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .SetMarkup("Text", "{Binding Value, ElementName=ColsCon}")
 
         ; 底部按钮行
@@ -211,19 +199,18 @@ class UIMacroPanelSettingGui {
         revertBtn := btnRow.Add("Button").Name("BtnRevert").Content(GetLang("恢复默认"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(32).Margin("0,0,16,0")
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.S(32)).Margin("0,0,16,0")
         revertBtn.InjectResources(PrimaryBtnStyle)
         okBtn := btnRow.Add("Button").Name("BtnConfirm").Content(GetLang("确定"))
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}").FontWeight("Bold")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1")
-            .FontSize(13).Cursor("Hand").Width(80).Height(32)
+            .FontSize(13).Cursor("Hand").Width(80).Height(UILayout.S(32))
         okBtn.InjectResources(PrimaryBtnStyle)
 
         ; 编译 XAML
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" ShowInTaskbar="False" Width="370" Height="400" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
 
         resourceInject := '<CornerRadius x:Key="PanelRadius">8</CornerRadius>'
@@ -497,7 +484,7 @@ class UIMacroPanelSettingGui {
     }
 
     SaveData() {
-        global IniFile, IniSection
+        global IniFile, MainSoftData, IniSection
 
         MainSoftData.UIPanelShowOnActive := this._showOnActive
         MainSoftData.UIPanelDefaultPos := this._defaultPos

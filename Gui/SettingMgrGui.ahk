@@ -56,7 +56,7 @@ class SettingMgrGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("配置管理")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         this._btnStyle := '<Style TargetType="Button"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{DynamicResource EditHoverBg}"/><Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource EditHoverStroke}"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>'
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
@@ -130,7 +130,7 @@ class SettingMgrGui {
         rowOpt.Add("TextBlock").Text(GetLang("配置选项："))
             .Foreground("{DynamicResource TextMain}").FontSize(13)
             .VerticalAlignment("Center").Width(optLabelW)
-        rowOpt.Add("ComboBox").Name("OperSettingCon").Width(comboW).Height(26).MinHeight(26)
+        rowOpt.Add("ComboBox").Name("OperSettingCon").Width(comboW).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
             .Margin(comboMargin ",0,0,0")
 
         this._AddPairBtnRow(operInner, "BtnLoad", GetLang("加载配置"), "BtnDel", GetLang("删除配置"),
@@ -150,7 +150,6 @@ class SettingMgrGui {
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" ShowInTaskbar="False" Width="440" Height="460" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="{DynamicResource PanelRadius}"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         groupBoxStyle := '<Style TargetType="GroupBox"><Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{DynamicResource TextMain}"/></Style>'
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '<CornerRadius x:Key="PanelRadius">8</CornerRadius>' groupBoxStyle)
 
@@ -186,7 +185,7 @@ class SettingMgrGui {
         btn := parent.Add("Button").Name(name).Content(content)
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1")
-            .FontSize(12).Cursor("Hand").Width(width).Height(28)
+            .FontSize(12).Cursor("Hand").Width(width).Height(UILayout.CtrlH.RowSm)
         btn.InjectResources(this._btnStyle)
         return btn
     }

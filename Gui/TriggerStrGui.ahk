@@ -63,11 +63,11 @@ class TriggerStrGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := GetLang("字串触发编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "280", "34", "30", "30", "30", "32", "*")
@@ -83,9 +83,9 @@ class TriggerStrGui {
 
         ; === 选项行 ===
         chkRow := main.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").VerticalAlignment("Center").Margin("20,0,0,0")
-        chkRow.Add("CheckBox").Name("IsEndCharCon").Content(GetLang("终止符")).Width(120).VerticalAlignment("Center")
+        chkRow.Add("CheckBox").Name("IsEndCharCon").Content(GetLang("终止符")).Width(UILayout.S(120)).VerticalAlignment("Center")
         chkRow.Add("CheckBox").Name("IsSubStrCon").Content(GetLang("允许子字串")).Margin("80,0,0,0").VerticalAlignment("Center")
-        chkRow.Add("CheckBox").Name("IsDeleteCon").Content(GetLang("删除触发字串")).Width(150).Margin("110,0,0,0").VerticalAlignment("Center")
+        chkRow.Add("CheckBox").Name("IsDeleteCon").Content(GetLang("删除触发字串")).Width(UILayout.S(150)).Margin("110,0,0,0").VerticalAlignment("Center")
 
         ; === 说明文本 ===
         main.Add("TextBlock").Grid_Row(3).Text(GetLang("终止符说明：当输入字串时，需要输入一个终止符触发。终止符包含：-()[]{}':;/\,.?! Enter Space Tab以及引号")).Margin("20,2,20,0").TextWrapping("Wrap")
@@ -101,18 +101,17 @@ class TriggerStrGui {
 
         ; === 底部按钮 ===
         btnRow := main.Add("StackPanel").Grid_Row(7).Orientation("Horizontal").VerticalAlignment("Center").Margin("50,0,0,0")
-        btnRow.Add("Button").Name("BtnBackspace").Content(GetLang("退格")).Width(100).Height(40).MinHeight(40).Cursor("Hand")
-        btnRow.Add("Button").Name("BtnClear").Content(GetLang("清空字串")).Width(100).Height(40).MinHeight(40).Margin("140,0,0,0").Cursor("Hand")
-        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(100).Height(40).MinHeight(40).Margin("140,0,0,0").Cursor("Hand")
-        btnRow.Add("Button").Name("SaveBtnCtrl").Content(GetLang("应用并保存")).Width(100).Height(40).MinHeight(40).Margin("140,0,0,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnBackspace").Content(GetLang("退格")).Width(UILayout.S(100)).Height(UILayout.S(40)).MinHeight(40).Cursor("Hand")
+        btnRow.Add("Button").Name("BtnClear").Content(GetLang("清空字串")).Width(UILayout.S(100)).Height(UILayout.S(40)).MinHeight(40).Margin("140,0,0,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(40)).MinHeight(40).Margin("140,0,0,0").Cursor("Hand")
+        btnRow.Add("Button").Name("SaveBtnCtrl").Content(GetLang("应用并保存")).Width(UILayout.S(100)).Height(UILayout.S(40)).MinHeight(40).Margin("140,0,0,0").Cursor("Hand")
 
         ; === 创建 XAMLHost ===
         pos := GetCenterPosOnActiveMonitor(1150, 500)
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", 0)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="1150" Height="500" Opacity="0"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(1150) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"', 'WindowStartupLocation="Manual" Left="' pos.x '" Top="' pos.y '"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===
@@ -145,7 +144,7 @@ class TriggerStrGui {
     _AddCharBtn(ch, x, y) {
         this._charSeq += 1
         name := "CharBtn_" this._charSeq
-        btn := this._charGrid.Add("Button").Name(name).Width(45).Height(30)
+        btn := this._charGrid.Add("Button").Name(name).Width(45).Height(UILayout.CtrlH.Btn)
             .SetProp("Canvas.Left", String(x)).SetProp("Canvas.Top", String(y))
             .Content(ch).FontSize(12).Cursor("Hand").Padding("0")
             .Background("{DynamicResource InputBg}").Foreground("{DynamicResource TextMain}")

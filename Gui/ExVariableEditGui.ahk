@@ -17,7 +17,7 @@ class ExVariableEditGui {
     }
 
     ShowGui(ExtractStr) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -42,11 +42,11 @@ class ExVariableEditGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := GetLang("提取文本编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -57,7 +57,7 @@ class ExVariableEditGui {
         ; === 内容 ===
         body := main.Add("Grid").Grid_Row(1).Margin("15,10")
         body.Rows("Auto", "24", "*", "34", "34", "34", "34", "34", "34", "*")
-        body.Cols("90", "100")
+        body.Cols(UILayout.S(90), UILayout.S(100))
 
         tip1 := GetLang("源文本内容：请输入 提取范围 或 剪切板 的文本内容")
         tip2 := GetLang("提取内容：请输入你需要提取的变量内容")
@@ -68,30 +68,27 @@ class ExVariableEditGui {
             .TextWrapping("Wrap").Margin("0,0,0,6")
 
         body.Add("TextBlock").Grid_Row(1).Grid_ColumnSpan(2).Text(GetLang("源文本内容：")).VerticalAlignment("Center")
-        body.Add("TextBox").Grid_Row(2).Grid_ColumnSpan(2).Name("OriTextCon").AcceptsReturn("True").TextWrapping("Wrap")
+        body.Add("TextBox").Grid_Row(2).Grid_ColumnSpan(2).Name("OriTextCon").AcceptsReturn("True").TextWrapping("Wrap").MinHeight(90)
             .VerticalContentAlignment("Top").Margin("0,2,0,4")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .ScrollViewer_VerticalScrollBarVisibility("Auto")
 
         ; 6 行提取内容
         loop 6 {
             r := A_Index + 2
             body.Add("TextBlock").Grid_Row(r).Grid_Column(0).Text(Format("{}" A_Index ":", GetLang("提取内容"))).VerticalAlignment("Center")
-            body.Add("TextBox").Grid_Row(r).Grid_Column(1).Name("VarText" A_Index).Height(26).MinHeight(26)
+            body.Add("TextBox").Grid_Row(r).Grid_Column(1).Name("VarText" A_Index).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
                 .VerticalContentAlignment("Center")
-                .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-                .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+                .Style("{DynamicResource InputBoxStyle}")
         }
 
         btnRow := body.Add("StackPanel").Grid_Row(9).Grid_ColumnSpan(2).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36)
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="480" Height="378" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(480) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

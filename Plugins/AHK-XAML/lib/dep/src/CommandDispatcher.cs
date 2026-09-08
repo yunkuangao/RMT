@@ -233,73 +233,6 @@ public partial class AhkWpfEngine
             }
             catch { }
         }
-        else if (msg == 0x0214)
-        { // WM_SIZING：仅四角等比缩放；四边（左/右/上/下）不允许单边调整宽高
-            try
-            {
-                int edge = wParam.ToInt32();
-                // 纯边拖拽（1=left 2=right 3=top 6=bottom）：恢复当前矩形，缩放无效
-                if (edge == 1 || edge == 2 || edge == 3 || edge == 6)
-                {
-                    RECT cur;
-                    if (GetWindowRect(hwnd, out cur))
-                    {
-                        Marshal.StructureToPtr(cur, lParam, false);
-                        handled = true;
-                        return IntPtr.Zero;
-                    }
-                }
-                if (win != null && !double.IsNaN(win.Width) && !double.IsNaN(win.Height)
-                    && win.Width > 0 && win.Height > 0)
-                {
-                    RECT rc = (RECT)Marshal.PtrToStructure(lParam, typeof(RECT));
-                    double ratio = win.Width / win.Height;
-                    int w = rc.right - rc.left;
-                    int h = rc.bottom - rc.top;
-                    if (w > 0 && h > 0)
-                    {
-                        // 4=left-top 5=right-top 7=left-bottom 8=right-bottom（四角）
-                        bool hasLeft = (edge == 4 || edge == 7);
-                        bool hasRight = (edge == 5 || edge == 8);
-                        bool hasTop = (edge == 4 || edge == 5);
-                        bool hasBottom = (edge == 7 || edge == 8);
-                        // 有水平拖拽边时以宽定高，否则以高定宽，保证宽高比恒定
-                        int newW, newH;
-                        if (hasLeft || hasRight)
-                        {
-                            newW = w;
-                            newH = (int)Math.Round(w / ratio);
-                        }
-                        else
-                        {
-                            newH = h;
-                            newW = (int)Math.Round(h * ratio);
-                        }
-                        // 最小尺寸：设计尺寸的 45%（与比例一致），避免缩得过小
-                        double minW = Math.Max(280, win.Width * 0.45);
-                        double minH = minW / ratio;
-                        if (newW < minW)
-                        {
-                            newW = (int)Math.Round(minW);
-                            newH = (int)Math.Round(minW / ratio);
-                        }
-                        if (newH < minH)
-                        {
-                            newH = (int)Math.Round(minH);
-                            newW = (int)Math.Round(minH * ratio);
-                        }
-                        if (hasRight) rc.right = rc.left + newW;
-                        else if (hasLeft) rc.left = rc.right - newW;
-                        if (hasBottom) rc.bottom = rc.top + newH;
-                        else if (hasTop) rc.top = rc.bottom - newH;
-                        Marshal.StructureToPtr(rc, lParam, false);
-                        handled = true;
-                        return IntPtr.Zero;
-                    }
-                }
-            }
-            catch { }
-        }
         else if (msg == 0x020A)
         { // WM_MOUSEWHEEL
             if (win != null && !win.IsEnabled) { handled = true; return IntPtr.Zero; }
@@ -776,14 +709,31 @@ public partial class AhkWpfEngine
             }
             catch { }
         }
-        else if (parts[0] == "Window" && parts[1] == "ApplyFonts")
+        else if (parts[1] == "ApplyFonts")
         {
             // 主题字体运行时应用（改主题字体后立即生效，无需重开窗口）：
             //   Window|ApplyFonts|字体|字号增量|字重数值(100-900)|清晰度(1=标准 2=锐利 3=极锐利)|字号下限
+            //   <元素名>|ApplyFonts|同上 —— 子树范围：只遍历该命名元素的逻辑+视觉子树（切页/VL_INIT
+            //   重建的行声明字号烘焙自构建期，继承基准被行自身声明覆盖，必须像整窗一样逐元素平移；
+            //   只重测子树避免整窗重排抖动）
             // 字体/字重/清晰度按绝对值设置（窗口根，未显式设置的元素继承）；
             // 字号按「增量」逐元素平移，且不低于字号下限（主题字体大小）。
             try
             {
+                DependencyObject fontRoot = null;
+                if (parts[0] == "Window")
+                {
+                    fontRoot = win;
+                }
+                else
+                {
+                    // 与普通属性 Update 同一解析链（FindControlByPath：FindName→Content→
+                    // NameScope→逻辑树→视觉树）。VL 列表等模板内元素不在窗口 Namescope/
+                    // 逻辑树，少一级兜底就找不到（2026-09-08 按键宏 tab 子树补刷失效实证）
+                    fontRoot = FindControlByPath(parts[0]) as DependencyObject;
+                }
+                if (fontRoot == null)
+                    return;
                 string[] seg = parts[2].Split('|');
                 string family = seg.Length > 0 ? seg[0] : "";
                 double delta = 0;
@@ -805,18 +755,18 @@ public partial class AhkWpfEngine
                 if (seg.Length > 4 && double.TryParse(seg[4], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out md))
                     minSize = Math.Max(6, md);
                 if (!string.IsNullOrEmpty(family))
-                    win.SetValue(TextElement.FontFamilyProperty, new System.Windows.Media.FontFamily(family));
+                    fontRoot.SetValue(TextElement.FontFamilyProperty, new System.Windows.Media.FontFamily(family));
                 if (hasWeight)
-                    win.SetValue(TextElement.FontWeightProperty, weight);
+                    fontRoot.SetValue(TextElement.FontWeightProperty, weight);
                 // 清晰度：1=标准(Ideal) 2=锐利(Display) 3=极锐利(Display+Aliased)
                 if (clarity == 1)
-                    win.SetValue(TextOptions.TextFormattingModeProperty, TextFormattingMode.Ideal);
+                    fontRoot.SetValue(TextOptions.TextFormattingModeProperty, TextFormattingMode.Ideal);
                 else
-                    win.SetValue(TextOptions.TextFormattingModeProperty, TextFormattingMode.Display);
+                    fontRoot.SetValue(TextOptions.TextFormattingModeProperty, TextFormattingMode.Display);
                 if (clarity == 3)
-                    win.SetValue(TextOptions.TextRenderingModeProperty, TextRenderingMode.Aliased);
+                    fontRoot.SetValue(TextOptions.TextRenderingModeProperty, TextRenderingMode.Aliased);
                 else
-                    win.SetValue(TextOptions.TextRenderingModeProperty, TextRenderingMode.ClearType);
+                    fontRoot.SetValue(TextOptions.TextRenderingModeProperty, TextRenderingMode.ClearType);
                 // 只缩放「非继承」字号（Local / Style / Template），避免子元素把已放大的父级再加一遍。
                 // 逻辑树覆盖 ComboBoxItem（下拉未展开也在），视觉树覆盖模板内 ContentPresenter（Tab/GroupBox 标题）。
                 var seen = new System.Collections.Generic.HashSet<System.Windows.DependencyObject>();
@@ -845,12 +795,34 @@ public partial class AhkWpfEngine
                                 node.SetValue(TextElement.FontSizeProperty, useSize);
                         }
                         FitControlHeightToFont(node, useSize);
+                        FitControlWidthToFont(node, useSize);
                     }
                     catch { }
                 };
-                apply(win);
-                WalkLogicalTree(win, apply);
-                WalkVisualTree(win, apply);
+                if (fontRoot is System.Windows.Window)
+                {
+                    apply(fontRoot);
+                    WalkLogicalTree(fontRoot, apply);
+                    WalkVisualTree(fontRoot, apply);
+                }
+                else
+                {
+                    // 子树补刷延迟到布局完成（Loaded 优先级在 Render 之后）：VL_INIT 刚填完
+                    // 数据时 ListBoxItem 还没 realize，同步遍历视觉树扑空（2026-09-08 切页
+                    // 字号补刷两次失效实证）。family/weight/清晰度已同步设置，此处只延树遍历。
+                    var fontRootLocal = fontRoot;
+                    System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(
+                        System.Windows.Threading.DispatcherPriority.Loaded, new System.Action(() =>
+                    {
+                        try
+                        {
+                            apply(fontRootLocal);
+                            WalkLogicalTree(fontRootLocal, apply);
+                            WalkVisualTree(fontRootLocal, apply);
+                        }
+                        catch { }
+                    }));
+                }
             }
             catch { }
         }
@@ -3935,6 +3907,111 @@ public partial class AhkWpfEngine
     }
 
     // 固定 Height 的按钮/下拉/输入框随字号加高，避免文字被裁切；标题栏窄按钮（宽<=40 且未设高）不改。
+    // 字号适配原值缓存（附加属性）：首次适配前记录设计 Height/MinHeight，
+    // 之后按 max(原值, need) 对称赋值——拉大顶起、拉小回缩，且不破坏特意设高的按钮（33/36 等）。
+    // 旧逻辑「Height < need 才设」只增不减，字号拉小后控件高度永不回缩（棘轮）。
+    private static DependencyProperty FontFitOrigHeightProp =
+        DependencyProperty.RegisterAttached("FontFitOrigHeight", typeof(double), typeof(AhkWpfEngine), new PropertyMetadata(double.NaN));
+    private static DependencyProperty FontFitOrigMinHeightProp =
+        DependencyProperty.RegisterAttached("FontFitOrigMinHeight", typeof(double), typeof(AhkWpfEngine), new PropertyMetadata(double.NaN));
+    private static DependencyProperty FontFitOrigMinWidthProp =
+        DependencyProperty.RegisterAttached("FontFitOrigMinWidth", typeof(double), typeof(AhkWpfEngine), new PropertyMetadata(double.NaN));
+    private static DependencyProperty FontFitOrigWidthProp =
+        DependencyProperty.RegisterAttached("FontFitOrigWidth", typeof(double), typeof(AhkWpfEngine), new PropertyMetadata(double.NaN));
+
+    // 宽度自适应（全局通用，免去逐窗口改定宽标签/按钮）：
+    //   TextBlock：显式定宽 + 单行 + 文字实测溢出 → 自动开折行（「标签被输入框盖住」的通用解）
+    //   Button：定宽/有 MinWidth 的文字按钮，文字实测宽 + 24 > MinWidth → 顶起（对称可回缩）
+    //   ComboBox/TextBox（2026-09-08）：定宽按字号比例适配 target = max(原值, 原值×字号/15)——
+    //     运行期版 UILayout.S(k=字号/15)，与构建期公式一致；15 号零扰动，大字号定宽下拉/输入框
+    //     不再裁字（搜索 Pro 等窗实测）。Width≤46 的小件（色块/图标钮）跳过，双向对称可回缩。
+    private static void FitControlWidthToFont(DependencyObject node, double fontSize)
+    {
+        FrameworkElement fe = node as FrameworkElement;
+        if (fe == null)
+            return;
+        var combo = node as ComboBox;
+        var tbox = node as TextBox;
+        if (combo != null || tbox != null)
+        {
+            if (!double.IsNaN(fe.Width) && fe.Width <= 46)
+                return;
+            var cwSrc = DependencyPropertyHelper.GetValueSource(fe, FrameworkElement.WidthProperty);
+            if (!((cwSrc.BaseValueSource == BaseValueSource.Local || cwSrc.BaseValueSource == BaseValueSource.Style)
+                && !double.IsNaN(fe.Width) && fe.Width > 0))
+                return;
+            double origW = (double)fe.GetValue(FontFitOrigWidthProp);
+            if (double.IsNaN(origW))
+            {
+                origW = fe.Width;
+                fe.SetValue(FontFitOrigWidthProp, origW);
+            }
+            double targetW = Math.Max(origW, Math.Ceiling(origW * fontSize / 15.0));
+            if (Math.Abs(targetW - fe.Width) > 0.01)
+                fe.Width = targetW;
+            return;
+        }
+        TextBlock tb = node as TextBlock;
+        if (tb != null)
+        {
+            if (tb.TextWrapping == TextWrapping.NoWrap && !string.IsNullOrEmpty(tb.Text))
+            {
+                var wSrc = DependencyPropertyHelper.GetValueSource(fe, FrameworkElement.WidthProperty);
+                if ((wSrc.BaseValueSource == BaseValueSource.Local || wSrc.BaseValueSource == BaseValueSource.Style)
+                    && !double.IsNaN(fe.Width) && fe.Width > 0)
+                {
+                    double tw = MeasureTextWidth(tb.Text, fontSize, tb.FontFamily.Source, tb.FontWeight);
+                    if (tw > fe.Width + 0.5)
+                        tb.TextWrapping = TextWrapping.Wrap;
+                }
+            }
+            return;
+        }
+        Button btn = node as Button;
+        if (btn == null)
+            return;
+        // 窄铬钮/方形图标钮不吃适配（同高度规则）
+        if (!double.IsNaN(fe.Width) && fe.Width <= 46)
+            return;
+        string text = btn.Content as string;
+        if (string.IsNullOrEmpty(text))
+            return;   // 图标/复合内容按钮跳过，宽度交给内容自适应
+        var bwSrc = DependencyPropertyHelper.GetValueSource(fe, FrameworkElement.WidthProperty);
+        var mwSrc = DependencyPropertyHelper.GetValueSource(fe, FrameworkElement.MinWidthProperty);
+        bool hasW = (bwSrc.BaseValueSource == BaseValueSource.Local || bwSrc.BaseValueSource == BaseValueSource.Style)
+            && !double.IsNaN(fe.Width) && fe.Width > 0;
+        bool hasMW = (mwSrc.BaseValueSource == BaseValueSource.Local || mwSrc.BaseValueSource == BaseValueSource.Style)
+            && fe.MinWidth > 0;
+        if (!hasW && !hasMW)
+            return;
+        double needW = Math.Ceiling(MeasureTextWidth(text, fontSize, btn.FontFamily.Source, btn.FontWeight) + 24);
+        if (needW <= 24)
+            return;
+        double origBtnW = (double)fe.GetValue(FontFitOrigMinWidthProp);
+        if (double.IsNaN(origBtnW))
+        {
+            origBtnW = hasMW ? fe.MinWidth : 0;
+            fe.SetValue(FontFitOrigMinWidthProp, origBtnW);
+        }
+        double targetBtnW = Math.Max(origBtnW, needW);
+        if (Math.Abs(targetBtnW - fe.MinWidth) > 0.01)
+            fe.MinWidth = targetBtnW;
+    }
+
+    private static double MeasureTextWidth(string text, double emSize, string family, System.Windows.FontWeight weight)
+    {
+        try
+        {
+            var tf = new Typeface(
+                new System.Windows.Media.FontFamily(string.IsNullOrEmpty(family) ? "Microsoft YaHei" : family),
+                FontStyles.Normal, weight, FontStretches.Normal);
+            var ft = new FormattedText(text, System.Globalization.CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight, tf, emSize, System.Windows.Media.Brushes.Black, 1.0);
+            return ft.Width;
+        }
+        catch { return 0; }
+    }
+
     private static void FitControlHeightToFont(DependencyObject node, double fontSize)
     {
         FrameworkElement fe = node as FrameworkElement;
@@ -3946,19 +4023,42 @@ public partial class AhkWpfEngine
         if ((node as Button) != null && !double.IsNaN(fe.Width) && fe.Width <= 46)
             return;
         string nm = fe.Name ?? "";
-        if (nm == "BtnHelp" || nm == "BtnClosePanel" || nm == "BtnWinClose" || nm == "BtnClose" || nm == "BtnClosePicker")
+        // BtnHelp 已移出名单：主窗口「RMT文档」是全宽文字按钮需要吃字号适配；
+        // BGMouseGui/BGKeyGui/VariableGui 的「?」小钮 Width=30 ≤ 46，上面的宽度规则已兜住
+        if (nm == "BtnClosePanel" || nm == "BtnWinClose" || nm == "BtnClose" || nm == "BtnClosePicker")
             return;
-        double need = Math.Ceiling(fontSize + 12);
-        if (need < 26)
-            need = 26;
+        // 高度需求 = max(24, 字号+9)：默认字号 15 → 24，恰好等于设计控件高，
+        // 默认密度零扰动（旧公式 +12/下限26 会把默认字号控件顶到 27，撑高所有行）；
+        // 字号拉大才按比例撑开（40 → 49）
+        double need = Math.Max(24, Math.Ceiling(fontSize + 9));
         var hSrc = DependencyPropertyHelper.GetValueSource(fe, FrameworkElement.HeightProperty);
         if ((hSrc.BaseValueSource == BaseValueSource.Local || hSrc.BaseValueSource == BaseValueSource.Style)
-            && !double.IsNaN(fe.Height) && fe.Height > 0 && fe.Height < need)
-            fe.Height = need;
+            && !double.IsNaN(fe.Height) && fe.Height > 0)
+        {
+            double origH = (double)fe.GetValue(FontFitOrigHeightProp);
+            if (double.IsNaN(origH))
+            {
+                origH = fe.Height;
+                fe.SetValue(FontFitOrigHeightProp, origH);
+            }
+            double targetH = Math.Max(origH, need);
+            if (Math.Abs(targetH - fe.Height) > 0.01)
+                fe.Height = targetH;
+        }
         var mSrc = DependencyPropertyHelper.GetValueSource(fe, FrameworkElement.MinHeightProperty);
         if ((mSrc.BaseValueSource == BaseValueSource.Local || mSrc.BaseValueSource == BaseValueSource.Style)
-            && fe.MinHeight > 0 && fe.MinHeight < need)
-            fe.MinHeight = need;
+            && fe.MinHeight > 0)
+        {
+            double origM = (double)fe.GetValue(FontFitOrigMinHeightProp);
+            if (double.IsNaN(origM))
+            {
+                origM = fe.MinHeight;
+                fe.SetValue(FontFitOrigMinHeightProp, origM);
+            }
+            double targetM = Math.Max(origM, need);
+            if (Math.Abs(targetM - fe.MinHeight) > 0.01)
+                fe.MinHeight = targetM;
+        }
     }
 
     // 揭盖：立刻移到目标位置并去掉 layered。不要在屏上再等一帧（GlassFrame=0 时会露出黑框）。

@@ -252,10 +252,12 @@ class MenuWheelGui {
         win := XAML_Generator("Window")
         win.SetProp("xmlns", "http://schemas.microsoft.com/winfx/2006/xaml/presentation")
         win.SetProp("xmlns:x", "http://schemas.microsoft.com/winfx/2006/xaml")
+        ; 画布窗显式声明 zoom 范式（引擎 Viewbox 白名单制，2026-09-08）：圆盘几何等比缩放
+        win.SetProp("Tag", "ZoomViewbox")
         win.Width(winW).Height(winH)
         win.Left(winLeft).Top(winTop)
         win.WindowStyle("None").AllowsTransparency("True").Background("{x:Null}")
-        win.ShowInTaskbar("False").Topmost("True").ResizeMode("NoResize")
+        win.ShowInTaskbar("False").Topmost("True")
         win.WindowStartupLocation("Manual")
         ; 注入原生 WPF 悬停样式 + 圆角配置 + Tooltip 配置
         wheelStyle := '<CornerRadius x:Key="PanelRadius">0,0,0,0</CornerRadius>'

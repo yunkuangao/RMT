@@ -65,8 +65,7 @@ class AiSettingGui {
         h := AiSettingGui.CtrlH
         ctrl.Height(h).MinHeight(h).MaxHeight(h).Padding(AiSettingGui.ComboPad)
             .VerticalContentAlignment("Center")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
         return ctrl
     }
 
@@ -92,8 +91,7 @@ class AiSettingGui {
     _StyleActionBtn(ctrl) {
         h := AiSettingGui.CtrlH
         ctrl.Height(h).MinHeight(h).MaxHeight(h).Padding("8,0").VerticalAlignment("Center")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .SnapsToDevicePixels("True")
         return ctrl
     }
@@ -102,7 +100,7 @@ class AiSettingGui {
         AiAssist.EnsureDefaults()
         this.closed := false
         title := GetLang("AI 设置")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
         h := AiSettingGui.CtrlH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
@@ -169,12 +167,11 @@ class AiSettingGui {
             cmbAppr.Add("ComboBoxItem").Content(GetLang(lab))
 
         btnRow := body.Add("StackPanel").Grid_Row(5).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Height(28).MinHeight(28).Padding("18,0")
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("18,0")
 
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", 0)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="460" SizeToContent="Height" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(460) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))

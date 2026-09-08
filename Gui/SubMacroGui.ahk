@@ -21,7 +21,7 @@ class SubMacroGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -68,11 +68,11 @@ class SubMacroGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("宏操作编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -83,32 +83,32 @@ class SubMacroGui {
         ; === 内容 ===
         body := main.Add("Grid").Grid_Row(1).Margin("10,8")
         body.Rows("34", "36", "36", "26", "26", "*")
-        body.Cols("80", "120", "80", "200")
+        body.Cols(UILayout.S(80), UILayout.S(120), UILayout.S(80), UILayout.S(200))
 
         ; 行0：快捷方式 + 执行指令 + 备注
         row0 := body.Add("StackPanel").Grid_Row(0).Grid_ColumnSpan(4).Orientation("Horizontal").VerticalAlignment("Center")
         row0.Add("TextBlock").Text(GetLang("快捷方式：")).VerticalAlignment("Center")
-        row0.Add("TextBox").Width(60).Height(24).MinHeight(24).Margin("4,0,0,0").Text("!l").IsReadOnly("True")
-        row0.Add("Button").Name("BtnExecute").Content(GetLang("执行指令")).Height(26).MinHeight(26).Margin("10,0,0,0")
+        row0.Add("TextBox").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0").Text("!l").IsReadOnly("True")
+        row0.Add("Button").Name("BtnExecute").Content(GetLang("执行指令")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("10,0,0,0")
         row0.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center").Margin("14,0,0,0")
-        row0.Add("TextBox").Name("RemarkCon").Width(150).Height(24).MinHeight(24).Margin("4,0,0,0")
+        row0.Add("TextBox").Name("RemarkCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("4,0,0,0")
 
         ; 行1：宏类型 + 宏序号
         body.Add("TextBlock").Grid_Row(1).Grid_Column(0).Text(GetLang("宏类型：")).VerticalAlignment("Center")
-        tc := body.Add("ComboBox").Grid_Row(1).Grid_Column(1).Name("TypeCombo").Height(26).MinHeight(26)
+        tc := body.Add("ComboBox").Grid_Row(1).Grid_Column(1).Name("TypeCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         for t in GetLangArr(["当前宏", "按键宏", "字串宏", "菜单宏", "界面宏", "定时宏", "宏"])
             tc.Add("ComboBoxItem").Content(t)
         body.Add("TextBlock").Grid_Row(1).Grid_Column(2).Text(GetLang("宏序号：")).VerticalAlignment("Center")
-        body.Add("ComboBox").Grid_Row(1).Grid_Column(3).Name("DropDownIndexCombo").Height(26).MinHeight(26)
+        body.Add("ComboBox").Grid_Row(1).Grid_Column(3).Name("DropDownIndexCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
 
         ; 行2：操作类型 + 插入次数
         body.Add("TextBlock").Grid_Row(2).Grid_Column(0).Text(GetLang("操作类型:")).VerticalAlignment("Center")
-        ct := body.Add("ComboBox").Grid_Row(2).Grid_Column(1).Name("CallTypeCombo").Height(26).MinHeight(26)
+        ct := body.Add("ComboBox").Grid_Row(2).Grid_Column(1).Name("CallTypeCombo").Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
         for c in GetLangArr(["插入到当前宏", "触发", "暂停", "取消暂停", "终止"])
             ct.Add("ComboBoxItem").Content(c)
         insertRow := body.Add("StackPanel").Name("InsertRow").Grid_Row(2).Grid_Column(2).Grid_ColumnSpan(2).Orientation("Horizontal").VerticalAlignment("Center")
         insertRow.Add("TextBlock").Text(GetLang("插入次数：")).VerticalAlignment("Center")
-        insertRow.Add("ComboBox").Name("InsertCountCombo").Width(120).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        insertRow.Add("ComboBox").Name("InsertCountCombo").Width(UILayout.S(120)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
 
         ; 行3-4：提示
         body.Add("TextBlock").Grid_Row(3).Grid_ColumnSpan(4).Text(GetLang("插入到当前宏: 指定宏 按插入次数 插入到当前宏")).VerticalAlignment("Center")
@@ -116,13 +116,12 @@ class SubMacroGui {
 
         ; 行5：确定
         btnRow := body.Add("StackPanel").Grid_Row(5).Grid_ColumnSpan(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(36).MinHeight(36)
+        btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(36)).MinHeight(36)
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="500" Height="235" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(500) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

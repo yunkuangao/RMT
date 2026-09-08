@@ -284,7 +284,6 @@ class CMDTipGui {
             .Background(bg)
             .Foreground(fg)
             .FontSize(fs)
-            .FontFamily(MainSoftData.FontType)
             .Padding("6,4")
             .VerticalScrollBarVisibility("Auto")
             .HorizontalScrollBarVisibility("Disabled")
@@ -299,7 +298,7 @@ class CMDTipGui {
             .Orientation("Horizontal").VerticalAlignment("Center").Margin("6,2")
         loop this._keySlots {
             keysRow.Add("Button").Name("KeyBtn_" (A_Index - 1))
-                .MinWidth(32).Height(32).Margin("2,0,0,0").Padding("6,0")
+                .MinWidth(32).Height(UILayout.S(32)).Margin("2,0,0,0").Padding("6,0")
                 .Content("").Visibility("Collapsed")
                 .VerticalContentAlignment("Center").HorizontalContentAlignment("Center")
                 .FontSize("11").Foreground(fg)
@@ -318,11 +317,9 @@ class CMDTipGui {
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"',
             Format('Title="CMDTip" ShowInTaskbar="False" Topmost="True" ShowActivated="False" Left="{}" Top="{}" Width="{}" Height="{}" Opacity="0"',
                 dipX, dipY, dipW, dipH))
-        this.ui.xaml := StrReplace(this.ui.xaml, 'ResizeMode="CanResize"', 'ResizeMode="NoResize"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"', 'WindowStartupLocation="Manual"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'AllowsTransparency="False"', 'AllowsTransparency="True"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'CornerRadius="{DynamicResource WindowRadius}"', 'CornerRadius="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         this.ui.OnEvent("Window", "Closing", ObjBindMethod(this, "OnWindowClosing"))

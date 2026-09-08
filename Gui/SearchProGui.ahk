@@ -58,7 +58,7 @@ class SearchProGui {
     }
 
     ShowGui(cmd) {
-        global MySoftData
+        global MainSoftData
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
         this._BuildAndShow()
@@ -72,11 +72,11 @@ class SearchProGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("搜索Pro编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "30", "24", "*", "44")
@@ -88,15 +88,14 @@ class SearchProGui {
         top := main.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").Margin("10,4")
         top.Add("TextBlock").Text(GetLang("快捷方式：")).VerticalAlignment("Center")
         top.Add("TextBlock").Text("!l").VerticalAlignment("Center").Margin("4,0,0,0").Opacity("0.6")
-        top.Add("Button").Name("BtnTrigger").Content(GetLang("执行指令")).Width(80).Height(26).MinHeight(26).Margin("8,0,0,0").Cursor("Hand")
+        top.Add("Button").Name("BtnTrigger").Content(GetLang("执行指令")).Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").Cursor("Hand")
         top.Add("TextBlock").Text(GetLang("备注：")).VerticalAlignment("Center").Margin("12,0,0,0")
-        top.Add("TextBox").Name("RemarkCon").Width(140).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
+        top.Add("TextBox").Name("RemarkCon").Width(UILayout.S(100)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
         top.Add("CheckBox").Name("PreviewAreaCon").Content(GetLang("预览框选范围")).VerticalAlignment("Center").Margin("16,0,0,0")
         top.Add("CheckBox").Name("SelectToggleCon").Content(GetLang("左键框选搜索范围")).VerticalAlignment("Center").Margin("12,0,0,0")
-        top.Add("Button").Name("BtnTargeter").Content(GetLang("定位取色器")).Height(26).MinHeight(26).Margin("12,0,0,0").Cursor("Hand")
-        top.Add("Button").Name("BtnTargeterHelp").Content("?").Width(30).Height(26).MinHeight(26).Margin("4,0,0,0").Cursor("Hand")
+        top.Add("Button").Name("BtnTargeter").Content(GetLang("定位取色器")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("12,0,0,0").Cursor("Hand")
+        top.Add("Button").Name("BtnTargeterHelp").Content("?").Width(30).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").Cursor("Hand")
             .Background("{DynamicResource EditBg}").Foreground("{DynamicResource EditText}")
             .BorderBrush("{DynamicResource EditStroke}").BorderThickness("1").Padding("0")
 
@@ -109,7 +108,7 @@ class SearchProGui {
 
         ; === 主体两列 ===
         body := main.Add("Grid").Grid_Row(3).Margin("10,2,10,0")
-        body.Cols("*", "235")
+        body.Cols("*", UILayout.S(235))
         body.Rows("*", "Auto")
 
         ; ---- 左列：目标列表（ListBox + 动态注入目标卡片） ----
@@ -117,13 +116,13 @@ class SearchProGui {
         left.Rows("*", "Auto")
         lbStyle := '<Style TargetType="ListBoxItem"><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>'
         left.Add("ListBox").Grid_Row(0).Name("TargetList")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .VirtualizingPanel_IsVirtualizing("False")
+            .ScrollViewer_CanContentScroll("False")   ; 像素平滑滚动（虚拟化已关，无代价）；默认按项滚动=整个卡片跳走
             .ScrollViewer_HorizontalScrollBarVisibility("Disabled").ScrollViewer_VerticalScrollBarVisibility("Auto")
             .InjectResources(lbStyle)
         addRow := left.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").HorizontalAlignment("Center").Margin("0,6,0,0")
-        addRow.Add("Button").Name("BtnAddTarget").Content(GetLang("+ 添加目标")).Width(100).Height(28).MinHeight(28).Cursor("Hand")
+        addRow.Add("Button").Name("BtnAddTarget").Content(GetLang("+ 添加目标")).Width(UILayout.S(100)).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Cursor("Hand")
 
         ; ---- 右列：整体设置（滚动） ----
         right := body.Add("ScrollViewer").Grid_Column(1)
@@ -133,51 +132,52 @@ class SearchProGui {
         ; 满足个数
         scRow := rightPanel.Add("StackPanel").Orientation("Horizontal").Margin("0,2,0,0")
         scRow.Add("TextBlock").Text(GetLang("满足个数：")).VerticalAlignment("Center")
-        scRow.Add("ComboBox").Name("SatisfyCountCon").Width(90).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
+        scRow.Add("ComboBox").Name("SatisfyCountCon").Width(UILayout.S(90)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
 
         ; 搜索次数 + 每次间隔
-        sr := rightPanel.Add("StackPanel").Orientation("Horizontal").Margin("0,8,0,0")
-        sr.Add("TextBlock").Text(GetLang("搜索次数：")).VerticalAlignment("Center")
-        sr.Add("ComboBox").Name("SearchCountCon").Width(80).Height(26).MinHeight(26).Margin("4,0,0,0").IsEditable("True")
-        sr.Add("TextBlock").Name("SearchIntervalTipCon").Text(GetLang("每次间隔：")).VerticalAlignment("Center").Margin("8,0,0,0")
-        sr.Add("TextBox").Name("SearchIntervalCon").Width(60).Height(24).MinHeight(24)
+        ; 右栏窄（235）：搜索次数/每次间隔 拆两行，避免横向溢出裁切
+        sr := rightPanel.Add("StackPanel").Orientation("Vertical").Margin("0,8,0,0")
+        srA := sr.Add("StackPanel").Orientation("Horizontal")
+        srA.Add("TextBlock").Text(GetLang("搜索次数：")).VerticalAlignment("Center")
+        srA.Add("ComboBox").Name("SearchCountCon").Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0").IsEditable("True")
+        srB := sr.Add("StackPanel").Orientation("Horizontal").Margin("0,6,0,0")
+        srB.Add("TextBlock").Name("SearchIntervalTipCon").Text(GetLang("每次间隔：")).VerticalAlignment("Center")
+        srB.Add("TextBox").Name("SearchIntervalCon").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11).Margin("4,0,0,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; 鼠标动作
         ma := rightPanel.Add("StackPanel").Orientation("Horizontal").Margin("0,8,0,0")
         ma.Add("TextBlock").Text(GetLang("鼠标动作：")).VerticalAlignment("Center")
-        mac := ma.Add("ComboBox").Name("MouseActionTypeCon").Width(150).Height(26).MinHeight(26).Margin("4,0,0,0")
+        mac := ma.Add("ComboBox").Name("MouseActionTypeCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
         for t in GetLangArr(["无动作", "移动至目标", "移动至目标点击"])
             mac.Add("ComboBoxItem").Content(t)
 
-        ms := rightPanel.Add("StackPanel").Orientation("Horizontal").Margin("0,8,0,0")
-        ms.Add("TextBlock").Name("SpeedTipCon").Text(GetLang("移动速度：")).VerticalAlignment("Center")
-        ms.Add("TextBox").Name("SpeedCon").Width(80).Height(24).MinHeight(24)
+        ; 右栏窄：移动速度/点击次数 拆两行，避免横向溢出裁切
+        ms := rightPanel.Add("StackPanel").Orientation("Vertical").Margin("0,8,0,0")
+        msA := ms.Add("StackPanel").Orientation("Horizontal")
+        msA.Add("TextBlock").Name("SpeedTipCon").Text(GetLang("移动速度：")).VerticalAlignment("Center")
+        msA.Add("TextBox").Name("SpeedCon").Width(UILayout.S(80)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11).Margin("4,0,0,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
-        ms.Add("TextBlock").Name("ClickCountTipCon").Text(GetLang("点击次数：")).VerticalAlignment("Center").Margin("12,0,0,0")
-        ms.Add("TextBox").Name("ClickCountCon").Width(60).Height(24).MinHeight(24)
+            .Style("{DynamicResource InputBoxStyle}")
+        msB := ms.Add("StackPanel").Orientation("Horizontal").Margin("0,6,0,0")
+        msB.Add("TextBlock").Name("ClickCountTipCon").Text(GetLang("点击次数：")).VerticalAlignment("Center")
+        msB.Add("TextBox").Name("ClickCountCon").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11).Margin("4,0,0,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; 找到/未找到指令
         ft := rightPanel.Add("StackPanel").Orientation("Horizontal").Margin("0,10,0,0")
         ft.Add("TextBlock").Text(GetLang("找到后的指令：（可选）")).VerticalAlignment("Center")
-        ft.Add("Button").Name("BtnEditFoundMacro").Content(GetLang("编辑")).Height(24).MinHeight(24).Margin("8,0,0,0").Cursor("Hand")
-        rightPanel.Add("TextBox").Name("TrueMacroCon").Height(44).Margin("0,2,0,0").AcceptsReturn("True").TextWrapping("Wrap")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
+        ft.Add("Button").Name("BtnEditFoundMacro").Content(GetLang("编辑")).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("8,0,0,0").Cursor("Hand")
+        rightPanel.Add("TextBox").Name("TrueMacroCon").Height(UILayout.S(44)).Margin("0,2,0,0").AcceptsReturn("True").TextWrapping("Wrap")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
 
         ft2 := rightPanel.Add("StackPanel").Orientation("Horizontal").Margin("0,6,0,0")
         ft2.Add("TextBlock").Name("FalseMacroTipCon").Text(GetLang("未找到后的指令：（可选）")).VerticalAlignment("Center")
-        ft2.Add("Button").Name("FalseMacroEditBtn").Content(GetLang("编辑")).Height(24).MinHeight(24).Margin("8,0,0,0").Cursor("Hand")
-        rightPanel.Add("TextBox").Name("FalseMacroCon").Height(44).Margin("0,2,0,0").AcceptsReturn("True").TextWrapping("Wrap")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
+        ft2.Add("Button").Name("FalseMacroEditBtn").Content(GetLang("编辑")).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Margin("8,0,0,0").Cursor("Hand")
+        rightPanel.Add("TextBox").Name("FalseMacroCon").Height(UILayout.S(44)).Margin("0,2,0,0").AcceptsReturn("True").TextWrapping("Wrap")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
 
         ; 结果保存
         rg := rightPanel.Add("GroupBox").Margin("0,8,0,0").Header(GetLang("结果保存"))
@@ -187,39 +187,37 @@ class SearchProGui {
         rgGrid.Rows("28", "28")
         rgGrid.Add("CheckBox").Name("ResultToggleCon").Content(GetLang("开关")).Grid_Row(0).Grid_Column(0).VerticalAlignment("Center")
         rgGrid.Add("TextBlock").Name("ResultVarTipCon").Text(GetLang("变量名")).Grid_Row(0).Grid_Column(1).VerticalAlignment("Center").Margin("10,0,0,0")
-        rgGrid.Add("ComboBox").Name("ResultSaveNameCon").Width(100).Height(24).MinHeight(24).Grid_Row(0).Grid_Column(2).Margin("4,0,0,0").IsEditable("True")
+        rgGrid.Add("ComboBox").Name("ResultSaveNameCon").Width(UILayout.S(100)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Grid_Row(0).Grid_Column(2).Margin("4,0,0,0").IsEditable("True")
         rgGrid.Add("TextBlock").Name("TrueValueTipCon").Text(GetLang("真值")).Grid_Row(1).Grid_Column(0).VerticalAlignment("Center").Margin("10,0,0,0")
-        rgGrid.Add("TextBox").Name("TrueValueCon").Width(60).Height(24).MinHeight(24).Grid_Row(1).Grid_Column(1).Margin("4,0,0,0")
+        rgGrid.Add("TextBox").Name("TrueValueCon").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Grid_Row(1).Grid_Column(1).Margin("4,0,0,0")
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
         rgGrid.Add("TextBlock").Name("FalseValueTipCon").Text(GetLang("假值")).Grid_Row(1).Grid_Column(2).VerticalAlignment("Center").Margin("10,0,0,0")
-        rgGrid.Add("TextBox").Name("FalseValueCon").Width(60).Height(24).MinHeight(24).Grid_Row(1).Grid_Column(3).Margin("4,0,0,0")
+        rgGrid.Add("TextBox").Name("FalseValueCon").Width(UILayout.S(60)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Grid_Row(1).Grid_Column(3).Margin("4,0,0,0")
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11)
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; 目标点保存
         cg := rightPanel.Add("GroupBox").Margin("0,6,0,0").Header(GetLang("目标点保存"))
             .BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1").Foreground("{DynamicResource TextMain}").Padding("6,4")
+        ; 右栏窄：坐标X/Y变量名 拆两行，避免横向溢出裁切
         cgGrid := cg.Add("Grid")
-        cgGrid.Cols("Auto", "Auto", "Auto", "Auto", "Auto")
-        cgGrid.Rows("28")
+        cgGrid.Cols("Auto", "Auto", "Auto")
+        cgGrid.Rows("28", "28")
         cgGrid.Add("CheckBox").Name("CoordToogleCon").Content(GetLang("开关")).Grid_Row(0).Grid_Column(0).VerticalAlignment("Center")
         cgGrid.Add("TextBlock").Name("CoordXTipCon").Text(GetLang("坐标X变量名")).Grid_Row(0).Grid_Column(1).VerticalAlignment("Center").Margin("10,0,0,0")
-        cgGrid.Add("ComboBox").Name("CoordXNameCon").Width(80).Height(24).MinHeight(24).Grid_Row(0).Grid_Column(2).Margin("4,0,0,0").IsEditable("True")
-        cgGrid.Add("TextBlock").Name("CoordYTipCon").Text(GetLang("坐标Y变量名")).Grid_Row(0).Grid_Column(3).VerticalAlignment("Center").Margin("10,0,0,0")
-        cgGrid.Add("ComboBox").Name("CoordYNameCon").Width(80).Height(24).MinHeight(24).Grid_Row(0).Grid_Column(4).Margin("4,0,0,0").IsEditable("True")
+        cgGrid.Add("ComboBox").Name("CoordXNameCon").Width(UILayout.S(80)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Grid_Row(0).Grid_Column(2).Margin("4,0,0,0").IsEditable("True")
+        cgGrid.Add("TextBlock").Name("CoordYTipCon").Text(GetLang("坐标Y变量名")).Grid_Row(1).Grid_Column(1).VerticalAlignment("Center").Margin("10,0,0,0")
+        cgGrid.Add("ComboBox").Name("CoordYNameCon").Width(UILayout.S(80)).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input).Grid_Row(1).Grid_Column(2).Margin("4,0,0,0").IsEditable("True")
 
         ; === 底部按钮 ===
         btnRow := main.Add("StackPanel").Grid_Row(4).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="880" Height="680" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(880) '" Height="680" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===
@@ -328,54 +326,56 @@ class SearchProGui {
             . '<StackPanel Orientation="Horizontal" VerticalAlignment="Center">'
             . '<TextBlock Text="' GetLang("目标") ' ' n '" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource TextMain}"/>'
             . '<TextBlock Text="' GetLang("搜索类型：") '" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "Type") '" Width="110" Height="24" MinHeight="24" Margin="4,0,0,0">' typeItems '</ComboBox>'
-            . '<Button Name="' this._TN(n, "DelBtn") '" Content="' GetLang("删除目标") '" Height="24" MinHeight="24" Padding="8,0" Margin="10,0,0,0" Cursor="Hand"/>'
+            . '<ComboBox Name="' this._TN(n, "Type") '" Width="' UILayout.S(110) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0">' typeItems '</ComboBox>'
+            . '<Button Name="' this._TN(n, "DelBtn") '" Content="' GetLang("删除目标") '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Padding="8,0" Margin="10,0,0,0" Cursor="Hand"/>'
             . '</StackPanel>'
             ; 窗口信息行
             . '<StackPanel Name="' this._TN(n, "WinInfoRow") '" Orientation="Horizontal" Margin="0,6,0,0">'
             . '<TextBlock Text="' GetLang("窗口信息:") '" VerticalAlignment="Center" Foreground="{DynamicResource TextSub}"/>'
-            . '<TextBox Name="' this._TN(n, "WinInfo") '" Width="150" Height="24" MinHeight="24" Margin="4,0,0,0"'
+            . '<TextBox Name="' this._TN(n, "WinInfo") '" Width="' UILayout.S(150) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0"'
             . ' Background="{DynamicResource InputBg}" Foreground="{DynamicResource InputText}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1" VerticalContentAlignment="Center" Padding="4,0"/>'
-            . '<Button Name="' this._TN(n, "WinInfoEditBtn") '" Content="' GetLang("编辑") '" Height="24" MinHeight="24" Margin="6,0,0,0" Cursor="Hand"/>'
+            . '<Button Name="' this._TN(n, "WinInfoEditBtn") '" Content="' GetLang("编辑") '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="6,0,0,0" Cursor="Hand"/>'
             . '</StackPanel>'
-            ; 坐标行
+            ; 坐标行（2+2 拆分：4 组横排在大字号下超卡片宽，终止 Y 被裁）
             . '<StackPanel Orientation="Horizontal" Margin="0,6,0,0">'
             . '<TextBlock Text="' GetLang("起始坐标X：") '" VerticalAlignment="Center" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "StartPosX") '" Width="70" Height="24" MinHeight="24" Margin="4,0,0,0" IsEditable="True"/>'
+            . '<ComboBox Name="' this._TN(n, "StartPosX") '" Width="' UILayout.S(70) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0" IsEditable="True"/>'
             . '<TextBlock Text="' GetLang("起始坐标Y：") '" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "StartPosY") '" Width="70" Height="24" MinHeight="24" Margin="4,0,0,0" IsEditable="True"/>'
-            . '<TextBlock Text="' GetLang("终止坐标X：") '" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "EndPosX") '" Width="70" Height="24" MinHeight="24" Margin="4,0,0,0" IsEditable="True"/>'
+            . '<ComboBox Name="' this._TN(n, "StartPosY") '" Width="' UILayout.S(70) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0" IsEditable="True"/>'
+            . '</StackPanel>'
+            . '<StackPanel Orientation="Horizontal" Margin="0,6,0,0">'
+            . '<TextBlock Text="' GetLang("终止坐标X：") '" VerticalAlignment="Center" Foreground="{DynamicResource TextSub}"/>'
+            . '<ComboBox Name="' this._TN(n, "EndPosX") '" Width="' UILayout.S(70) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0" IsEditable="True"/>'
             . '<TextBlock Text="' GetLang("终止坐标Y：") '" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "EndPosY") '" Width="70" Height="24" MinHeight="24" Margin="4,0,0,0" IsEditable="True"/>'
+            . '<ComboBox Name="' this._TN(n, "EndPosY") '" Width="' UILayout.S(70) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0" IsEditable="True"/>'
             . '</StackPanel>'
             ; 图片区
             . '<StackPanel Name="' this._TN(n, "ImageRow") '" Orientation="Horizontal" Margin="0,6,0,0">'
             . '<TextBlock Text="' GetLang("识别模型：") '" VerticalAlignment="Center" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "ImageType") '" Width="80" Height="24" MinHeight="24" Margin="4,0,0,0">' modelItems '</ComboBox>'
-            . '<Button Name="' this._TN(n, "ScreenshotBtn") '" Content="' GetLang("截图") '" Height="24" MinHeight="24" Margin="10,0,0,0" Cursor="Hand"/>'
-            . '<Button Name="' this._TN(n, "ImageSelectBtn") '" Content="' GetLang("选择图片") '" Height="24" MinHeight="24" Margin="6,0,0,0" Cursor="Hand"/>'
+            . '<ComboBox Name="' this._TN(n, "ImageType") '" Width="' UILayout.S(96) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0">' modelItems '</ComboBox>'
+            . '<Button Name="' this._TN(n, "ScreenshotBtn") '" Content="' GetLang("截图") '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="10,0,0,0" Cursor="Hand"/>'
+            . '<Button Name="' this._TN(n, "ImageSelectBtn") '" Content="' GetLang("选择图片") '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="6,0,0,0" Cursor="Hand"/>'
             . '</StackPanel>'
             . '<StackPanel Name="' this._TN(n, "ImagePathRow") '" Orientation="Horizontal" Margin="0,4,0,0">'
             . '<TextBlock Text="' GetLang("图片路径：") '" VerticalAlignment="Center" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "ImagePath") '" Width="250" Height="24" MinHeight="24" Margin="4,0,0,0" IsEditable="True"/>'
-            . '<Image Name="' this._TN(n, "Image") '" Width="40" Height="40" Margin="8,0,0,0" Stretch="Uniform" VerticalAlignment="Center"/>'
+            . '<ComboBox Name="' this._TN(n, "ImagePath") '" Width="' UILayout.S(250) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0" IsEditable="True"/>'
+            . '<Image Name="' this._TN(n, "Image") '" Width="40" Height="' UILayout.S(40) '" Margin="8,0,0,0" Stretch="Uniform" VerticalAlignment="Center"/>'
             . '</StackPanel>'
             ; 颜色区
             . '<StackPanel Name="' this._TN(n, "ColorRow") '" Orientation="Horizontal" Margin="0,6,0,0">'
             . '<TextBlock Text="' GetLang("搜索颜色：") '" VerticalAlignment="Center" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "Color") '" Width="110" Height="24" MinHeight="24" Margin="4,0,0,0" IsEditable="True"/>'
+            . '<ComboBox Name="' this._TN(n, "Color") '" Width="' UILayout.S(110) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0" IsEditable="True"/>'
             . '<Border Name="' this._TN(n, "ColorTip") '" Width="16" Height="16" Background="#FF0000" VerticalAlignment="Center" Margin="6,0,0,0"/>'
             . '</StackPanel>'
             ; 文本区
             . '<StackPanel Name="' this._TN(n, "TextRow") '" Orientation="Horizontal" Margin="0,6,0,0">'
             . '<TextBlock Text="' GetLang("搜索文本：") '" VerticalAlignment="Center" Foreground="{DynamicResource TextSub}"/>'
-            . '<ComboBox Name="' this._TN(n, "Text") '" Width="200" Height="24" MinHeight="24" Margin="4,0,0,0" IsEditable="True"/>'
+            . '<ComboBox Name="' this._TN(n, "Text") '" Width="' UILayout.S(200) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '" Margin="4,0,0,0" IsEditable="True"/>'
             . '</StackPanel>'
             ; 相似度
             . '<StackPanel Name="' this._TN(n, "SimilarRow") '" Orientation="Horizontal" Margin="0,6,0,0">'
             . '<TextBlock Text="' GetLang("相似度(%)：") '" VerticalAlignment="Center" Foreground="{DynamicResource TextSub}"/>'
-            . '<TextBox Name="' this._TN(n, "Similar") '" Width="80" Height="24" MinHeight="24"'
+            . '<TextBox Name="' this._TN(n, "Similar") '" Width="' UILayout.S(80) '" Height="' UILayout.S(24) '" MinHeight="' UILayout.S(24) '"'
             . ' VerticalContentAlignment="Center" Padding="4,0" TextAlignment="Center" FontSize="11" Margin="4,0,0,0"'
             . ' Foreground="{DynamicResource InputText}" Background="{DynamicResource InputBg}" BorderBrush="{DynamicResource InputStroke}" BorderThickness="1"/>'
             . '</StackPanel>'

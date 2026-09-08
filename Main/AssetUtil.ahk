@@ -711,7 +711,7 @@ GetThemesIniPath() {
 
 ; persistIni=true 时写入 MainSettings（权威）并同步 themes.ini
 ApplyUserFontSize(fs, persistIni := true) {
-    global XAML_FontSizeDelta, XAML_FontSizeBase, XAML_FontSizeDefault
+    global XAML_FontSizeDelta, MainSoftData, XAML_FontSizeBase, XAML_FontSizeDefault
     baseFs := IsSet(XAML_FontSizeBase) ? XAML_FontSizeBase : 15
     defFs := IsSet(XAML_FontSizeDefault) ? XAML_FontSizeDefault : 15
     if (!IsNumber(fs))
@@ -1170,7 +1170,7 @@ LoadCurMacroSetting() {
 
 ; 持久化的当前 tab 是 TableID（身份）：解析为显示顺序下标；无效则回落 1
 ResolveCurTableIndex() {
-    global MySoftData
+    global MySoftData, MainSoftData
     if (MainSoftData.CurTableID != "") {
         idx := GetTableIndexByID(MainSoftData.CurTableID)
         MainSoftData.TableIndex := idx > 0 ? idx : 1
@@ -1564,7 +1564,7 @@ BuildSortIndex(segs, orderMap) {
 ; 解析后迁移为新格式对象结构
 ; ============================================================
 ReadTableItemInfoLegacy(tableItem) {
-    global MySoftData, MacroFile, IniSection
+    global MySoftData, MainSoftData, MacroFile, IniSection
     symbol := tableItem.Symbol
     defaultInfo := GetTableItemDefaultInfo(tableItem)
     savedTKArrStr := IniRead(MacroFile, IniSection, symbol "TKArr", "")
@@ -3434,7 +3434,34 @@ GetItemOffsetOfFold(tableItem, itemIndex) {
     return GetItemFoldData(tableItem, itemIndex).offset
 }
 
+; =============================================================================
+; CustomMsgBox —— 薄分发器（签名与返回语义不变，调用方零改动），三级分发：
+;
+; 1. 主进程：XAML 实现位于 Main\Util\CustomMsgBoxXaml.ahk（class CustomMsgBoxXaml，
+;    仅主进程链经 GlobalUtil.ahk 加载），走 CustomMsgBoxXaml.Show。
+; 2. Worker：走 Thread\WorkUtil.ahk 的 CustomMsgBox_Worker（一行壳：委托统一阻塞代理
+;    WorkerDialog_Request 直发 CM 请求由主进程代弹 XAML，轮询等 CMR 回传）。
+;    此处用动态名解析（仿本文件 XamlUiDiagDaemon 先例），裸写 CustomMsgBox_Worker /
+;    CustomMsgBoxXaml 会触发 Worker 编译 #Warn（XAMLHost 同因），故全程不出现这些标识符。
+; 3. 兜底：CustomMsgBox_Native 原生 Gui 实现（Worker 编译链断网/异常场景）。
+; =============================================================================
 CustomMsgBox(Text := "", Title := "", Buttons := "") {
+    fnName := "CustomMsgBoxXaml"
+    if (IsSet(%fnName%)) {
+        impl := %fnName%
+        return impl.Show(Text, Title, Buttons)
+    }
+    fnName := "CustomMsgBox_Worker"
+    if (IsSet(%fnName%)) {
+        impl := %fnName%
+        return impl(Text, Title, Buttons)
+    }
+    return CustomMsgBox_Native(Text, Title, Buttons)
+}
+
+; CustomMsgBox 原生 Gui 兜底实现（Worker 编译链使用；返回语义：命中按钮=1 基索引，
+; 点 X / 关闭 / Esc=0）。签名与迁移前 git HEAD 版 CustomMsgBox 完全一致。
+CustomMsgBox_Native(Text := "", Title := "", Buttons := "") {
     Result := -1
 
     ; 解析按钮字符串
@@ -3890,23 +3917,28 @@ UnloadEnglishOcr() {
     }
 }
 
-; 获取窗口在活动显示器上居中的坐标
+; 获取窗口在活动显示器上居中的坐标（返回 DIP，供 XAML Window Left/Top 直接使用；
+; winWidth/winHeight 为 DIP 设计值。MonitorGetWorkArea 返回物理像素，按系统 DPI 换算，
+; 与 MainWindowXaml / CustomMsgBoxXaml 的预计算居中先例一致）
 GetCenterPosOnActiveMonitor(winWidth, winHeight) {
+    scale := A_ScreenDPI / 96.0
+    if (scale < 1.0)
+        scale := 1.0
     MouseGetPos(&mouseX, &mouseY)
     monCount := MonitorGetCount()
     Loop monCount {
         MonitorGet(A_Index, &mL, &mT, &mR, &mB)
         if (mouseX >= mL && mouseX < mR && mouseY >= mT && mouseY < mB) {
             MonitorGetWorkArea(A_Index, &waL, &waT, &waR, &waB)
-            x := Floor((waL + waR - winWidth) / 2)
-            y := Floor((waT + waB - winHeight) / 2)
+            x := Floor((waL + waR - winWidth * scale) / (2 * scale))
+            y := Floor((waT + waB - winHeight * scale) / (2 * scale))
             return {x: x, y: y}
         }
     }
     ; 默认主显示器
     MonitorGetWorkArea(1, &waL, &waT, &waR, &waB)
-    x := Floor((waL + waR - winWidth) / 2)
-    y := Floor((waT + waB - winHeight) / 2)
+    x := Floor((waL + waR - winWidth * scale) / (2 * scale))
+    y := Floor((waT + waB - winHeight * scale) / (2 * scale))
     return {x: x, y: y}
 }
 

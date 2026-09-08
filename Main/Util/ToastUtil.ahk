@@ -121,7 +121,7 @@ class Toast {
             ; 先放到屏幕外，等尺寸稳定后再定位到右下角
             win.Left(-20000).Top(-20000)
             win.WindowStyle("None").AllowsTransparency("True").Background("{x:Null}")
-            win.ShowInTaskbar("False").Topmost("True").ResizeMode("NoResize")
+            win.ShowInTaskbar("False").Topmost("True")
             win.ShowActivated("False").SizeToContent("WidthAndHeight")
             win.WindowStartupLocation("Manual").Opacity(0)
 
@@ -137,7 +137,9 @@ class Toast {
             lbl := border.Add("TextBlock")
             lbl.Text(displayMsg).TextWrapping("Wrap").Foreground(text)
             lbl.FontFamily("Segoe UI Variable Display, Segoe UI, Microsoft YaHei UI, sans-serif")
-            lbl.FontSize(14)
+            ; 响应式字号：声明即当前主题字号（PopupFontSize=主题×主窗缩放，主窗 NoViewbox 后即主题字号）。
+            ; skipFontScale 下引擎构建期不动声明值 → 渲染字号=声明值，每次弹出重建自然跟主题，无需广播。
+            lbl.FontSize(XAMLHost.PopupFontSize())
 
             ; 记录展示前的前台窗口（通常是逻辑树编辑器），展示后抢回焦点
             this.restoreHwnd := WinGetID("A")

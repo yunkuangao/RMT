@@ -49,11 +49,11 @@ class UseExplainGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MySoftData, MainSoftData
         this._closed := false
         title := GetLang("使用说明")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*", "44")
@@ -69,43 +69,38 @@ class UseExplainGui {
         nameRow.Add("TextBlock").Text(MySoftData.CurSettingName).VerticalAlignment("Center").Margin("4,0,0,0")
 
         authorRow := body.Add("StackPanel").Orientation("Horizontal").Margin("0,6,0,0")
-        authorRow.Add("TextBlock").Text(GetLang("作者：")).Width(80).VerticalAlignment("Center")
-        authorRow.Add("TextBox").Name("AuthorCon").Width(480).Height(26).MinHeight(26)
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
+        authorRow.Add("TextBlock").Text(GetLang("作者：")).Width(UILayout.S(80)).VerticalAlignment("Center")
+        authorRow.Add("TextBox").Name("AuthorCon").Width(UILayout.S(480)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row)
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
 
         effectRow := body.Add("StackPanel").Orientation("Horizontal").Margin("0,6,0,0")
-        effectRow.Add("TextBlock").Text(GetLang("配置作用：")).Width(80).VerticalAlignment("Top")
-        effectRow.Add("TextBox").Name("EffectCon").Width(480).Height(60).AcceptsReturn("True").TextWrapping("Wrap")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
+        effectRow.Add("TextBlock").Text(GetLang("配置作用：")).Width(UILayout.S(80)).VerticalAlignment("Top")
+        effectRow.Add("TextBox").Name("EffectCon").Width(UILayout.S(480)).Height(UILayout.S(60)).AcceptsReturn("True").TextWrapping("Wrap")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
 
         operRow := body.Add("StackPanel").Orientation("Horizontal").Margin("0,6,0,0")
-        operRow.Add("TextBlock").Text(GetLang("操作说明：")).Width(80).VerticalAlignment("Top")
-        operRow.Add("TextBox").Name("OperCon").Width(480).Height(140).AcceptsReturn("True").TextWrapping("Wrap")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
+        operRow.Add("TextBlock").Text(GetLang("操作说明：")).Width(UILayout.S(80)).VerticalAlignment("Top")
+        operRow.Add("TextBox").Name("OperCon").Width(UILayout.S(480)).Height(UILayout.S(140)).AcceptsReturn("True").TextWrapping("Wrap")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Top").Padding("4,2").FontSize(11)
 
         lvRow := body.Add("StackPanel").Orientation("Horizontal").Margin("0,6,0,0")
-        lvRow.Add("TextBlock").Text(GetLang("图片备注：")).Width(80).VerticalAlignment("Top")
-        lvRow.Add("ListBox").Name("LVCon").Width(480).Height(120)
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        lvRow.Add("TextBlock").Text(GetLang("图片备注：")).Width(UILayout.S(80)).VerticalAlignment("Top")
+        lvRow.Add("ListBox").Name("LVCon").Width(UILayout.S(480)).Height(UILayout.S(120))
+            .Style("{DynamicResource InputBoxStyle}")
             .VirtualizingPanel_IsVirtualizing("False")
 
         btnRow := body.Add("StackPanel").Orientation("Horizontal").Margin("80,6,0,0")
-        btnRow.Add("Button").Name("BtnSelectImage").Content(GetLang("选择图片")).Width(80).Height(28).MinHeight(28).Cursor("Hand")
-        btnRow.Add("Button").Name("BtnScreenShot").Content(GetLang("截图")).Width(80).Height(28).MinHeight(28).Margin("20,0,0,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnSelectImage").Content(GetLang("选择图片")).Width(UILayout.S(80)).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Cursor("Hand")
+        btnRow.Add("Button").Name("BtnScreenShot").Content(GetLang("截图")).Width(UILayout.S(80)).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Margin("20,0,0,0").Cursor("Hand")
 
         ; === 底部按钮 ===
         bottom := main.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        bottom.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
+        bottom.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="620" Height="560" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(620) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

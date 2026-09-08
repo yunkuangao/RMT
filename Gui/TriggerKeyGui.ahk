@@ -356,7 +356,7 @@ class TriggerKeyGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         ; 实例复用：重建前清空按键映射，避免 _btnKeyMap/_keySeq 累积导致事件重复绑定
         this.ConMap := Map()
@@ -365,7 +365,7 @@ class TriggerKeyGui {
         this._keySeq := 0
         title := GetLang("触发键编辑器")
         this._title := title
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*", "Auto")
@@ -400,10 +400,9 @@ class TriggerKeyGui {
         detectRow := keyInner.Add("StackPanel").Grid_Row(0).Orientation("Horizontal")
             .HorizontalAlignment("Center").VerticalAlignment("Top").Margin("-20,2,0,0").Panel_ZIndex(2)
         detectRow.Add("TextBlock").Text(GetLang("键盘触发键检测：")).VerticalAlignment("Center")
-        detectRow.Add("TextBox").Name("HotkeyCon").Width(180).Height(26).MinHeight(26).Margin("4,0,0,0")
-            .Background("{DynamicResource InputBg}").Foreground("{DynamicResource InputText}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalContentAlignment("Center").Padding("4,0")
-        detectBtn := detectRow.Add("Button").Name("BtnDetect").Content(GetLang("确定")).Width(56).Height(26).MinHeight(26).Padding("12,0").Margin("6,0,0,0").Cursor("Hand")
+        detectRow.Add("TextBox").Name("HotkeyCon").Width(180).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("4,0,0,0")
+            .Style("{DynamicResource InputBoxStyle}").VerticalContentAlignment("Center").Padding("4,0")
+        detectBtn := detectRow.Add("Button").Name("BtnDetect").Content(GetLang("确定")).Width(56).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Padding("12,0").Margin("6,0,0,0").Cursor("Hand")
             .Background("{DynamicResource ControlBg}").Foreground("{DynamicResource TextMain}")
             .BorderBrush("{DynamicResource ControlBorder}").BorderThickness("1")
         detectBtn.InjectResources(toolBtnStyle)
@@ -426,10 +425,9 @@ class TriggerKeyGui {
 
         r1 := opt.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").HorizontalAlignment("Left").Margin("100,0,0,0")
         r1.Add("TextBlock").Name("HoldTimeLabelCon").Text(GetLang("长按时间/双击时间：")).VerticalAlignment("Center")
-        r1.Add("TextBox").Name("HoldTimeCon").Width(100).Height(24).MinHeight(24)
+        r1.Add("TextBox").Name("HoldTimeCon").Width(100).Height(UILayout.CtrlH.Input).MinHeight(UILayout.CtrlH.Input)
             .VerticalContentAlignment("Center").Padding("4,0").TextAlignment("Center").FontSize(11).Margin("4,0,0,0")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
             .ToolTip(GetLang("此设置只在触发模式是【长按】/【双击】时有效"))
 
         r2 := opt.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").HorizontalAlignment("Left").Margin("100,0,0,0")
@@ -445,11 +443,11 @@ class TriggerKeyGui {
         helpStack.Add("TextBlock").Name("HelpTip4").Text(GetLang("勾选规则2：手柄按钮、摇杆可选1-2个按键组合")).Opacity("0.6").Margin("0,4,0,0")
 
         btnRow := bottom.Add("StackPanel").Grid_Row(1).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        clearBtn := btnRow.Add("Button").Name("BtnClear").Content(GetLang("清空")).Width(100).Height(32).MinHeight(32).Margin("0").Cursor("Hand")
+        clearBtn := btnRow.Add("Button").Name("BtnClear").Content(GetLang("清空")).Width(100).Height(UILayout.S(32)).MinHeight(32).Margin("0").Cursor("Hand")
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1").FontWeight("Bold")
         clearBtn.InjectResources(editorBtnStyle)
-        okBtn := btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("400,0,0,0").Cursor("Hand")
+        okBtn := btnRow.Add("Button").Name("BtnOk").Content(GetLang("确定")).Width(100).Height(UILayout.S(32)).MinHeight(32).Margin("400,0,0,0").Cursor("Hand")
             .Background("{DynamicResource ActionBg}").Foreground("{DynamicResource ActionText}")
             .BorderBrush("{DynamicResource ActionStroke}").BorderThickness("1").FontWeight("Bold")
         okBtn.InjectResources(editorBtnStyle)
@@ -460,8 +458,8 @@ class TriggerKeyGui {
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", "")
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="1280" Height="635" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        ; 画布窗显式声明 zoom 范式（引擎 Viewbox 白名单制，2026-09-08）：键位网格等比缩放
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="1280" Height="635" Tag="ZoomViewbox" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 注册按键事件 ===
@@ -490,7 +488,7 @@ class TriggerKeyGui {
         this._keySeq += 1
         name := "KeyBtn_" this._keySeq
         txtName := name "_Txt"
-        btn := this._keyGrid.Add("Button").Name(name).Width(width).Height(25)
+        btn := this._keyGrid.Add("Button").Name(name).Width(width).Height(UILayout.S(25))
             .SetProp("Canvas.Left", String(x)).SetProp("Canvas.Top", String(y))
             .Cursor("Hand").Padding("2,1")
             .HorizontalContentAlignment("Stretch").VerticalContentAlignment("Stretch")

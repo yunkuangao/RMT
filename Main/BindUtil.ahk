@@ -115,7 +115,7 @@ BindShortcut(triggerInfo, action) {
 }
 
 BindSuspendHotkey() {
-    global MySoftData
+    global MainSoftData
     if (MainSoftData.SuspendHotkey != "") {
         isCombo := IsComboKey(MainSoftData.SuspendHotkey)
         if (isCombo) {
@@ -133,7 +133,7 @@ BindSuspendHotkey() {
 }
 
 OnSuspendHotkey(*) {
-    global MySoftData
+    global MySoftData, MainSoftData
     MainSoftData.IsSuspend := !MainSoftData.IsSuspend
     UIControls.SuspendToggle.Value := MainSoftData.IsSuspend
     if (MainSoftData.IsSuspend) {

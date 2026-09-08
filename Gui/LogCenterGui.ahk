@@ -62,7 +62,7 @@ class LogCenterGui {
     _BuildAndShow() {
         this.closed := false
         title := GetLang("日志中心")
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*")
@@ -82,7 +82,7 @@ class LogCenterGui {
         tabBiz := topBar.Add("RadioButton").Name("TabBiz").Content(GetLang("业务日志")).IsChecked("False").VerticalAlignment("Center").Margin("0,0,16,0").GroupName("LogTab")
 
         topBar.Add("TextBlock").Text(GetLang("级别：")).VerticalAlignment("Center").Margin("8,0,4,0").Foreground("{DynamicResource TextSub}")
-        lvCombo := topBar.Add("ComboBox").Name("CmbLevel").Width(90).Height(26).MinHeight(26).VerticalContentAlignment("Center").Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1").VerticalAlignment("Center").Margin("0,0,12,0")
+        lvCombo := topBar.Add("ComboBox").Name("CmbLevel").Width(90).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).VerticalContentAlignment("Center").Style("{DynamicResource InputBoxStyle}").VerticalAlignment("Center").Margin("0,0,12,0")
         lvCombo.Add("ComboBoxItem").Content(GetLang("全部"))
         lvCombo.Add("ComboBoxItem").Content("debug")
         lvCombo.Add("ComboBoxItem").Content("info")
@@ -90,10 +90,10 @@ class LogCenterGui {
         lvCombo.Add("ComboBoxItem").Content("error")
         lvCombo.SelectedIndex("0")
 
-        btnRefresh := topBar.Add("Button").Name("BtnRefresh").Content(GetLang("刷新")).Height(28).MinHeight(28).Padding("14,0").Margin("0,4,8,4")
-        btnCopy := topBar.Add("Button").Name("BtnCopy").Content(GetLang("复制")).Height(28).MinHeight(28).Padding("14,0").Margin("0,4,8,4")
-        btnClear := topBar.Add("Button").Name("BtnClear").Content(GetLang("清空")).Height(28).MinHeight(28).Padding("14,0").Margin("0,4,8,4")
-        btnExport := topBar.Add("Button").Name("BtnExport").Content(GetLang("导出")).Height(28).MinHeight(28).Padding("14,0").Margin("0,4,0,4")
+        btnRefresh := topBar.Add("Button").Name("BtnRefresh").Content(GetLang("刷新")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("14,0").Margin("0,4,8,4")
+        btnCopy := topBar.Add("Button").Name("BtnCopy").Content(GetLang("复制")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("14,0").Margin("0,4,8,4")
+        btnClear := topBar.Add("Button").Name("BtnClear").Content(GetLang("清空")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("14,0").Margin("0,4,8,4")
+        btnExport := topBar.Add("Button").Name("BtnExport").Content(GetLang("导出")).Height(UILayout.CtrlH.RowSm).MinHeight(UILayout.CtrlH.RowSm).Padding("14,0").Margin("0,4,0,4")
 
         ; 日志内容区
         ; 外层 Border 提供背景/边框；内层 ScrollViewer 管理滚动，滚动条固定在外层 ScrollViewer 底部/右侧
@@ -114,7 +114,6 @@ class LogCenterGui {
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", 0)
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' title '" Width="760" Height="480"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===

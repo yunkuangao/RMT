@@ -111,14 +111,23 @@ class WorkPool {
         this.lostWorkerCheckFunc := ""
         this.rxPollFunc := ""
         this.residualCheckFunc := ""
-        this._inputGuis := Map()      ; 活动输入弹窗实例（key=req）
+        this._inputGuis := Map()      ; 活动弹窗请求实例（key=req）
+        ; 弹窗请求注册表：opcode → {handler, reply, close}
+        ; 新增弹窗类型：此处加一行注册 + Worker 侧经 WorkUtil.WorkerDialog_Request 直发即可
+        ; reply：回传 opcode；close：弹窗构建异常时的回传参数（「关闭」语义；
+        ; IB 用 "0" 而非 "cancel"，避免异常路径误触发用户的取消动作，与旧异常路径行为一致）
+        this._dialogRegistry := Map(
+            "IP", { handler: (req, reply, args*) => this._HandleInputBox(req, reply, args*), reply: "IPR", close: ["0", ""] },
+            "IB", { handler: (req, reply, args*) => this._HandleInputBtn(req, reply, args*), reply: "IBR", close: ["0"] },
+            "CM", { handler: (req, reply, args*) => this._HandleCustomMsgBox(req, reply, args*), reply: "CMR", close: ["0"] }
+        )
 
         OnMessage(WM_LOAD_WORK, ObjBindMethod(this, "OnWorkerReady"))
         OnMessage(WM_WORKER_TO_MASTER, ObjBindMethod(this, "OnWorkerToMaster"))
 
         ; §17 热重载订阅：整表保存（OnSaveSetting 选「否」→ Publish(0,0)，落盘后）→ 广播 Worker 重载配置，
         ; 使「新增宏 / 修改宏内容」保存选「否」后 Worker（Work.exe 启动快照）立即生效，不必重启
-        global MyHotReloadBus
+        global MyHotReloadBus, MainSoftData
         if (IsSet(MyHotReloadBus) && IsObject(MyHotReloadBus))
             MyHotReloadBus.Subscribe(ObjBindMethod(this, "OnHotReloadConfigChanged"))
 
@@ -1127,13 +1136,12 @@ class WorkPool {
                         MsgBoxContent(args[1])
                     case "TT":
                         ToolTipContent(args[1])
-                    case "IP":
-                        ; Worker 请求输入框：创建独立实例弹窗（不同宏/Worker 并发，互不阻塞；共享主进程 daemon）
+                    case "IP", "IB", "CM":
+                        ; Worker 请求弹窗（注册表统一分发）：每请求独立实例（并发互不阻塞，共享主进程 daemon）
                         ; 异步创建：避免在消息轮询/OnMessage 上下文同步 XAMLHost（主进程单线程会与 daemon 回传互堵）
-                        SetTimer((*) => this._ShowInputDialog(wd, false, args.Length >= 1 ? args[1] : "", args.Length >= 2 ? args[2] : ""), -10)
-                    case "IB":
-                        ; Worker 请求输入按钮条：创建独立实例，结果回传对应 Worker
-                        SetTimer((*) => this._ShowInputDialog(wd, true, args.Length >= 1 ? args[1] : "1"), -10)
+                        ; 闭包捕获 wd/opcode/args 与循环变量别名，但 Worker 弹窗请求是阻塞式的（同一
+                        ; Worker 同批不会出现两个弹窗请求），与旧 case 内捕获 args 的别名语义一致
+                        SetTimer((*) => this._ShowDialogReq(wd, opcode, args*), -10)
                     case "JY":
                         JoyDebugLog(Format("WorkPool recv JY args=[{}, {}, {}] from worker#{}"
                             , args.Length >= 1 ? args[1] : "", args.Length >= 2 ? args[2] : ""
@@ -1203,15 +1211,15 @@ class WorkPool {
         }
     }
 
-    ; 输入弹窗：每请求独立实例（并发互不阻塞）；Worker 请求结果跨进程回传，主进程宏请求写本地槽位
-    _ShowInputDialog(wd, isBtn, args*) {
-        this._ShowInputDialogReq({ wd: wd, local: false, done: false }, isBtn, args*)
+    ; 弹窗请求统一入口（Worker 路径）：每请求独立 req 实例，查注册表分发
+    _ShowDialogReq(wd, opcode, args*) {
+        this._DispatchDialogReq({ wd: wd, local: false, done: false }, opcode, args*)
     }
 
-    ; 主进程宏输入请求：SetTimer 异步弹窗（避免宏执行上下文同步 XAMLHost），结果写回 req.result
-    RequestLocalInput(isBtn, args*) {
+    ; 主进程宏弹窗请求：SetTimer 异步弹窗（避免宏执行上下文同步 XAMLHost），结果写回 req.result
+    RequestLocalInput(opcode, args*) {
         req := { wd: { idx: 0 }, local: true, done: false, result: "" }
-        SetTimer((*) => this._ShowInputDialogReq(req, isBtn, args*), -10)
+        SetTimer((*) => this._DispatchDialogReq(req, opcode, args*), -10)
         deadline := A_TickCount + 300000
         loop {
             Sleep(100)
@@ -1228,33 +1236,53 @@ class WorkPool {
         return req.result
     }
 
-    _ShowInputDialogReq(req, isBtn, args*) {
+    ; 统一分发（Worker/本地两路共用）：查注册表调 handler 构建弹窗
+    ; （IP/IB 异步回调式——gui 动作触发回传；CM 同步阻塞式——调完直接回传）；
+    ; 弹窗构建异常按「关闭」语义回传 close 参数，不让 Worker/宏挂死
+    _DispatchDialogReq(req, opcode, args*) {
+        entry := this._dialogRegistry[opcode]
         this._inputGuis[req] := true   ; 追踪活动实例
-        GraphPoolLog("输入请求处理", Format("wd=#{1} type={2}", req.wd.idx, isBtn ? "btn" : "input"))
+        GraphPoolLog("弹窗请求处理", Format("wd=#{1} op={2}", req.wd.idx, opcode))
+        ; 必须经局部变量调用：AHK 对「属性值为函数对象」的 entry.handler(...) 形式
+        ; 会把 entry 前置为首参（方法式调用语义），导致 req/reply/args 整体错位
+        handler := entry.handler
         try {
-            if (isBtn) {
-                ; 输入按钮条
-                gui := InputBtnXamlGui()
-                req.gui := gui
-                gui.TrueAction := (*) => this._SendInputResult(req, "IBR", "true")
-                gui.FalseAction := (*) => this._SendInputResult(req, "IBR", "false")
-                gui.ContinueAction := (*) => this._SendInputResult(req, "IBR", "continue")
-                gui.CancelAction := (*) => this._SendInputResult(req, "IBR", "cancel")
-                gui.HideAction := (*) => this._SendInputResult(req, "IBR", "cancel")
-                gui.ShowGui(Integer(args[1]))
-            } else {
-                ; XAML 输入框
-                gui := CustomInputGui()
-                req.gui := gui
-                gui.SureAction := (val) => this._SendInputResult(req, "IPR", "1", val)
-                gui.HideAction := (*) => this._SendInputResult(req, "IPR", "0", "")
-                gui.CloseAction := (*) => this._SendInputResult(req, "IPR", "0", "")
-                gui.ShowGui(args[1], args.Length >= 2 ? args[2] : "")
-            }
+            handler(req, entry.reply, args*)
         } catch as e {
-            GraphPoolLog("输入弹窗异常", Format("err={1} wd=#{2}", e.Message, req.wd.idx))
-            this._SendInputResult(req, "IPR", "0", "")
+            GraphPoolLog("弹窗构建异常", Format("op={1} err={2} wd=#{3}", opcode, e.Message, req.wd.idx))
+            this._SendInputResult(req, entry.reply, entry.close*)
         }
+    }
+
+    ; 输入框（IP）：XAML 弹窗，动作回调回传 IPR
+    _HandleInputBox(req, reply, args*) {
+        gui := CustomInputGui()
+        req.gui := gui
+        gui.SureAction := (val) => this._SendInputResult(req, reply, "1", val)
+        gui.HideAction := (*) => this._SendInputResult(req, reply, "0", "")
+        gui.CloseAction := (*) => this._SendInputResult(req, reply, "0", "")
+        gui.ShowGui(args.Length >= 1 ? args[1] : "", args.Length >= 2 ? args[2] : "")
+    }
+
+    ; 输入按钮条（IB）：XAML 弹窗，动作回调回传 IBR
+    _HandleInputBtn(req, reply, args*) {
+        gui := InputBtnXamlGui()
+        req.gui := gui
+        gui.TrueAction := (*) => this._SendInputResult(req, reply, "true")
+        gui.FalseAction := (*) => this._SendInputResult(req, reply, "false")
+        gui.ContinueAction := (*) => this._SendInputResult(req, reply, "continue")
+        gui.CancelAction := (*) => this._SendInputResult(req, reply, "cancel")
+        gui.HideAction := (*) => this._SendInputResult(req, reply, "cancel")
+        gui.ShowGui(Integer(args.Length >= 1 ? args[1] : "1"))
+    }
+
+    ; 自定义弹窗（CM）：SetTimer 已脱离消息轮询上下文，此处同步调 XAML（阻塞至用户选择），回传 CMR
+    _HandleCustomMsgBox(req, reply, args*) {
+        result := CustomMsgBoxXaml.Show(
+            args.Length >= 1 ? args[1] : "",
+            args.Length >= 2 ? args[2] : "",
+            args.Length >= 3 ? args[3] : "")
+        this._SendInputResult(req, reply, result)
     }
 
     ; 回传输入结果（同一请求只回传一次）

@@ -55,7 +55,7 @@ class FreePasteGui {
     }
 
     _BuildAndShow(isImage, isText) {
-        global MySoftData
+        global MainSoftData
         title := "RMT-FreePaste"
         this._title := title
 
@@ -80,9 +80,7 @@ class FreePasteGui {
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", "0")
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", 0)
         this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="RMT-FreePaste" Width="300" Height="200" SizeToContent="WidthAndHeight" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'ResizeMode="CanResize"', 'ResizeMode="NoResize"')
         this.ui.xaml := StrReplace(this.ui.xaml, 'WindowStartupLocation="CenterScreen"', 'WindowStartupLocation="CenterScreen" Topmost="True" ShowInTaskbar="False"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件（闭包捕获本面板 ui，支持多面板并存；事件回调为异步 SetTimer，勿做阻塞操作）===

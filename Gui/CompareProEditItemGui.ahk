@@ -74,7 +74,7 @@ class CompareProEditItemGui {
     }
 
     ShowGui(EditType, DataArr, logicStr, macro, controlType) {
-        global MySoftData
+        global MainSoftData
         ; XAML 窗口不支持隐藏复用：已打开的实例先关掉再重建
         if (IsObject(this.ui) && !this._closed)
             this._CloseWindow()
@@ -89,12 +89,12 @@ class CompareProEditItemGui {
     }
 
     _BuildAndShow() {
-        global MySoftData
+        global MainSoftData
         this._closed := false
         title := this.ParentTile GetLang("如果Pro分支编辑器")
         this._title := title
         this.Gui := CompareProEditItemGuiFacade(this)
-        titleHeight := "30"
+        titleHeight := UILayout.TitleH
 
         main := XAML_Generator("Grid").Background("{DynamicResource BgColor}").TextElement_FontSize(XAMLHost.FontSize())
         main.Rows(titleHeight, "*", "44")
@@ -109,9 +109,8 @@ class CompareProEditItemGui {
         ; 行0：逻辑关系
         logicRow := body.Add("StackPanel").Grid_Row(0).Orientation("Horizontal").VerticalAlignment("Center")
         logicRow.Add("TextBlock").Text(GetLang("逻辑关系：")).VerticalAlignment("Center")
-        lc := logicRow.Add("ComboBox").Name("LogicalTypeCon").Width(80).Height(26).MinHeight(26).Margin("6,0,0,0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        lc := logicRow.Add("ComboBox").Name("LogicalTypeCon").Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["且", "或"])
             lc.Add("ComboBoxItem").Content(t)
 
@@ -127,48 +126,42 @@ class CompareProEditItemGui {
             row := body.Add("Grid").Grid_Row(A_Index + 1)
             row.Cols("Auto", "Auto", "Auto", "Auto")
             row.Add("CheckBox").Name("ToggleCon" A_Index).Grid_Column(0).Width(30).VerticalAlignment("Center")
-            row.Add("ComboBox").Name("NameCon" A_Index).Grid_Column(1).Width(120).Height(26).MinHeight(26).Margin("8,0,0,0").IsEditable("True")
-                .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-                .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
-            ct := row.Add("ComboBox").Name("CompareTypeCon" A_Index).Grid_Column(2).Width(80).Height(26).MinHeight(26).Margin("8,0,0,0")
-                .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-                .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            row.Add("ComboBox").Name("NameCon" A_Index).Grid_Column(1).Width(UILayout.S(120)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").IsEditable("True")
+                .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
+            ct := row.Add("ComboBox").Name("CompareTypeCon" A_Index).Grid_Column(2).Width(UILayout.S(80)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0")
+                .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
             for t in GetLangArr(["大于", "大于等于", "等于", "小于等于", "小于", "字符包含", "变量存在", "正则匹配"])
                 ct.Add("ComboBoxItem").Content(t)
-            row.Add("ComboBox").Name("VariableCon" A_Index).Grid_Column(3).Width(120).Height(26).MinHeight(26).Margin("8,0,0,0").IsEditable("True")
-                .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-                .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            row.Add("ComboBox").Name("VariableCon" A_Index).Grid_Column(3).Width(UILayout.S(120)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("8,0,0,0").IsEditable("True")
+                .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         }
 
         ; 行6：分支指令 + 编辑按钮
         macroLabelRow := body.Add("StackPanel").Grid_Row(6).Orientation("Horizontal").VerticalAlignment("Center")
         macroLabelRow.Add("TextBlock").Text(GetLang("分支指令:")).VerticalAlignment("Center")
-        macroLabelRow.Add("Button").Name("BtnEditMacro").Content(GetLang("编辑")).Height(26).MinHeight(26).Margin("10,0,0,0").Padding("12,0").Cursor("Hand")
+        macroLabelRow.Add("Button").Name("BtnEditMacro").Content(GetLang("编辑")).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("10,0,0,0").Padding("12,0").Cursor("Hand")
 
         ; 行7：分支指令内容（多行）
-        body.Add("TextBox").Name("MacroCon").Grid_Row(7).AcceptsReturn("True").TextWrapping("Wrap").FontSize("11")
+        body.Add("TextBox").Name("MacroCon").Grid_Row(7).AcceptsReturn("True").TextWrapping("Wrap").FontSize("11").MinHeight(110)
             .VerticalContentAlignment("Top").Padding("4,2")
-            .Foreground("{DynamicResource InputText}").Background("{DynamicResource InputBg}")
-            .BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+            .Style("{DynamicResource InputBoxStyle}")
 
         ; 行8：流程控制
         ctrlRow := body.Add("StackPanel").Grid_Row(8).Orientation("Horizontal").VerticalAlignment("Center")
         ctrlRow.Add("TextBlock").Text(GetLang("流程控制：")).VerticalAlignment("Center")
-        cc := ctrlRow.Add("ComboBox").Name("ControlTypeCon").Width(150).Height(26).MinHeight(26).Margin("6,0,0,0")
-            .VerticalContentAlignment("Center").FontSize("11").Foreground("{DynamicResource InputText}")
-            .Background("{DynamicResource InputBg}").BorderBrush("{DynamicResource InputStroke}").BorderThickness("1")
+        cc := ctrlRow.Add("ComboBox").Name("ControlTypeCon").Width(UILayout.S(150)).Height(UILayout.CtrlH.Row).MinHeight(UILayout.CtrlH.Row).Margin("6,0,0,0")
+            .VerticalContentAlignment("Center").FontSize("11").Style("{DynamicResource InputBoxStyle}")
         for t in GetLangArr(["无", "循环-跳过本轮", "循环-跳出", "分支-跳出"])
             cc.Add("ComboBoxItem").Content(t)
 
         ; === 底部按钮 ===
         btnRow := main.Add("StackPanel").Grid_Row(2).Orientation("Horizontal").HorizontalAlignment("Center").VerticalAlignment("Center")
-        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(100).Height(32).MinHeight(32).Margin("4,0").Cursor("Hand")
+        btnRow.Add("Button").Name("BtnSure").Content(GetLang("确定")).Width(UILayout.S(100)).Height(UILayout.S(32)).MinHeight(32).Margin("4,0").Cursor("Hand")
 
         ; === 创建 XAMLHost ===
         tmp := StrReplace(XAML_TEMPLATE, "%CaptionHeight%", titleHeight)
         this.ui := XAMLHost(StrReplace(tmp, "%app%", main.ToString()), "", this.OwnerHwnd)
-        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="440" Height="430" Opacity="0"')
-        this.ui.xaml := StrReplace(this.ui.xaml, 'FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"', 'FontFamily="' MainSoftData.FontType '"')
+        this.ui.xaml := StrReplace(this.ui.xaml, 'Width="940" Height="700"', 'Title="' this._EscapeXml(title) '" Width="' UILayout.S(440) '" SizeToContent="Height" Opacity="0"')
         this.ui.xaml := StrReplace(this.ui.xaml, '%resources%', '')
 
         ; === 事件 ===
@@ -250,7 +243,7 @@ class CompareProEditItemGui {
     }
 
     OnClickSureBtn(state, ctrl, event) {
-        global MySoftData
+        global MySoftData, MainSoftData
         action := this.SureBtnAction
         if (this.IsSubMacroEdit) {
             if (this.EditType == 2) {
