@@ -106,7 +106,11 @@
                 if (isSel)
                     selIdx := k - 1
                 descAttr := descriptions.Length ? ' Tag="' this._XmlEsc(GetLang(descriptions[k])) '"' : ""
-                itemsXaml .= '<ComboBoxItem Content="' this._XmlEsc(it) '"' descAttr '/>'
+                if (name == "CmbLang") {
+                    official := OfficialLanguages()
+                    itemsXaml .= LanguageOptionXaml(it, it, official.Has(it) ? official[it].flag : "")
+                } else
+                    itemsXaml .= '<ComboBoxItem Content="' this._XmlEsc(it) '"' descAttr '/>'
             }
             selAttr := (selIdx == "") ? "" : ' SelectedIndex="' selIdx '"'
             if (editable)
@@ -234,6 +238,7 @@
                 {f: "SuspendHotkey", l: "软件休眠", t: true},
                 {f: "PauseHotkey", l: "暂停宏", t: false},
                 {f: "KillMacroHotkey", l: "终止宏", t: false},
+                {f: "VoiceInputHotkey", l: "语音输入", t: true},
                 {f: "ToolRecordMacroHotKey", l: "指令录制", t: false},
                 {f: "ToolTextFilterHotKey", l: "文本提取", t: false}]},
             {title: "截图与工具", glyph: "&#xE8D4;", defs: [
@@ -314,7 +319,7 @@
             uiFoldNames.Push(GetLang("面板") " 1")
         triggerPage := page("trigger"
             , twoCol(
-                card(GetLang("菜单宏-轮盘"), "&#xE700;", tog(GetLang("固定位置"), "WheelFixedPosCon", MainSoftData.FixedMenuWheel, GetLang("固定在屏幕中下方"))
+                card(GetLang("轮盘"), "&#xE700;", tog(GetLang("固定位置"), "WheelFixedPosCon", MainSoftData.FixedMenuWheel, GetLang("固定在屏幕中下方"))
                     . tog(GetLang("显示扇区名称提示"), "WheelShowTooltipCon", MainSoftData.MenuWheelShowTooltip, GetLang("悬停显示扇区名称"))
                     . cmb(GetLang("选择模式"), "WheelSelectModeCon", GetLangArr(["点击选择", "划线选择"]), MainSoftData.MenuWheelSelectMode)
                     . sld(GetLang("轮盘大小"), "WheelScaleCon", "WheelScaleVal", MainSoftData.MenuWheelScale, 50, 200, 10), "0", "", "wheel")

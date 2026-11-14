@@ -18,7 +18,9 @@ param(
     # 覆盖编译器路径（CI 用自完备的 AHK 安装目录）
     [string]$Ahk2ExePath = "",
     [string]$Base64Path = "",
-    [string]$Base32Path = ""
+    [string]$Base32Path = "",
+    # 跳过多语言翻译完整性检查
+    [switch]$SkipLangCheck
 )
 
 try { $Host.UI.RawUI.WindowTitle = "RMT 打包工具" } catch { }
@@ -917,6 +919,10 @@ function Copy-Voice {
     }
 }
 
+# VC++ 2015-2022 运行库不随包分发：客户端检测到系统未安装时，下载官方
+# vc_redist.{arch}.exe 静默安装。官方安装包自己知道该装什么，
+# 不需要我们维护一份"完整依赖清单"，也不会出现清单漏项导致干净机器起不来。
+
 # 发行目录运行时要靠磁盘加载、以前打包漏掉的插件
 function Copy-RuntimePlugins {
     param([string]$ReleaseDir)
@@ -1084,10 +1090,20 @@ function New-RMTAssets {
     New-Item -ItemType Directory -Path $assetsDir -Force | Out-Null
     Write-Log "生成 $assetsDir ..." "Gray"
 
+    # Windows tar 在部分系统代码页下无法按名称提取带重音的条目。
+    $langArchiveNames = @{ "Español.txt" = "Spanish.txt"; "Français.txt" = "French.txt"; "繁體中文.txt" = "TraditionalChinese.txt" }
     $bundles = [ordered]@{
         "Lang.zip" = @(
-            @{ Dest = "chinese.txt"; Src = "Lang\中文.txt" },
-            @{ Dest = "English.txt"; Src = "Lang\English.txt" }
+
+            # 动态打包 Lang\ 下所有语言包
+            @(Get-ChildItem -Path (Join-Path $PSScriptRoot "Lang") -Filter "*.txt" -ErrorAction SilentlyContinue |
+                Where-Object { $_.BaseName -ne "简中" -and $_.BaseName -ne "中文" } |
+                ForEach-Object {
+                    $entry = $langArchiveNames[$_.Name] ?? $_.Name
+                    @{ Dest = $entry; Src = "Lang\$($_.Name)" }
+                })
+            @(Get-ChildItem -Path (Join-Path $PSScriptRoot "Lang\Flags") -Filter "*.png" -File |
+                ForEach-Object { @{ Dest = "Flags/$($_.Name)"; Src = "Lang\Flags\$($_.Name)" } })
         )
         "RMT.zip" = @(
             @{ Dest = "RMT.dll"; Src = "Plugins\RMT\RMT.dll" },
@@ -1118,16 +1134,13 @@ function New-RMTAssets {
             @{ Dest = "opencv_world481.dll"; Src = "Plugins\OpenCV\$Arch\opencv_world481.dll" },
             @{ Dest = "ScreenCapture.exe"; Src = "Plugins\ScreenCapture\ScreenCapture.exe" }
         )
+        # 只带系统拿不到的私有组件。VC++ 运行库由客户端检测后装进系统，不重复随包，
+        # 否则这份清单会引用不存在的源文件，New-RMTAssetZip 会直接抛异常中断打包。
         "Voice.zip" = @(
             @{ Dest = "VoiceDll.dll"; Src = "Plugins\Voice\$Arch\VoiceDll.dll" },
             @{ Dest = "sherpa-onnx-c-api.dll"; Src = "Plugins\Voice\$Arch\sherpa-onnx-c-api.dll" },
             @{ Dest = "onnxruntime.dll"; Src = "Plugins\Voice\$Arch\onnxruntime.dll" },
             @{ Dest = "onnxruntime_providers_shared.dll"; Src = "Plugins\Voice\$Arch\onnxruntime_providers_shared.dll" },
-            @{ Dest = "vcruntime140.dll"; Src = "Plugins\Voice\$Arch\vcruntime140.dll" },
-            @{ Dest = "msvcp140.dll"; Src = "Plugins\Voice\$Arch\msvcp140.dll" },
-            @{ Dest = "msvcp140_1.dll"; Src = "Plugins\Voice\$Arch\msvcp140_1.dll" },
-            @{ Dest = "msvcp140_2.dll"; Src = "Plugins\Voice\$Arch\msvcp140_2.dll" },
-            @{ Dest = "api-ms-win-core-path-l1-1-0.dll"; Src = "Plugins\Voice\$Arch\api-ms-win-core-path-l1-1-0.dll" },
             @{ Dest = "decoder-epoch-13-avg-2-chunk-16-left-64.onnx"; Src = "$kwsDir\decoder-epoch-13-avg-2-chunk-16-left-64.onnx" },
             @{ Dest = "encoder-epoch-13-avg-2-chunk-16-left-64.int8.onnx"; Src = "$kwsDir\encoder-epoch-13-avg-2-chunk-16-left-64.int8.onnx" },
             @{ Dest = "joiner-epoch-13-avg-2-chunk-16-left-64.int8.onnx"; Src = "$kwsDir\joiner-epoch-13-avg-2-chunk-16-left-64.int8.onnx" },
@@ -1153,9 +1166,6 @@ function New-RMTAssets {
             @{ Dest = "install-interception.exe"; Src = "Plugins\AhiDriver\installer\install-interception.exe" },
             @{ Dest = "InstallReadme.txt"; Src = "Plugins\AhiDriver\installer\使用说明.txt" }
         )
-    }
-    if ($Arch -eq "x64") {
-        $bundles["Voice.zip"] += @{ Dest = "vcruntime140_1.dll"; Src = "Plugins\Voice\x64\vcruntime140_1.dll" }
     }
 
     # 生成 ico.zip（Images\Soft 下 SelfCheck.ahk 的 icoFileList）
@@ -1205,13 +1215,27 @@ function Main {
     }
 
     # 步骤 1: 检查文件
-    Write-Step 1 "检查源文件"
+    Write-Step 1 "检查源文件与多语言完整性"
     $script:WorkAhk = Join-Path $PSScriptRoot "Thread\Work.ahk"
     $WorkDir = Join-Path $PSScriptRoot "Thread"
     if (-not (Test-Path $script:WorkAhk)) {
         throw "找不到源文件: $($script:WorkAhk)"
     }
     Write-Log "[OK] Work.ahk 存在" "Green"
+
+    if (-not $SkipLangCheck) {
+        $checkScript = Join-Path $PSScriptRoot "CheckTranslations.ps1"
+        if (Test-Path $checkScript) {
+            Write-Log "正在校验多语言翻译完整性（检查漏翻与多翻）..." "Gray"
+            & $checkScript -Strict
+            if ($LASTEXITCODE -ne 0) {
+                throw "多语言翻译检查未通过，打包已被即时中断！请先运行 .\CheckTranslations.ps1 修复漏翻和多翻。"
+            }
+            Write-Log "[OK] 多语言翻译完整性校验通过" "Green"
+        }
+    } else {
+        Write-Log "  已跳过多语言翻译完整性检查（-SkipLangCheck）" "Yellow"
+    }
 
     # 步骤 2: 查找编译工具
     Write-Step 2 "查找编译工具"
