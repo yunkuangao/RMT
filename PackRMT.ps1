@@ -408,6 +408,26 @@ function New-Release {
         }
     }
 
+    # 在线更新器（C# 独立 exe）：源码比产物新才重编，避免每次打包都白等
+    $updBuild = Join-Path $PSScriptRoot "Plugins\Update\build.ps1"
+    $updExe = Join-Path $PSScriptRoot "Plugins\Update\RMT.Update.exe"
+    if (Test-Path -LiteralPath $updBuild) {
+        $needBuild = -not (Test-Path -LiteralPath $updExe)
+        if (-not $needBuild) {
+            $exeTime = (Get-Item -LiteralPath $updExe).LastWriteTimeUtc
+            $newer = @(Get-ChildItem -LiteralPath (Split-Path -Parent $updBuild) -Filter "*.cs" -File |
+                Where-Object { $_.LastWriteTimeUtc -gt $exeTime })
+            $needBuild = $newer.Count -gt 0
+        }
+        if ($needBuild) {
+            Write-Log "编译 Plugins\Update\RMT.Update.exe ..." "Gray"
+            & powershell -NoProfile -ExecutionPolicy Bypass -File $updBuild -NoPause
+            if ($LASTEXITCODE -ne 0) {
+                throw "RMT.Update.exe 编译失败，请检查 $env:TEMP\RMT-update-build.log"
+            }
+        }
+    }
+
     $RmtAhk = Join-Path $PSScriptRoot "RMT.ahk"
     $IconPath = Join-Path $PSScriptRoot "Images\Soft\rabit.ico"
 
@@ -937,6 +957,11 @@ function Copy-RuntimePlugins {
             Name = "RMT/RMT.ExcelHelper.exe"
             Src  = "Plugins\RMT\RMT.ExcelHelper.exe"
             Dst  = "Plugins\RMT\RMT.ExcelHelper.exe"
+        },
+        @{
+            Name = "Update/RMT.Update.exe"
+            Src  = "Plugins\Update\RMT.Update.exe"
+            Dst  = "Plugins\Update\RMT.Update.exe"
         },
         @{
             Name = "RMTMcps/RMTMcps.exe"

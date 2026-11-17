@@ -53,4 +53,6 @@ RunStartupCommandsAfterUI() {
     SetTimer(DirectXStartupCheck, -6000)
     ; 图标字体：非必要资源，缺了才后台下载，装完提示重启生效，不拖慢启动
     SetTimer(IconFontStartupCheck, -8000)
+    ; 在线更新：排最后，静默检查，有更新才弹一次（设置里可关；弹窗点取消即永久关闭）
+    SetTimer(RmtUpdateStartupCheck, -30000)
 }

@@ -3,7 +3,7 @@
 
     ; 页面切换（RadioButton 视觉态由本方法显式设置，避免依赖 GroupName 作用域）
     OnSettingNavClick(pageId, state, ctrl, event) {
-        for pid in ["behavior", "macro", "record", "trigger", "hotkey", "appearance", "ai", "diagnostic"] {
+        for pid in ["behavior", "macro", "record", "trigger", "hotkey", "appearance", "ai", "update", "diagnostic"] {
             try this.ui.Update("SetNav_" pid, "IsChecked", pid == pageId ? "True" : "False")
             try this.ui.Update("SetPage_" pid, "Visibility", pid == pageId ? "Visible" : "Collapsed")
         }
@@ -25,18 +25,20 @@
             pageId := "appearance"
         else if (RegExMatch(ctrl, "i)^(ChkBoot|ChkAdmin|ChkData|ChkModal|CmbLang|CmbPreferred|CmbScreen|CmbOCR|CmbExcelBackend|CmbSearchImage|ChkSearchImageAdaptive|CmbRemark|CmbTriggerJoy|CmbJoy|ChkJoy|EditMuti|TabVisible)") )
             pageId := "behavior"
+        else if (RegExMatch(ctrl, "i)^(ChkUpdateCheck|ChkUpdateBeta)") )
+            pageId := "update"
         else if (ctrl == "EditNetPort")
             pageId := "behavior"
         if (pageId != "") {
             this._settingDirty[pageId] := true
-            labels := Map("behavior", "系统", "macro", "宏", "record", "指令录制", "trigger", "界面", "hotkey", "快捷键", "appearance", "主题", "ai", "AI 助手", "diagnostic", "日志")
+            labels := Map("behavior", "系统", "macro", "宏", "record", "指令录制", "trigger", "界面", "hotkey", "快捷键", "appearance", "主题", "ai", "AI 助手", "update", "更新", "diagnostic", "日志")
             try this.ui.Update("SetNavText_" pageId, "Text", GetLang(labels[pageId]) " *")
         }
         this._RefreshAllSettingModules()
     }
 
     ClearSettingDirty() {
-        labels := Map("behavior", "系统", "macro", "宏", "record", "指令录制", "trigger", "界面", "hotkey", "快捷键", "appearance", "主题", "ai", "AI 助手", "diagnostic", "日志")
+        labels := Map("behavior", "系统", "macro", "宏", "record", "指令录制", "trigger", "界面", "hotkey", "快捷键", "appearance", "主题", "ai", "AI 助手", "update", "更新", "diagnostic", "日志")
         this._settingDirty := Map()
         for pageId, label in labels
             try this.ui.Update("SetNavText_" pageId, "Text", GetLang(label))
@@ -70,7 +72,8 @@
             {id: "font", fields: [{key: "FontType", def: "微软雅黑", ctrl: "CmbFont", kind: "cmbText"}, {key: "FontSize", def: XAML_FontSizeDefault, ctrl: "ThemeFontSizeCon", kind: "themeFontSize"}]},
             {id: "palette", fields: [{key: "AppTheme", def: "Default", ctrl: "ThemePresetCon", kind: "theme"}]},
             {id: "aiModel", fields: [{key: "AiProvider", def: "openai", ctrl: "AiProviderCon", kind: "aiProv"}, {key: "AiApiBaseUrl", def: "https://api.openai.com/v1", ctrl: "AiBaseUrlCon", kind: "txt"}, {key: "AiApiKey", def: "", ctrl: "AiApiKeyCon", kind: "pwd"}, {key: "AiModel", def: "", ctrl: "AiModelCon", kind: "txt"}]},
-            {id: "aiPerm", fields: [{key: "AiAccessMode", def: 2, ctrl: "AiAccessCon", kind: "cmb"}, {key: "AiApprovalMode", def: 2, ctrl: "AiApprovalCon", kind: "cmb"}]}
+            {id: "aiPerm", fields: [{key: "AiAccessMode", def: 2, ctrl: "AiAccessCon", kind: "cmb"}, {key: "AiApprovalMode", def: 2, ctrl: "AiApprovalCon", kind: "cmb"}]},
+            {id: "updOpt", fields: [{key: "UpdateCheck", def: true, ctrl: "ChkUpdateCheck", kind: "chk"}, {key: "UpdateBeta", def: false, ctrl: "ChkUpdateBeta", kind: "chk"}]}
         ]
     }
 
@@ -778,6 +781,90 @@
     OnCheckEdit(fieldName, state, ctrl, event) {
         MainSoftData.%fieldName% := this.ui.Query(ctrl) == "True"
         this.MarkSettingDirty(ctrl)
+    }
+
+    ; ---------- 设置中心：更新 ----------
+
+    ; 版本 / 最新版本 / 通道 / 两个开关：建页时和每次检查完重读一遍
+    ; （切页不刷新，进页面看到的是上次检查的结果，这是有意的）
+    _RefreshUpdatePage() {
+        if (!IsObject(this.ui))
+            return
+        try this.ui.Update("LblUpdateCurrent", "Text", "RMTv" RMT_VERSION)
+        try this.ui.Update("LblUpdateChannel", "Text", RmtUpdater.IsBeta() ? GetLang("测试版") : GetLang("正式版"))
+        ; 弹窗点「取消」会直接关掉自动检查（永久），这里跟着回读，别让勾选框和实际值不一致
+        auto := MainSoftData.HasProp("UpdateCheck") ? MainSoftData.UpdateCheck : true
+        try this.ui.Update("ChkUpdateCheck", "IsChecked", auto ? "True" : "False")
+
+        latest := ""
+        when := ""
+        res := RmtUpdater.LastResult()
+        ; 结果里记着当时用的通道：刚切过通道时旧结果不代表当前通道，显示成「未检查」
+        chan := RmtUpdater.IsBeta() ? "test" : "stable"
+        resChan := ""
+        if (IsObject(res) && res.Has("channel"))
+            resChan := Trim(String(res["channel"]))
+        if (IsObject(res) && resChan == chan) {
+            if (res.Has("latest"))
+                latest := Trim(String(res["latest"]))
+            if (res.Has("checked_at"))
+                when := Trim(String(res["checked_at"]))
+        }
+        txt := (latest == "") ? GetLang("未检查") : ("RMTv" latest)
+        if (when != "")
+            txt .= "  ·  " when
+        try this.ui.Update("LblUpdateLatest", "Text", txt)
+    }
+
+    OnSettingCheckUpdate(state := "", ctrl := "", event := "") {
+        if (RmtUpdater.IsBusy())
+            return
+        try this.ui.Update("LblUpdateStatus", "Text", GetLang("正在检查…"))
+        try this.ui.Update("LblUpdateStatus", "ToolTip", "")
+        try this.ui.Update("BtnCheckUpdate", "IsEnabled", "False")
+        if (RmtUpdater.Check(ObjBindMethod(this, "_OnSettingCheckDone")))
+            return
+        ; 更新器 exe 不在（老版本目录 / 被删了）：别装作在检查
+        try this.ui.Update("BtnCheckUpdate", "IsEnabled", "True")
+        try this.ui.Update("LblUpdateStatus", "Text", GetLang("缺少更新程序"))
+    }
+
+    _OnSettingCheckDone(res) {
+        try this.ui.Update("BtnCheckUpdate", "IsEnabled", "True")
+        this._RefreshUpdatePage()
+
+        if (!IsObject(res)) {
+            try this.ui.Update("LblUpdateStatus", "Text", GetLang("检查失败"))
+            return
+        }
+        ok := res.Has("ok") ? res["ok"] : 0
+        if (ok != 1) {
+            err := res.Has("error") ? Trim(String(res["error"])) : ""
+            try this.ui.Update("LblUpdateStatus", "Text", GetLang("检查失败"))
+            if (err != "")
+                try this.ui.Update("LblUpdateStatus", "ToolTip", err)
+            return
+        }
+
+        hasUpdate := res.Has("has_update") ? res["has_update"] : 0
+        if (hasUpdate != 1) {
+            try this.ui.Update("LblUpdateStatus", "Text", GetLang("已是最新"))
+            return
+        }
+
+        latest := res.Has("latest") ? Trim(String(res["latest"])) : ""
+        try this.ui.Update("LblUpdateStatus", "Text", GetLang("发现新版本") " " latest)
+        ; 这里是 XAML 事件链上的回调，弹窗推到下一轮消息循环再开
+        SetTimer(() => RmtUpdater.Prompt(res), -50)
+    }
+
+    ; 切测试版通道：通道行立刻跟着变，不用等保存；顺便按新通道重查一次，
+    ; 否则用户勾了以后看到的还是正式版那次的结果，会以为「勾了没反应」
+    OnSettingBetaChannel(state, ctrl, event) {
+        this.OnCheckEdit("UpdateBeta", state, ctrl, event)
+        this._RefreshUpdatePage()
+        if (!RmtUpdater.IsBusy())
+            this.OnSettingCheckUpdate()
     }
 
     ; §10 显示页签勾选：写入 TabVisibleMap（保存后重启生效）

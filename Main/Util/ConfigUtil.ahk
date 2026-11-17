@@ -335,6 +335,16 @@ Cfg_Stringify(value) {
     return String(value)
 }
 
+; 读布尔：CfgWrite 把 true/false 存成 "1"/"0"（TOML 里是带引号的字符串），
+; 直接 !! 判断会把 "0" 当成真——凡是要当开关用的布尔一律走这里。
+CfgReadBool(file, section, key, def := false) {
+    v := CfgRead(file, section, key, def ? 1 : 0)
+    if (IsInteger(v) || IsFloat(v))
+        return v != 0
+    s := StrLower(Trim(String(v), '" '))
+    return (s == "1" || s == "true" || s == "yes" || s == "on")
+}
+
 ; 删键；key 省略 → 删整段。键/段不存在时不落盘（与 IniDelete 一致）
 CfgDelete(file, section, key := "") {
     global Cfg_BatchDepth, Cfg_Cache

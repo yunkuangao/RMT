@@ -64,6 +64,10 @@ LoadMainSetting() {
         MainSoftData.IsAdminStart := !!MainSoftData.IsAdminStart
     reportRaw := String(CfgRead(SettingFile, SettingSection, "IsDataReport", true))
     MainSoftData.IsDataReport := !(reportRaw = "0" || reportRaw = "false")
+    ; 在线更新：启动检查 / 是否接收测试版（1.3F 这类预览版）
+    ; 必须走 CfgReadBool：配置里存的是字符串 "1"/"0"，!! 会把 "0" 判成真
+    MainSoftData.UpdateCheck := CfgReadBool(SettingFile, SettingSection, "UpdateCheck", true)
+    MainSoftData.UpdateBeta := CfgReadBool(SettingFile, SettingSection, "UpdateBeta", false)
     MainSoftData.ShowSplitLine := CfgRead(SettingFile, SettingSection, "ShowSplitLine", false)
     MainSoftData.FixedMenuWheel := CfgRead(SettingFile, SettingSection, "FixedMenuWheel", false)
     MainSoftData.MenuWheelSelectMode := CfgRead(SettingFile, SettingSection, "MenuWheelSelectMode", 2)

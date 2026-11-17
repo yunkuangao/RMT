@@ -82,6 +82,8 @@ OnSaveSetting(*) {
     CheckAndAddDirty("DebugRunAllHotkey", MainSoftData.HasProp("DebugRunAllHotkey") ? MainSoftData.DebugRunAllHotkey : "^f5")
     CheckAndAddDirty("IsBootStart", MainSoftData.IsBootStart)
     CheckAndAddDirty("IsDataReport", MainSoftData.HasProp("IsDataReport") ? MainSoftData.IsDataReport : true)
+    CheckAndAddDirty("UpdateCheck", MainSoftData.HasProp("UpdateCheck") ? MainSoftData.UpdateCheck : true)
+    CheckAndAddDirty("UpdateBeta", MainSoftData.HasProp("UpdateBeta") ? MainSoftData.UpdateBeta : false)
     CheckAndAddDirty("ShowSplitLine", MainSoftData.ShowSplitLine)
     CheckAndAddDirty("IsModalSubGui", MainSoftData.IsModalSubGui)
     CheckAndAddDirty("BackImagePath", MainSoftData.BackImagePath)   ; §11 主界面背景图

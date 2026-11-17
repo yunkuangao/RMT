@@ -33,7 +33,7 @@
         navStyle := '<Style x:Key="SetNavItem" TargetType="RadioButton">'
             . '<Setter Property="Height" Value="36"/><Setter Property="Margin" Value="0"/><Setter Property="Padding" Value="0"/><Setter Property="BorderThickness" Value="0"/><Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Foreground" Value="{DynamicResource TextMain}"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>'
             . '<Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">'
-            . '<Border x:Name="Bd" Background="Transparent"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="3"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>'
+            . '<Border x:Name="Bd" Background="Transparent" BorderBrush="{DynamicResource OutlineStroke}" BorderThickness="0,1,0,0" SnapsToDevicePixels="True"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="3"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>'
             . '<Rectangle x:Name="Bar" Grid.Column="0" Width="3" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource TextMain}" Visibility="Collapsed" Margin="0,5,0,5"/>'
             . '<ContentPresenter Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center"/></Grid></Border>'
             . '<ControlTemplate.Triggers>'
@@ -144,6 +144,11 @@
             return '<Grid VerticalAlignment="Top"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><StackPanel Grid.Column="0" VerticalAlignment="Top">' l '</StackPanel><StackPanel Grid.Column="2" VerticalAlignment="Top">' r '</StackPanel></Grid>'
         }
         navItem(id, glyph, text, checked := false) {
+            ; 分隔线在模板里的 Bd 上画（见 SetNavItem），这里不再套外层 Border。
+            ; 之前套 Border 时，外层边框先绘制、子元素后绘制，选中项的不透明背景
+            ; 会盖住压在它上面的那 1px，线就只在未选中时可见。
+            ; 同一个 Border 内部顺序固定为「背景 → 边框 → 内容」，选中、悬停都盖不住；
+            ; 项高由样式固定在 36，线条落在 36 的整数倍上，也不会出现半像素抖动。
             return '<RadioButton Name="SetNav_' id '" GroupName="SetNav" Style="{StaticResource SetNavItem}"' (checked ? ' IsChecked="True"' : '') '><DockPanel Margin="12,0,8,0"><TextBlock DockPanel.Dock="Left" Text="' glyph '" FontFamily="' iconFont '" FontSize="14" Foreground="{DynamicResource TextMain}" Margin="0,0,9,0" VerticalAlignment="Center"/><Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Name="SetNavText_' id '" Text="' this._XmlEsc(text) '" FontSize="13"/></Viewbox></DockPanel></RadioButton>'
         }
         pending(body) {
@@ -390,17 +395,33 @@
             )
         )
 
+        ; ---------- 页：更新 ----------
+        upAuto := MainSoftData.HasProp("UpdateCheck") ? MainSoftData.UpdateCheck : true
+        upBeta := MainSoftData.HasProp("UpdateBeta") ? MainSoftData.UpdateBeta : false
+        upCtrl := '<Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>'
+            . '<Button Name="BtnCheckUpdate" Content="' GetLang("检查更新") '" HorizontalAlignment="Left" MinWidth="96" Padding="12,0"/>'
+            . '<TextBlock Grid.Column="1" Name="LblUpdateStatus" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSub}" TextWrapping="Wrap"/></Grid>'
+        updatePage := page("update"
+            , twoCol(
+                card(GetLang("版本"), "&#xE895;", row(GetLang("当前版本"), '<TextBlock Name="LblUpdateCurrent" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMain}"/>')
+                    . row(GetLang("最新版本"), '<TextBlock Name="LblUpdateLatest" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSub}" TextWrapping="Wrap"/>')
+                    . row(GetLang("更新通道"), '<TextBlock Name="LblUpdateChannel" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSub}"/>')
+                    . row(GetLang("更新状态"), upCtrl), "0")
+                , card(GetLang("更新设置"), "&#xE713;", tog(GetLang("自动检查更新"), "ChkUpdateCheck", upAuto, GetLang("启动后自动检查一次，有新版才提示；关掉后手动检查照常可用"))
+                    . tog(GetLang("使用测试版"), "ChkUpdateBeta", upBeta, GetLang("接收 1.3F 这类预览版；正式版发布后同样能收到")), "0", "", "updOpt")
+            )
+        )
+
         ; ---------- 组装：左侧导航 + 右侧页面 ----------
-        navDefs := [["behavior", "&#xE713;", "系统"], ["macro", "&#xE768;", "宏"], ["record", "&#xE7C8;", "指令录制"], ["trigger", "&#xE8D4;", "界面"], ["hotkey", "&#xE765;", "快捷键"], ["appearance", "&#xE790;", "主题"], ["ai", "&#xE99A;", "AI 助手"], ["diagnostic", "&#xE81C;", "日志"]]
-        navSep := '<Border Height="1" Background="{DynamicResource OutlineStroke}"/>'
-        navAll := navSep
-        for ni, nd in navDefs {
-            if (ni > 1)
-                navAll .= navSep
+        navDefs := [["behavior", "&#xE713;", "系统"], ["macro", "&#xE768;", "宏"], ["record", "&#xE7C8;", "指令录制"], ["trigger", "&#xE8D4;", "界面"], ["hotkey", "&#xE765;", "快捷键"], ["appearance", "&#xE790;", "主题"], ["ai", "&#xE99A;", "AI 助手"], ["update", "&#xE895;", "更新"], ["diagnostic", "&#xE81C;", "日志"]]
+        ; 收尾线：最后一项只有顶边线，列表底下要靠这条补一根。
+        ; 它是纯背景、无子元素，不会被任何东西盖住；位置在 9 项的整数倍上，不会抖。
+        navSep := '<Border Height="1" Background="{DynamicResource OutlineStroke}" SnapsToDevicePixels="True"/>'
+        navAll := ""
+        for ni, nd in navDefs
             navAll .= navItem(nd[1], nd[2], GetLang(nd[3]) (this._settingDirty.Has(nd[1]) ? " *" : ""), ni == 1)
-        }
         navAll .= navSep
-        pagesAll := behaviorPage . macroPage . recordPage . triggerPage . hotkeyPage . themePage . aiPage . logPage
+        pagesAll := behaviorPage . macroPage . recordPage . triggerPage . hotkeyPage . themePage . aiPage . updatePage . logPage
         Add('<Grid ' ns '><Grid.Resources>' navStyle . switchStyle . fieldStyles '</Grid.Resources>'
             . '<Grid.ColumnDefinitions><ColumnDefinition Width="153"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>'
             . '<Border BorderBrush="{DynamicResource OutlineStroke}" BorderThickness="0,0,1,0" SnapsToDevicePixels="True"><StackPanel>' navAll . '</StackPanel></Border>'
@@ -447,7 +468,7 @@
         for def in MacroCategoryDefs()
             this._Bind("TabVisible_" def[1], "Click", ObjBindMethod(this, "OnTabVisibleCheck", def[1]))
         ; ---- 设置中心：左侧导航 ----
-        for pid in ["behavior", "macro", "record", "trigger", "hotkey", "appearance", "ai", "diagnostic"]
+        for pid in ["behavior", "macro", "record", "trigger", "hotkey", "appearance", "ai", "update", "diagnostic"]
             this._Bind("SetNav_" pid, "Click", ObjBindMethod(this, "OnSettingNavClick", pid))
 
         ; ---- 设置中心：仅「日志中心」仍为独立查看窗口（非设置项）----
@@ -538,6 +559,12 @@
         loop AppThemeUtil.ColorDefs.Length
             this._Bind("PalettePreview_" A_Index, "MouseLeftButtonDown", ObjBindMethod(this, "OnSettingPickColor", A_Index))
         this._RenderSettingPalette()
+
+        ; ---- 设置中心：更新 ----
+        this._Bind("ChkUpdateCheck", "Click", ObjBindMethod(this, "OnCheckEdit", "UpdateCheck"))
+        this._Bind("ChkUpdateBeta", "Click", ObjBindMethod(this, "OnSettingBetaChannel"))
+        this._Bind("BtnCheckUpdate", "Click", ObjBindMethod(this, "OnSettingCheckUpdate"))
+        this._RefreshUpdatePage()
 
         UIControls.CMDTip := CtrlAdapter("ChkCMDTip", this.ui, "IsChecked")
         this.ui.Update("ChkCMDTip", "IsChecked", MySoftData.CMDTip ? "True" : "False")

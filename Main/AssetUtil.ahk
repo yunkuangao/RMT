@@ -52,6 +52,8 @@ RmtAssetsBaseUrl(tag) {
 #Include Util\MouseMovePreview.ahk
 #Include Util\TomlUtil.ahk
 #Include Util\ConfigUtil.ahk
+; 在线更新：只负责拉起 Plugins\Update\RMT.Update.exe 并读结果
+#Include Util\UpdateUtil.ahk
 
 global WM_COPYDATA := 0x4a ;传递字符串，系统信息
 
